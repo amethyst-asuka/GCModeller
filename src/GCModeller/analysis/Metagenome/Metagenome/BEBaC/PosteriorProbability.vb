@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::505aa001b3bb4aa5e4a16c650a546903, ..\GCModeller\analysis\Metagenome\Metagenome\BEBaC\PosteriorProbability.vb"
+﻿#Region "Microsoft.VisualBasic::8bf16e8a70a9768a9fc1ff59cd5bcdf4, ..\GCModeller\analysis\Metagenome\Metagenome\BEBaC\PosteriorProbability.vb"
 
     ' Author:
     ' 
@@ -28,8 +28,8 @@
 
 Imports System.Runtime.CompilerServices
 Imports Microsoft.VisualBasic.DataMining
-Imports Microsoft.VisualBasic.DataMining.DirichletDistribution
 Imports Microsoft.VisualBasic.Linq
+Imports Microsoft.VisualBasic.Math.Distributions
 
 Namespace BEBaC
 

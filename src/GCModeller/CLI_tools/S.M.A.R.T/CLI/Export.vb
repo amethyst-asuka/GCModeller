@@ -1,28 +1,28 @@
-﻿#Region "Microsoft.VisualBasic::5bb295f7fb8d2a4925058be1ea13b0f0, ..\GCModeller\CLI_tools\S.M.A.R.T\CLI\Export.vb"
+﻿#Region "Microsoft.VisualBasic::68a634adf25295ec0c743ee7418b5329, ..\GCModeller\CLI_tools\S.M.A.R.T\CLI\Export.vb"
 
-' Author:
-' 
-'       asuka (amethyst.asuka@gcmodeller.org)
-'       xieguigang (xie.guigang@live.com)
-'       xie (genetics@smrucc.org)
-' 
-' Copyright (c) 2016 GPL3 Licensed
-' 
-' 
-' GNU GENERAL PUBLIC LICENSE (GPL3)
-' 
-' This program is free software: you can redistribute it and/or modify
-' it under the terms of the GNU General Public License as published by
-' the Free Software Foundation, either version 3 of the License, or
-' (at your option) any later version.
-' 
-' This program is distributed in the hope that it will be useful,
-' but WITHOUT ANY WARRANTY; without even the implied warranty of
-' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-' GNU General Public License for more details.
-' 
-' You should have received a copy of the GNU General Public License
-' along with this program. If not, see <http://www.gnu.org/licenses/>.
+    ' Author:
+    ' 
+    '       asuka (amethyst.asuka@gcmodeller.org)
+    '       xieguigang (xie.guigang@live.com)
+    '       xie (genetics@smrucc.org)
+    ' 
+    ' Copyright (c) 2016 GPL3 Licensed
+    ' 
+    ' 
+    ' GNU GENERAL PUBLIC LICENSE (GPL3)
+    ' 
+    ' This program is free software: you can redistribute it and/or modify
+    ' it under the terms of the GNU General Public License as published by
+    ' the Free Software Foundation, either version 3 of the License, or
+    ' (at your option) any later version.
+    ' 
+    ' This program is distributed in the hope that it will be useful,
+    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
+    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    ' GNU General Public License for more details.
+    ' 
+    ' You should have received a copy of the GNU General Public License
+    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -100,7 +100,7 @@ Partial Module CLI
         Dim Log As String = args("-i")
         Dim Saved As String = args("-o")
 
-        Dim BlastLog As BLASTOutput.Standard.BLASTOutput = BLASTOutput.Standard.BLASTOutput.TryParse(Log)
+        Dim BlastLog As BLASTOutput.Legacy.BLASTOutput = BLASTOutput.Legacy.BLASTOutput.TryParse(Log)
         Call BlastLog.Save(Saved)
         Return 0
     End Function
@@ -151,7 +151,7 @@ Partial Module CLI
             Return -1
         End If
 
-        Using File As BLASTOutput.Standard.BLASTOutput = BLASTOutput.Standard.BLASTOutput.Load(XmlFile) 'Depose 操作的时候会自动保存
+        Using File As BLASTOutput.Legacy.BLASTOutput = BLASTOutput.Legacy.BLASTOutput.Load(XmlFile) 'Depose 操作的时候会自动保存
             Call File.Grep(AddressOf GrepScriptQuery.Grep, AddressOf GrepScriptHit.Grep)
         End Using
 

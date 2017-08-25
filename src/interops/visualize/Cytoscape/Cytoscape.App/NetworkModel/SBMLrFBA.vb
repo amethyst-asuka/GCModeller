@@ -40,7 +40,7 @@ Imports SMRUCC.genomics.Model.SBML.Specifics.MetaCyc
 
 Namespace NetworkModel
 
-    <PackageNamespace("NET.SBML.rFBA")>
+    <Package("NET.SBML.rFBA")>
     Public Module SBMLrFBA
 
         <ExportAPI("FBA_OUT.Load")>
@@ -49,7 +49,7 @@ Namespace NetworkModel
         End Function
 
         <ExportAPI("NET.Generate")>
-        Public Function CreateNetwork(model As XmlFile, flux As IEnumerable(Of FBA_OUTPUT.TabularOUT)) As Network
+        Public Function CreateNetwork(model As XmlFile, flux As IEnumerable(Of FBA_OUTPUT.TabularOUT)) As NetworkTables
             Dim ZEROS As String() =
                 LinqAPI.Exec(Of String) <= From x As FBA_OUTPUT.TabularOUT
                                            In flux
@@ -66,14 +66,14 @@ Namespace NetworkModel
             Dim allCompounds = (From x As Reaction
                                 In nZ
                                 Select x.GetMetabolites.Select(
-                                    Function(xx) xx.species)).MatrixAsIterator.Distinct.ToArray
+                                    Function(xx) xx.species)).IteratesALL.Distinct.ToArray
             Dim nodes = allCompounds.ToArray(
                 Function(x) New Node With {
-                    .Identifier = x,
+                    .ID = x,
                     .NodeType = "Metabolite"})
             Dim fluxNodes As Node() = nZ.ToArray(Function(x) __flux2Node(x, fluxValue))
-            Dim edges As NetworkEdge() = nZ.Select(AddressOf __flux2Edges).MatrixToVector
-            Return New Network With {
+            Dim edges As NetworkEdge() = nZ.Select(AddressOf __flux2Edges).ToVector
+            Return New NetworkTables With {
                 .Edges = edges,
                 .Nodes = nodes.Join(fluxNodes).ToArray
             }
@@ -83,13 +83,13 @@ Namespace NetworkModel
             Dim from As NetworkEdge() = flux.Reactants.ToArray(
                 Function(x) New NetworkEdge With {
                     .FromNode = x.species,
-                    .InteractionType = "Reactant",
+                    .Interaction = "Reactant",
                     .ToNode = flux.id})
             Dim toEdges As NetworkEdge() = flux.Products.ToArray(
                 Function(x) New NetworkEdge With {
                     .FromNode = flux.id,
                     .ToNode = x.species,
-                    .InteractionType = "Product"})
+                    .Interaction = "Product"})
             Return from.Join(toEdges).ToArray
         End Function
 
@@ -105,7 +105,7 @@ Namespace NetworkModel
             Next
 
             Dim node As New Node With {
-                .Identifier = flux.id,
+                .ID = flux.id,
                 .NodeType = "Flux",
                 .Properties = meta
             }

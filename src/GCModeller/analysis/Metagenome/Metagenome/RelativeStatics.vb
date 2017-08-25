@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::ef21be2dfde0f1491366e823747e4084, ..\GCModeller\analysis\Metagenome\Metagenome\RelativeStatics.vb"
+﻿#Region "Microsoft.VisualBasic::a157f4c5b0b42c36776f9106d2c28714, ..\GCModeller\analysis\Metagenome\Metagenome\RelativeStatics.vb"
 
     ' Author:
     ' 
@@ -34,6 +34,7 @@ Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Serialization.JSON
 Imports SMRUCC.genomics.Analysis.Metagenome.gast
+Imports SMRUCC.genomics.Metagenomics
 
 Public Module RelativeStatics
 
@@ -44,20 +45,20 @@ Public Module RelativeStatics
     ''' <param name="EXPORT"></param>
     ''' <returns></returns>
     <Extension>
-    Public Function ExportByRanks(source As IEnumerable(Of RelativeSample), EXPORT As String) As Boolean
+    Public Function ExportByRanks(source As IEnumerable(Of OTUData), EXPORT As String) As Boolean
         Dim samples As View() = LinqAPI.Exec(Of View) <=   ' 进行数据视图转换
-            From x As RelativeSample
+            From x As OTUData
             In source
             Select New View With {
                 .OTU = x.OTU,
-                .Samples = x.Samples.ToDictionary(
+                .Samples = x.Data.ToDictionary(
                     Function(o) o.Key,
                     Function(o) o.Value * 100),
-                .TaxonTree = New Taxonomy(x.Taxonomy.Split(";"c))
+                .TaxonTree = New gast.Taxonomy(x.Taxonomy.Split(";"c))
             }
 
-        For Each rank As SeqValue(Of String) In Taxonomy.ranks.SeqIterator   ' 按照rank层次进行计算
-            Dim out As String = $"{EXPORT}/{rank.obj}.Csv"
+        For Each rank As SeqValue(Of String) In gast.Taxonomy.ranks.SeqIterator   ' 按照rank层次进行计算
+            Dim out As String = $"{EXPORT}/{rank.value}.Csv"
             Dim Groups = (From x As View
                           In samples
                           Let tree As String = x.TaxonTree.GetTree(rank.i)   ' 按照物种树进行数据分组
@@ -75,7 +76,7 @@ Public Module RelativeStatics
                     .Samples = (From o As KeyValuePair(Of String, Double)
                                 In (From x As View
                                     In gg
-                                    Select x.Samples.ToArray).MatrixAsIterator
+                                    Select x.Samples.ToArray).IteratesALL
                                 Select o
                                 Group o By o.Key Into Group) _
                                      .ToDictionary(Function(x) x.Key,
@@ -105,7 +106,7 @@ Public Module RelativeStatics
 
     Public Class View
 
-        Public Property TaxonTree As Taxonomy
+        Public Property TaxonTree As gast.Taxonomy
         Public Property Samples As Dictionary(Of String, Double)
         Public Property OTU As String
 

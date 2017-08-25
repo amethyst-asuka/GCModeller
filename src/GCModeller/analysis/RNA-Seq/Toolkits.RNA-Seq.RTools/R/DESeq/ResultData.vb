@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::f54dad00f373a1c17b63bfef26ad8719, ..\GCModeller\analysis\RNA-Seq\Toolkits.RNA-Seq.RTools\R\DESeq\ResultData.vb"
+﻿#Region "Microsoft.VisualBasic::fcb78f38ab19a3057598809b754b1204, ..\GCModeller\analysis\RNA-Seq\Toolkits.RNA-Seq.RTools\R\DESeq\ResultData.vb"
 
     ' Author:
     ' 
@@ -37,7 +37,7 @@ Namespace DESeq2
     ''' </summary>
     Public Class ResultData : Inherits DESeq2Diff
         Implements IExprMAT
-        Implements sIdEnumerable
+        Implements INamedValue
 
         <Meta(GetType(Double))>
         Public Property dataExpr0 As Dictionary(Of String, Double) Implements IExprMAT.dataExpr0

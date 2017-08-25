@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::8418e0662d270da2f5815bc50d64e2f6, ..\GCModeller\foundation\OBO_Foundry\RawTerm.vb"
+﻿#Region "Microsoft.VisualBasic::f7a61c24bdfb33ca8eda7af3815db022, ..\GCModeller\foundation\OBO_Foundry\RawTerm.vb"
 
     ' Author:
     ' 
@@ -39,11 +39,10 @@ Public Structure RawTerm
     Public Property data As NamedValue(Of String())()
 
     Public Function GetData() As Dictionary(Of String, String())
-        Return data.ToDictionary(Function(x) x.Name, Function(x) x.x)
+        Return data.ToDictionary(Function(x) x.Name, Function(x) x.Value)
     End Function
 
     Public Overrides Function ToString() As String
         Return Me.GetJson
     End Function
 End Structure
-

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::c6a81cb7ec8c146c3e5bbe925d92a331, ..\GCModeller\analysis\SequenceToolkit\SNP\SNPScan.vb"
+﻿#Region "Microsoft.VisualBasic::87db795c3a3c2373a1daffc7c7c91491, ..\GCModeller\analysis\SequenceToolkit\SNP\SNPScan.vb"
 
     ' Author:
     ' 
@@ -32,6 +32,7 @@ Imports SMRUCC.genomics.Analysis
 Imports SMRUCC.genomics.Analysis.SequenceTools.SNP.SangerSNPs
 Imports SMRUCC.genomics.Interops
 Imports SMRUCC.genomics.SequenceModel
+Imports SMRUCC.genomics.SequenceModel.FASTA
 Imports SMRUCC.genomics.SequenceModel.Patterns
 
 Public Module SNPScan
@@ -116,9 +117,19 @@ Public Module SNPScan
     ''' <returns></returns>
     <Extension>
     Public Function ScanSNPs(nt As FASTA.FastaFile,
-                             refInd As Integer,
+                             refInd$,
                              Optional pureMode As Boolean = False,
-                             Optional monomorphic As Boolean = False) As SNPsAln
-        Return nt.SNPSitesGeneric(1, 1, 1, App.GetAppSysTempFile, refInd, If(pureMode, 1, 0), If(monomorphic, 1, 0))
+                             Optional monomorphic As Boolean = False,
+                             Optional ByRef vcf_output_filename$ = Nothing) As SNPsAln
+
+        Dim index% = nt.Index(refInd)
+
+        If index = -1 Then
+            Throw New EvaluateException($"{refInd} is not a valid reference....")
+        Else
+            Call $"Using {nt(index).Title} as reference...".__DEBUG_ECHO
+        End If
+
+        Return nt.SNPSitesGeneric(1, 1, 1, App.GetAppSysTempFile, index, If(pureMode, 1, 0), If(monomorphic, 1, 0), vcf_output_filename)
     End Function
 End Module

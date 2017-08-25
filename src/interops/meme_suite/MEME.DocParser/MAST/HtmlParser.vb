@@ -38,7 +38,7 @@ Imports SMRUCC.genomics.SequenceModel
 
 Namespace DocumentFormat.MAST.HTML
 
-    <PackageNamespace("Mast.Html.Parser", Publisher:="xie.guigang@gmail.com")>
+    <Package("Mast.Html.Parser", Publisher:="xie.guigang@gmail.com")>
     Public Module HtmlParser
 
         Private Function __getRegulation(Tfbs As FASTA.FastaToken) As KeyValuePair(Of String, String)
@@ -74,7 +74,7 @@ Namespace DocumentFormat.MAST.HTML
             Dim LQuery = (From i As Integer
                           In Directories.Sequence.AsParallel
                           Let subDir As String = Directories(i)
-                          Select Process(subDir, FastaDir, MAST_out, TFBSInfos)).ToArray.MatrixToList
+                          Select Process(subDir, FastaDir, MAST_out, TFBSInfos)).ToArray.Unlist
 
             Dim Path As String = String.Format("{0}/Exported/{1}.csv", BaseDirExported, DirName)
 

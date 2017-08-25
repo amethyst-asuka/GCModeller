@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::fdacff90bf03057f79cd9a7a65563ccd, ..\GCModeller\core\Bio.Assembly\Assembly\Expasy\NomenclatureDB\NomenclatureDB.vb"
+﻿#Region "Microsoft.VisualBasic::0b17f910234441c59cc53308a38450fc, ..\core\Bio.Assembly\Assembly\Expasy\NomenclatureDB\NomenclatureDB.vb"
 
     ' Author:
     ' 
@@ -88,10 +88,10 @@ Namespace Assembly.Expasy.Database
                               In Enzymes
                               Where InStr(enz.Identification, ECNumber) = 1
                               Select enz.SwissProt).ToArray
-                Return LQuery.MatrixAsIterator.Distinct.ToArray
+                Return LQuery.IteratesALL.Distinct.ToArray
             Else
                 Return (From id As String
-                        In Enzymes.GetItem(ECNumber).SwissProt
+                        In Enzymes.Take(ECNumber).SwissProt
                         Where Not String.IsNullOrEmpty(id)
                         Select id
                         Distinct).ToArray
@@ -101,7 +101,7 @@ Namespace Assembly.Expasy.Database
         Public Function TryExportUniprotFasta(data As IEnumerable(Of Uniprot.UniprotFasta)) As FASTA.FastaFile
             Dim UniprotIDs As String() = (From enz As Enzyme
                                           In Me.Enzymes
-                                          Select enz.SwissProt).MatrixAsIterator.Distinct.ToArray
+                                          Select enz.SwissProt).IteratesALL.Distinct.ToArray
             Dim LQuery As IEnumerable(Of FASTA.FastaToken) = From fa As Uniprot.UniprotFasta
                                                              In data.AsParallel
                                                              Where Array.IndexOf(UniprotIDs, fa.UniprotID)
@@ -135,11 +135,11 @@ Namespace Assembly.Expasy.Database
             }
         End Function
 
-        Public Sub Export(ByRef Classes As CsvExport.Enzyme(), ByRef SwissProt As CsvExport.SwissProt())
-            Classes = (From enz As Enzyme
-                       In Enzymes
-                       Select CsvExport.Enzyme.CreateObject(enz)).ToArray
-            SwissProt = Enzymes.Select(AddressOf CsvExport.SwissProt.CreateObjects).MatrixToVector
+        Public Sub Export(ByRef Classes As csv.Enzyme(), ByRef SwissProt As csv.SwissProt())
+            Classes = Enzymes.ToArray(AddressOf csv.Enzyme.CreateObject)
+            SwissProt = Enzymes _
+                .Select(AddressOf csv.SwissProt.CreateObjects) _
+                .ToVector
         End Sub
 
         Public Overrides Function Save(Optional FilePath As String = "", Optional Encoding As Encoding = Nothing) As Boolean

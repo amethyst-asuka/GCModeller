@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::055d5e67b1ae9f074672ea67e9a9e4e1, ..\GCModeller\core\Bio.Assembly\Assembly\MiST2\DocArchive\Models\Transducin.vb"
+﻿#Region "Microsoft.VisualBasic::7679ef80b5b9d9ee3da6753de70d5c12, ..\core\Bio.Assembly\Assembly\MiST2\DocArchive\Models\Transducin.vb"
 
     ' Author:
     ' 
@@ -41,7 +41,7 @@ Namespace Assembly.MiST2
     ''' <remarks></remarks>
     '''
     Public Class Transducin : Inherits Protein
-        Implements sIdEnumerable
+        Implements INamedValue
 
         <XmlElement> Public Property Inputs As String()
         <XmlElement> Public Property Outputs As String()
@@ -85,11 +85,10 @@ Namespace Assembly.MiST2
             Dim TempTokens As String() = (From m As Match
                                           In Regex.Matches(Mid(pfam, p), "\d+")
                                           Select m.Value).ToArray
-            Dim Domain As DomainObject =
-                New DomainObject With {
-                    .Identifier = Mid(pfam, 1, p - 1)
+            Dim Domain As New DomainObject With {
+                .Name = Mid(pfam, 1, p - 1)
             }
-            Domain.CommonName = Domain.Identifier
+            Domain.CommonName = Domain.Name
             Domain.Position = New ComponentModel.Loci.Location With {
                 .Left = Convert.ToInt64(TempTokens(0)),
                 .Right = Convert.ToInt64(TempTokens(1))

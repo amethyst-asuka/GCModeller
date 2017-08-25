@@ -29,18 +29,15 @@
 Imports System.Runtime.CompilerServices
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
-Imports Microsoft.VisualBasic.ComponentModel
-Imports Microsoft.VisualBasic.DataMining.KMeans
-Imports Microsoft.VisualBasic.Data.visualize.Network
 Imports Microsoft.VisualBasic.Data.csv
+Imports Microsoft.VisualBasic.Data.visualize.Network
+Imports Microsoft.VisualBasic.DataMining.KMeans
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq.Extensions
 Imports SMRUCC.genomics.Assembly.KEGG.Archives.Xml
-Imports SMRUCC.genomics.Assembly.KEGG.DBGET
 Imports SMRUCC.genomics.Assembly.KEGG.DBGET.BriteHEntry
 Imports SMRUCC.genomics.ComponentModel
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.GenomeMotifFootPrints
-Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat
 Imports SMRUCC.genomics.Visualize.Cytoscape.CytoscapeGraphView.Serialization
 Imports SMRUCC.genomics.Visualize.Cytoscape.CytoscapeGraphView.XGMML
 Imports SMRUCC.genomics.Visualize.Cytoscape.NetworkModel.PfsNET
@@ -58,6 +55,7 @@ Partial Module CLI
     <ExportAPI("/Phenotypes.KEGG",
                Info:="Regulator phenotype relationship cluster from virtual footprints.",
                Usage:="/Phenotypes.KEGG /mods <KEGG_Modules/Pathways.DIR> /in <VirtualFootprints.csv> [/pathway /out <outCluster.csv>]")>
+    <Group(CLIGrouping.KEGGPhenotype)>
     Public Function KEGGModulesPhenotypeRegulates(args As CommandLine) As Integer
         Dim inFile As String = args("/in")
         Dim modsDIR As String = args("/mods")
@@ -108,6 +106,7 @@ Partial Module CLI
     End Function
 
     <ExportAPI("/net.model", Usage:="/net.model /model <kegg.xmlModel.xml> [/out <outDIR> /not-trim]")>
+    <Group(CLIGrouping.KEGGPhenotype)>
     Public Function BuildModelNet(args As CommandLine) As Integer
         Dim model As String = args("/model")
         Dim out As String = args.GetValue("/out", model.TrimSuffix & ".NET/")
@@ -117,6 +116,7 @@ Partial Module CLI
     End Function
 
     <ExportAPI("/net.pathway", Usage:="/net.pathway /model <kegg.pathway.xml> [/out <outDIR> /trim]")>
+    <Group(CLIGrouping.KEGGPhenotype)>
     Public Function PathwayNet(args As CommandLine) As Integer
         Dim model As String = args("/model")
         Dim out As String = args.GetValue("/out", model.TrimSuffix & ".NET/")
@@ -132,6 +132,7 @@ Partial Module CLI
     ''' <returns></returns>
     <ExportAPI("/modNET.Simple",
                Usage:="/modNET.Simple /in <mods/pathway_DIR> [/out <outDIR> /pathway]")>
+    <Group(CLIGrouping.KEGGPhenotype)>
     Public Function SimpleModesNET(args As CommandLine) As Integer
         Dim inDIR As String = args("/in")
         Dim outDIR As String = args.GetValue("/out", inDIR & "-SimpleModsNET/")
@@ -144,7 +145,7 @@ Partial Module CLI
                           x.EntryId,
                           x.BriteId,
                           x.GetPathwayGenes).ToArray
-        Dim net As New FileStream.Network
+        Dim net As New FileStream.NetworkTables
         net += From x In LQuery
                Let props = New Dictionary(Of String, String) From {
                     {"A", mods.GetA(x.x)},
@@ -152,7 +153,7 @@ Partial Module CLI
                     {"C", mods.GetC(x.x)}
                }
                Select New FileStream.Node With {
-                    .Identifier = x.EntryId,
+                    .ID = x.EntryId,
                     .NodeType = "Module",
                     .Properties = props
                }
@@ -163,10 +164,10 @@ Partial Module CLI
 
                 If Not common.IsNullOrEmpty Then
                     net += New FileStream.NetworkEdge With {
-                        .Confidence = common.Length,
+                        .value = common.Length,
                         .FromNode = a.EntryId,
                         .ToNode = b.EntryId,
-                        .InteractionType = "Interact",
+                        .Interaction = "Interact",
                         .Properties = New Dictionary(Of String, String) From {
                             {"Genes", common.JoinBy("; ")}
                         }

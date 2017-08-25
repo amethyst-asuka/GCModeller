@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::78a427ca2d455f10cc7d8d8c7c5d0d2c, ..\GCModeller\engine\GCTabular\CsvTabularData\FileStream.vb"
+﻿#Region "Microsoft.VisualBasic::cd62429cbebc9959d2a3c1bfce28d462, ..\GCModeller\engine\GCTabular\CsvTabularData\FileStream.vb"
 
     ' Author:
     ' 
@@ -40,9 +40,9 @@ Imports SMRUCC.genomics.Model.SBML.Level2.Elements
 
 Namespace FileStream
 
-    Public Class Pathway : Implements sIdEnumerable
+    Public Class Pathway : Implements INamedValue
 
-        <Column("UniqueId")> Public Property Identifier As String Implements sIdEnumerable.Identifier
+        <Column("UniqueId")> Public Property Identifier As String Implements INamedValue.Key
         <CollectionAttribute("MetabolismFlux")> Public Property MetabolismFlux As String()
         <Column("Comments")> Public Property Comment As String
 
@@ -58,7 +58,7 @@ Namespace FileStream
         Public Property Temperature As Double
     End Class
 
-    Public Class ProteinAssembly : Implements sIdEnumerable
+    Public Class ProteinAssembly : Implements INamedValue
 
         <Collection("ProteinComponents", "; ")> Public Property ProteinComponents As String()
 
@@ -68,7 +68,7 @@ Namespace FileStream
         ''' <value></value>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Public Property ProteinComplexes As String Implements sIdEnumerable.Identifier
+        Public Property ProteinComplexes As String Implements INamedValue.Key
         Public Property Upper_Bound As Double
 
         ''' <summary>
@@ -90,7 +90,7 @@ Namespace FileStream
     ''' Product of <see cref="TranscriptUnit"></see> transcription event
     ''' </summary>
     ''' <remarks></remarks>
-    Public Class Transcript : Implements sIdEnumerable
+    Public Class Transcript : Implements INamedValue
 
         ''' <summary>
         ''' <seealso cref="Metabolite.Identifier"></seealso> for itself in the table of <see cref="Metabolite"></see>
@@ -101,7 +101,7 @@ Namespace FileStream
         Public Property UniqueId As String
         Public Property Lamda As Double
 
-        Public Property Template As String Implements sIdEnumerable.Identifier
+        Public Property Template As String Implements INamedValue.Key
 
         ''' <summary>
         ''' <seealso cref="Metabolite.Identifier"></seealso> for its protein product.
@@ -129,8 +129,8 @@ Namespace FileStream
         End Function
     End Class
 
-    Public Class Protein : Implements sIdEnumerable
-        Public Property Identifier As String Implements sIdEnumerable.Identifier
+    Public Class Protein : Implements INamedValue
+        Public Property Identifier As String Implements INamedValue.Key
         Public Property ECNumber As String
         <Column("Lambda")> Public Property Lambda As Double
         <CollectionAttribute("Polypeptide.Composition", "; ")> Public Property PolypeptideCompositionVector As Integer()
@@ -142,8 +142,8 @@ Namespace FileStream
         End Function
     End Class
 
-    Public Class MetabolismFlux : Implements sIdEnumerable
-        Public Property Identifier As String Implements sIdEnumerable.Identifier
+    Public Class MetabolismFlux : Implements INamedValue
+        Public Property Identifier As String Implements INamedValue.Key
         Public Property Equation As String
             Get
                 Return _Equation
@@ -151,8 +151,8 @@ Namespace FileStream
             Set(value As String)
                 _Equation = value
                 Dim Model As DefaultTypes.Equation = EquationBuilder.CreateObject(value)
-                _Internal_compilerLeft = (From item In Model.Reactants Select New KeyValuePair(Of Double, String)(item.StoiChiometry, item.Identifier)).ToArray
-                _Internal_compilerRight = (From item In Model.Products Select New KeyValuePair(Of Double, String)(item.StoiChiometry, item.Identifier)).ToArray
+                _Internal_compilerLeft = (From item In Model.Reactants Select New KeyValuePair(Of Double, String)(item.StoiChiometry, item.ID)).ToArray
+                _Internal_compilerRight = (From item In Model.Products Select New KeyValuePair(Of Double, String)(item.StoiChiometry, item.ID)).ToArray
             End Set
         End Property
 
@@ -263,8 +263,8 @@ Namespace FileStream
             Dim FluxObject As DataModel.FluxObject =
                 EquationBuilder.CreateObject(Of MetaCyc.Schema.Metabolism.Compound, DataModel.FluxObject)(Equation)
 
-            Call Metabolites.AddRange((From item In FluxObject.LeftSides Select item.Identifier).ToList)
-            Call Metabolites.AddRange((From item In FluxObject.RightSide Select item.Identifier).ToList)
+            Call Metabolites.AddRange((From item In FluxObject.LeftSides Select item.Identifier).AsList)
+            Call Metabolites.AddRange((From item In FluxObject.RightSide Select item.Identifier).AsList)
 
             Return Metabolites.ToArray
         End Function
@@ -291,10 +291,10 @@ Namespace FileStream
             Dim Model = EquationBuilder.CreateObject(Equation)
             Dim Reactants = (From item As CompoundSpecieReference
                              In Model.Reactants
-                             Select New GCMarkupLanguage.GCML_Documents.ComponentModels.CompoundSpeciesReference With {.Identifier = item.Identifier, .StoiChiometry = item.StoiChiometry}).ToArray
+                             Select New GCMarkupLanguage.GCML_Documents.ComponentModels.CompoundSpeciesReference With {.Identifier = item.ID, .StoiChiometry = item.StoiChiometry}).ToArray
             Dim Products = (From item As CompoundSpecieReference
                             In Model.Products
-                            Select New GCMarkupLanguage.GCML_Documents.ComponentModels.CompoundSpeciesReference With {.Identifier = item.Identifier, .StoiChiometry = item.StoiChiometry}).ToArray
+                            Select New GCMarkupLanguage.GCML_Documents.ComponentModels.CompoundSpeciesReference With {.Identifier = item.ID, .StoiChiometry = item.StoiChiometry}).ToArray
 
             Return New Metabolism.Reaction With {
                 .Identifier = Identifier,
@@ -323,7 +323,7 @@ Namespace FileStream
 
             Dim FluxObject As List(Of MetabolismFlux) = (From MetabolismFlux As SBML.Level2.Elements.Reaction
                                                          In SBML.Model.listOfReactions.AsParallel
-                                                         Select CreateObject(MetabolismFlux, MetaCycReactions, MetabolismEnzymeLink)).ToList
+                                                         Select CreateObject(MetabolismFlux, MetaCycReactions, MetabolismEnzymeLink)).AsList
             Return FluxObject
         End Function
 

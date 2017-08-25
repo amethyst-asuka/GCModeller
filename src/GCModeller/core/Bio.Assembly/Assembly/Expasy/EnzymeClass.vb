@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::1b1f99258fe189d983842d0567480e65, ..\GCModeller\core\Bio.Assembly\Assembly\Expasy\EnzymeClass.vb"
+﻿#Region "Microsoft.VisualBasic::c639cf885b60b1e1dac13f05d22d7d67, ..\core\Bio.Assembly\Assembly\Expasy\EnzymeClass.vb"
 
     ' Author:
     ' 
@@ -36,14 +36,14 @@ Namespace Assembly.Expasy.AnnotationsTool
     ''' 这个是最终的酶分类结果的呈现形式
     ''' </summary>
     ''' <remarks></remarks>
-    Public Class EnzymeClass : Implements sIdEnumerable
+    Public Class EnzymeClass : Implements INamedValue
 
         ''' <summary>
         ''' 一种酶分子是可能同时具备有多个酶分类编号的
         ''' </summary>
         ''' <remarks></remarks>
         Public Property EC_Class As String()
-        Public Property ProteinId As String Implements sIdEnumerable.Identifier
+        Public Property ProteinId As String Implements INamedValue.Key
         ''' <summary>
         ''' {[EC] Annotation}
         ''' </summary>
@@ -67,11 +67,11 @@ Namespace Assembly.Expasy.AnnotationsTool
         End Function
     End Class
 
-    Public MustInherit Class T_ECPaired : Implements sIdEnumerable
+    Public MustInherit Class T_ECPaired : Implements INamedValue
         Implements IKeyValuePairObject(Of String, String)
 
-        Public Property ProteinId As String Implements sIdEnumerable.Identifier, IKeyValuePairObject(Of String, String).Identifier
-        Public Property UniprotMatched As String Implements IKeyValuePairObject(Of String, String).Value
+        Public Property ProteinId As String Implements INamedValue.Key, IKeyValuePairObject(Of String, String).Key
+        Public Property uniprot As String Implements IKeyValuePairObject(Of String, String).Value
 
         Public Overrides Function ToString() As String
             Return MyClass.GetJson

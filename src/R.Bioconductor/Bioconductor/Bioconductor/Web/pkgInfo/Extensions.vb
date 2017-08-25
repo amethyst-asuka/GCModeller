@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::787b3b92df5d69c7acd08616b4572ec5, ..\R.Bioconductor\Bioconductor\Bioconductor\Web\pkgInfo\Extensions.vb"
+﻿#Region "Microsoft.VisualBasic::b1291ca9d010b5af046aad69272a9e66, ..\R.Bioconductor\Bioconductor\Bioconductor\Web\pkgInfo\Extensions.vb"
 
     ' Author:
     ' 
@@ -31,7 +31,8 @@ Imports System.Reflection
 Imports System.Runtime.CompilerServices
 Imports System.Text
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic.DocumentFormat.Csv.StorageProvider.Reflection
+Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
+Imports Microsoft.VisualBasic.Text.HtmlParser
 
 Namespace Web.Packages
 

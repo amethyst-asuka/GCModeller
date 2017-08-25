@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::9afebb25082e8807424584e1e99d1a73, ..\GCModeller\analysis\SequenceToolkit\SequenceTools\CLI\ORF.vb"
+﻿#Region "Microsoft.VisualBasic::a343869e0a77fd833e8db1c4dc9e2148, ..\GCModeller\analysis\SequenceToolkit\SequenceTools\CLI\ORF.vb"
 
     ' Author:
     ' 
@@ -39,9 +39,10 @@ Partial Module Utilities
     <ExportAPI("--translates",
                Info:="Translates the ORF gene as protein sequence. If any error was output from the console, please using > operator dump the output to a log file for the analysis.",
                Usage:="--translates /orf <orf.fasta> [/transl_table 1 /force]")>
-    <Argument("/orf", False, Description:="ORF gene nt sequence should be completely complement and reversed as forwards strand if it is complement strand.")>
-    <Argument("/force", True, Description:="This force parameter will force the translation program ignore of the stop code and continute sequence translation.")>
-    <Argument("/transl_table", True, Description:="Available index value was described at http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=tgencodes#SG25")>
+    <Argument("/orf", False, CLITypes.File, PipelineTypes.std_in, Description:="ORF gene nt sequence should be completely complement and reversed as forwards strand if it is complement strand.")>
+    <Argument("/force", True, CLITypes.Boolean, PipelineTypes.undefined, Description:="This force parameter will force the translation program ignore of the stop code and continute sequence translation.")>
+    <Argument("/transl_table", True, Description:="Available index value was described at 
+    http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=tgencodes#SG25")>
     Public Function Translates(<Parameter("args",
                                           "/transl_table Available index value was described at http://www.ncbi.nlm.nih.gov/Taxonomy/taxonomyhome.html/index.cgi?chapter=tgencodes#SG25")>
                                args As CommandLine) As Integer

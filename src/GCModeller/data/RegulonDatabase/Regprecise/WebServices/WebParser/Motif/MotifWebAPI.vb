@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::3ca5ea25d4caee5c0c904b299721b178, ..\GCModeller\data\RegulonDatabase\Regprecise\WebServices\WebParser\Motif\MotifWebAPI.vb"
+﻿#Region "Microsoft.VisualBasic::f46b8badf058cbaae74bccb0edf7bd67, ..\GCModeller\data\RegulonDatabase\Regprecise\WebServices\WebParser\Motif\MotifWebAPI.vb"
 
     ' Author:
     ' 
@@ -32,6 +32,7 @@ Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.Emit.Marshal
 Imports SMRUCC.genomics.ComponentModel
 Imports SMRUCC.genomics.Data.Regtransbase.WebServices
+Imports Microsoft.VisualBasic.Text.HtmlParser
 
 Namespace Regprecise
 
@@ -82,7 +83,10 @@ Namespace Regprecise
 
         <Extension>
         Private Function __getEntry(value As String) As KeyValuePair
-            Dim key As String = value.GetValue.TrimVBCrLf.Trim
+            Dim key As String = value _
+                .GetValue _
+                .TrimNewLine("") _
+                .Trim
             value = RegPrecise & value.href
             Return New KeyValuePair(key, value)
         End Function

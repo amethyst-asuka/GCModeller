@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::e4b7c9c8efaa0be4206617e730b3e788, ..\GCModeller\data\ExternalDBSource\SABIORK KineticLaws\SBMLParser.vb"
+﻿#Region "Microsoft.VisualBasic::3059cf326978b50166da6735da72c898, ..\GCModeller\data\ExternalDBSource\SABIORK KineticLaws\SBMLParser.vb"
 
     ' Author:
     ' 
@@ -36,9 +36,9 @@ Imports Microsoft.VisualBasic.Language
 
 Namespace SabiorkKineticLaws.SBMLParser
 
-    Public Class CompoundSpecie : Implements sIdEnumerable
+    Public Class CompoundSpecie : Implements INamedValue
 
-        Public Property Id As String Implements sIdEnumerable.Identifier
+        Public Property Id As String Implements INamedValue.Key
         Public Property Name As String
         Public Property Identifiers As String()
         Public Property modifierType As String
@@ -102,7 +102,7 @@ Namespace SabiorkKineticLaws.SBMLParser
 
         Private Shared Function TryParseSpeciesReference(strData As String) As CompoundSpecieReference
             Dim Reference As CompoundSpecieReference = New CompoundSpecieReference
-            Reference.Identifier = GetStringValue(Regex.Match(strData, "species="".+?""").Value)
+            Reference.ID = GetStringValue(Regex.Match(strData, "species="".+?""").Value)
             Reference.StoiChiometry = Val(GetStringValue(Regex.Match(strData, "stoichiometry="".+?""").Value))
 
             Return Reference

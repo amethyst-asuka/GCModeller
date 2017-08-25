@@ -45,7 +45,7 @@ Namespace Programs
     ''' Quantifying similarity between motifs
     ''' </summary>
     ''' 
-    <PackageNamespace("TomTOM",
+    <Package("TomTOM",
                       Category:=APICategories.ResearchTools,
                       Description:="Quantifying similarity between motifs")>
     <Cite(Title:="Quantifying similarity between motifs",
@@ -98,7 +98,7 @@ Genome Biol. 2007;8(2):R24.",
             Dim lstFamily = (From modDIR As String
                              In lstModules.AsParallel
                              Let id As String = If(simplifyId,
-                                 IO.Path.GetFileNameWithoutExtension(modDIR),
+                                 basename(modDIR),
                                  FileIO.FileSystem.GetDirectoryInfo(modDIR).Name)
                              Let familyMatches = FileIO.FileSystem.GetFiles(modDIR, FileIO.SearchOption.SearchAllSubDirectories, "tomtom.xml")
                              Where Not familyMatches.IsNullOrEmpty
@@ -133,7 +133,7 @@ Genome Biol. 2007;8(2):R24.",
             Dim copies = (From x In family
                           Select FamilyName =
                              If(simplifyId,
-                             IO.Path.GetFileNameWithoutExtension(x.Key),
+                             basename(x.Key),
                              x.Key),
                              matchesValue = From query As TOMText
                                             In x.Value
@@ -178,7 +178,7 @@ Genome Biol. 2007;8(2):R24.",
                          Select From x As LDM.Motif
                             In motif.Value
                                 Select id = $"{motif.Key}.{x.Id}",
-                                x).MatrixAsIterator _
+                                x).IteratesALL _
                                 .ToDictionary(Function(x) x.id,
                                               Function(x) x.x)
             Dim LQuery As MotifMatch() =
@@ -227,7 +227,7 @@ Genome Biol. 2007;8(2):R24.",
             Dim lstFile As IEnumerable(Of String) = ls - l - r - wildcards("*.txt") <= inDIR
             Dim lstMEME = (From path As String
                        In lstFile.AsParallel
-                           Let modId As String = IO.Path.GetFileNameWithoutExtension(path)
+                           Let modId As String = basename(path)
                            Let Motifs As LDM.Motif() = Text.Load(path)
                            Where Not Motifs.IsNullOrEmpty
                            Select modId,

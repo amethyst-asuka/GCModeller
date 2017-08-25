@@ -1,45 +1,42 @@
-﻿#Region "Microsoft.VisualBasic::b0171b88ed1cdc922163f9cb3b4e7a5b, ..\GCModeller\visualize\GCModeller.DataVisualization\RenderingColor.vb"
+﻿#Region "Microsoft.VisualBasic::dd33396be1186f81240853641bc5d519, ..\visualize\GCModeller.DataVisualization\RenderingColor.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports System.Drawing
 Imports System.Runtime.CompilerServices
-Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.ComponentModel
-Imports Microsoft.VisualBasic.ComponentModel.DataStructures
+Imports Microsoft.VisualBasic.ComponentModel.Algorithm.base
 Imports Microsoft.VisualBasic.Imaging
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
 Imports SMRUCC.genomics.Assembly.NCBI
-Imports SMRUCC.genomics.ComponentModel
 
 Public Module RenderingColor
 
-    Public Function NeutralizeColor(data As Color()) As Color
+    <Extension> Public Function NeutralizeColor(data As Color()) As Color
         Dim _r As Integer = CInt((From x As Color In data Select x.R).Average(Function(n) CInt(n)))
         Dim _g As Integer = CInt((From x As Color In data Select x.G).Average(Function(n) CInt(n)))
         Dim _b As Integer = CInt((From x As Color In data Select x.B).Average(Function(n) CInt(n)))
@@ -57,11 +54,11 @@ Public Module RenderingColor
     Public Function CategoryMapsTextures(textures As Image(), Optional categories As String() = Nothing) As Dictionary(Of String, Brush)
         If categories.IsNullOrEmpty Then
             categories = LinqAPI.Exec(Of String) <=
-                From category As COG.Category
-                In COG.Function.Default.Categories
-                Select From [class] As KeyValuePair
+                From category As COG.Catalog
+                In COG.Function.Default.Catalogs
+                Select From [class] As KeyValuePair(Of Char, String)
                        In category.SubClasses
-                       Select [class].Key
+                       Select CStr([class].Key)
             categories = categories.Distinct.ToArray
         End If
 
@@ -88,18 +85,19 @@ Public Module RenderingColor
         Next
 
         '剩余的使用颜色
-        Dim ColorList As List(Of Color) = AllDotNetPrefixColors.ToList
-        categories = categories.Skip(tmpBuf.Count).ToArray
-        Dim ChunkBuffer = categories.CreateSlideWindows(Textures.Count, Textures.Count)
+        Dim ColorList As New List(Of Color)(AllDotNetPrefixColors)
+        Dim wins As SlideWindow(Of String)() = categories _
+            .Skip(tmpBuf.Length) _
+            .CreateSlideWindows(Textures.Length, Textures.Length)
         Dim J As Integer = 0
 
         Do While True
-            For Each CatList In ChunkBuffer
+            For Each cats As SlideWindow(Of String) In wins
                 Dim Color As Color = ColorList(J)
 
-                For i As Integer = 0 To CatList.Elements.Length - 1
-                    Dim res = TextureResourceLoader.AdjustColor(Textures(i), Color)
-                    Call hash.Add(CatList(i), New TextureBrush(res))
+                For i As Integer = 0 To cats.Items.Length - 1
+                    Dim res As Image = TextureResourceLoader.AdjustColor(Textures(i), Color)
+                    Call hash.Add(cats(i), New TextureBrush(res))
                 Next
 
                 J += 1
@@ -114,7 +112,7 @@ Public Module RenderingColor
     ''' </summary>
     ''' <param name="categories"></param>
     ''' <returns></returns>
-    Private Function __directlyMapping(categories As String(), Textures As Image()) As Dictionary(Of String, Brush)
+    Private Function __directlyMapping(categories$(), Textures As Image()) As Dictionary(Of String, Brush)
         Dim DictData As Dictionary(Of String, Brush) = New Dictionary(Of String, Brush)
 
         For i As Integer = 0 To categories.Count - 1
@@ -130,24 +128,25 @@ Public Module RenderingColor
     ''' <param name="categories">当不为空的时候，会返回一个列表，其中空字符串会被排除掉，故而在返回值之中需要自己添加一个空值的默认颜色</param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function InitCOGColors(categories As String()) As Dictionary(Of String, Color)
+    Public Function InitCOGColors(categories$()) As Dictionary(Of String, Color)
         If Not categories.IsNullOrEmpty Then
             Return GenerateColorProfiles(categories)
         End If
 
         Dim CogCategory As COG.Function =
             COG.Function.Default
-        Dim f As Double = 255 / CogCategory.Categories.Length
+        Dim f As Double = 255 / CogCategory.Catalogs.Length
         Dim R As Double = f
         Dim COGColors As New Dictionary(Of String, Color)
         Dim cl As Color
+        Dim rand As New Random
 
-        For Each cata As COG.Category In CogCategory.Categories
-            Dim f2 As Double = 255 / cata.SubClasses.Length
+        For Each cata As COG.Catalog In CogCategory.Catalogs
+            Dim f2 As Double = 255 / cata.SubClasses.Count
             Dim G As Double = f2
 
-            For Each [class] As KeyValuePair In cata.SubClasses
-                cl = Color.FromArgb(220, R, G, 255 * RandomDouble())
+            For Each [class] As KeyValuePair(Of Char, String) In cata.SubClasses
+                cl = Color.FromArgb(220, R, G, 255 * rand.NextDouble())
                 G += f2
 
                 Call COGColors.Add([class].Key, cl)
@@ -173,15 +172,16 @@ Public Module RenderingColor
         Dim Gs As New List(Of Integer)(255.Sequence.Shuffles)
         Dim Bs As New List(Of Integer)(255.Sequence.Shuffles)
         Dim R, G, B As Integer
+        Dim rand As New Random
 
         For Each cl As String In From s As String
                                  In categories
                                  Where Not String.IsNullOrEmpty(s)
                                  Select s
 
-            Call VBMath.Randomize() : R = RandomDouble() * (Rs.Count - 1)
-            Call VBMath.Randomize() : G = RandomDouble() * (Gs.Count - 1)
-            Call VBMath.Randomize() : B = RandomDouble() * (Bs.Count - 1)
+            R = rand.NextDouble() * (Rs.Count - 1)
+            G = rand.NextDouble() * (Gs.Count - 1)
+            B = rand.NextDouble() * (Bs.Count - 1)
 
             Call Colors.Add(cl, Color.FromArgb(Rs(R), Gs(G), Bs(B)))
 

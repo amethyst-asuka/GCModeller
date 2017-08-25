@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::1add034cd05bc2a6ba37028f932735ac, ..\R.Bioconductor\RDotNet.Extensions.Bioinformatics\Declares\VennDiagram\VennDiagram\RModelAPI.vb"
+﻿#Region "Microsoft.VisualBasic::38f603886d96d6f692e454d931582f1f, ..\R.Bioconductor\RDotNet.Extensions.Bioinformatics\Declares\VennDiagram\VennDiagram\RModelAPI.vb"
 
     ' Author:
     ' 
@@ -26,16 +26,12 @@
 
 #End Region
 
-Imports System.Drawing
 Imports System.Runtime.CompilerServices
-Imports System.Text
-Imports System.Xml.Serialization
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
+Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Linq.Extensions
-Imports RDotNET.Extensions.VisualBasic
 
 Namespace VennDiagram.ModelAPI
 
@@ -47,7 +43,7 @@ Namespace VennDiagram.ModelAPI
         ''' <param name="source"></param>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Public Function Generate(source As DocumentStream.File) As VennDiagram
+        Public Function Generate(source As IO.File) As VennDiagram
             Dim LQuery = From vec
                          In __vector(source:=source)
                          Select New Partition With {
@@ -64,18 +60,19 @@ Namespace VennDiagram.ModelAPI
             Dim Vector = (From name As String
                           In source.First
                           Select k = name,
-                              lst = New List(Of String)).ToArray
+                              list = New List(Of String)).ToArray
 
             For row As Integer = 1 To source.RowNumbers - 1
                 Dim Line As RowObject = source(row)
                 For colums As Integer = 0 To Width - 1
                     If Not String.IsNullOrEmpty(Line.Column(colums).Trim) Then
-                        Call Vector(colums).lst.Add(CStr(row))
+                        Call Vector(colums).list.Add(CStr(row))
                     End If
                 Next
             Next
 
-            Return Vector.ToDictionary(Function(x) x.k, Function(x) x.lst.ToArray)
+            Return Vector.ToDictionary(Function(x) x.k, 
+                                       Function(x) x.list.ToArray)
         End Function
 
         ''' <summary>
@@ -96,7 +93,7 @@ Namespace VennDiagram.ModelAPI
         <Extension>
         Public Function VectorMapper(Of T As IEnumerable(Of IEnumerable(Of String)))(entities As T) As String()
             Dim dictTokens As Dictionary(Of String, Integer) =
-            entities.MatrixAsIterator.Distinct.ToArray(
+            entities.IteratesALL.Distinct.ToArray(
               Function(name, idx) New With {.name = name, .idx = idx}) _
                   .ToDictionary(Function(entity) entity.name,
                                 Function(entity) entity.idx)
@@ -110,10 +107,10 @@ Namespace VennDiagram.ModelAPI
             Dim lst As String()() = source.ToArray(Function(x) lTokens(x.Value))
             Dim mapps = VectorMapper(lst)
             Dim result As New Dictionary(Of T, String)
-            Dim i As Integer = 0
+            Dim i As int = 0
 
             For Each x In source.ToArray
-                Call result.Add(x.Key, mapps(i.MoveNext))
+                Call result.Add(x.Key, mapps(++i))
             Next
 
             Return result

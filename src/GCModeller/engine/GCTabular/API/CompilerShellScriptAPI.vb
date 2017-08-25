@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::ad5a23aa14554e5795991a83c95a2b53, ..\GCModeller\engine\GCTabular\API\CompilerShellScriptAPI.vb"
+﻿#Region "Microsoft.VisualBasic::fc7fd80aafa75ebae5c9bd8aa535dfb6, ..\GCModeller\engine\GCTabular\API\CompilerShellScriptAPI.vb"
 
     ' Author:
     ' 
@@ -32,12 +32,13 @@ Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Data.csv.Extensions
 Imports SMRUCC.genomics.Data
 Imports SMRUCC.genomics.GCModeller.ModellingEngine.Assembly.GCTabular.FileStream.XmlFormat
+Imports SMRUCC.genomics.Model.Network.STRING
 
 <[Namespace]("GCModeller.Compiler.GCML.Csvx")>
 Public Module CompilerShellScriptAPI
 
     <ExportAPI("model.optimization")>
-    Public Function OptimizationModel(Model As FileStream.IO.XmlresxLoader) As DocumentStream.File
+    Public Function OptimizationModel(Model As FileStream.IO.XmlresxLoader) As IO.File
         Dim Optimization = New Compiler.Components.MetabolismOptimization()
         Dim result = Optimization.Optimization(Model)
         Return result
@@ -53,30 +54,30 @@ Public Module CompilerShellScriptAPI
     End Function
 
     ''' <summary>
-    ''' <see cref="StringDB.StrPNet.TCS.SensorInducers.SensorId">Inducer</see>的值可能是CommonName，MetaCyc标识符或者KEGG标识符，这个方法仅仅是生成一个模板数据，用于编译器使用的
+    ''' <see cref="TCS.SensorInducers.SensorId">Inducer</see>的值可能是CommonName，MetaCyc标识符或者KEGG标识符，这个方法仅仅是生成一个模板数据，用于编译器使用的
     ''' </summary>
     ''' <returns></returns>
     ''' <remarks></remarks>
     ''' 
     <ExportAPI("sensing_profile.extract")>
     Public Function ExtractSensingProfiles(MiST2 As SMRUCC.genomics.Assembly.MiST2.MiST2) _
-        As StringDB.StrPNet.TCS.SensorInducers()
+        As TCS.SensorInducers()
 
         Dim IDList As String() = {
             (From protein In MiST2.MajorModules.First.OneComponent Select protein.Identifier).ToArray,
             (From protein In MiST2.MajorModules.First.Chemotaxis Select protein.Identifier).ToArray
-        }.MatrixToVector
+        }.ToVector
 
         Dim Profile = (From strId As String
                        In (From strValue As String In IDList Select strValue Distinct Order By strValue Ascending).ToArray
-                       Select New StringDB.StrPNet.TCS.SensorInducers With
+                       Select New TCS.SensorInducers With
                               {
                                   .SensorId = strId, .Inducers = New String() {}}).ToArray
         Return Profile
     End Function
 
     <ExportAPI("sensing_profile.save")>
-    Public Function SaveProfile(sensingProfiles As StringDB.StrPNet.TCS.SensorInducers(), save As String) As Boolean
+    Public Function SaveProfile(sensingProfiles As TCS.SensorInducers(), save As String) As Boolean
         Return sensingProfiles.SaveTo(save, False)
     End Function
 

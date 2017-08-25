@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::d71dcd254f5a187df0e08717df55259d, ..\R.Bioconductor\Bioconductor\Bioconductor\Program.vb"
+﻿#Region "Microsoft.VisualBasic::479cae111b3fa7c04818d25405913be6, ..\R.Bioconductor\Bioconductor\Bioconductor\Program.vb"
 
     ' Author:
     ' 
@@ -39,10 +39,6 @@ Imports System.Threading
 Module Program
 
     Public Sub Main()
-#If DEBUG Then
-        Call Test.Main()
-#End If
-
         Dim splash As New bioc
         Call RunTask(AddressOf splash.ShowDialog)
         Dim repo As Repository = Repository.LoadDefault

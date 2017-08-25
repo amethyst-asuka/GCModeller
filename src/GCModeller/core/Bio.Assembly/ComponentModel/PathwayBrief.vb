@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::079f8559a80b7228afe89e6f7d18402a, ..\GCModeller\core\Bio.Assembly\ComponentModel\PathwayBrief.vb"
+﻿#Region "Microsoft.VisualBasic::ae989e93d402501ead44c97c83455e60, ..\core\Bio.Assembly\ComponentModel\PathwayBrief.vb"
 
     ' Author:
     ' 
@@ -33,10 +33,10 @@ Namespace ComponentModel
 
     Public MustInherit Class PathwayBrief
         Implements IKeyValuePairObject(Of String, String)
-        Implements sIdEnumerable
+        Implements INamedValue
 
         <XmlAttribute>
-        Public Overridable Property EntryId As String Implements sIdEnumerable.Identifier, IKeyValuePairObject(Of String, String).Identifier
+        Public Overridable Property EntryId As String Implements INamedValue.Key, IKeyValuePairObject(Of String, String).Key
         Public Property Description As String Implements IKeyValuePairObject(Of String, String).Value
 
         ''' <summary>

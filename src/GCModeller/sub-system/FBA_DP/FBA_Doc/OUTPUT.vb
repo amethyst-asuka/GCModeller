@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::0a34c27aa40f7beab8f292f950ca61de, ..\GCModeller\sub-system\FBA_DP\FBA_Doc\OUTPUT.vb"
+﻿#Region "Microsoft.VisualBasic::0b966283b99faceca85b1c65fc4fdd9d, ..\GCModeller\sub-system\FBA_DP\FBA_Doc\OUTPUT.vb"
 
     ' Author:
     ' 
@@ -26,22 +26,23 @@
 
 #End Region
 
-Imports Microsoft.VisualBasic.Terminal.STDIO
-Imports Microsoft.VisualBasic.Linq
 Imports System.Xml.Serialization
-Imports Microsoft.VisualBasic.Serialization
-Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Microsoft.VisualBasic
+Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
+Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Linq
+Imports Microsoft.VisualBasic.Serialization
 Imports Microsoft.VisualBasic.Serialization.JSON
+Imports Microsoft.VisualBasic.Terminal.STDIO
 
 Namespace FBA_OUTPUT
 
     ''' <summary>
     ''' RXN  --> flux result.
     ''' </summary>
-    Public Class TabularOUT : Implements sIdEnumerable
+    Public Class TabularOUT : Implements INamedValue
 
-        Public Property Rxn As String Implements sIdEnumerable.Identifier
+        Public Property Rxn As String Implements INamedValue.Key
         Public Property Flux As Double
 
         Public Overrides Function ToString() As String
@@ -65,7 +66,7 @@ Namespace FBA_OUTPUT
                 If value Is Nothing Then
                     __innerResult = New List(Of KeyValuePairObject(Of String, Double))
                 Else
-                    __innerResult = value.ToList
+                    __innerResult = value.AsList
                 End If
             End Set
         End Property

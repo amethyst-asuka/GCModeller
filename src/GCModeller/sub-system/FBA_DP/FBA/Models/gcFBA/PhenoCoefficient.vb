@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::2284e269587746a2e75d26405d4e1092, ..\GCModeller\sub-system\FBA_DP\FBA\Models\gcFBA\PhenoCoefficient.vb"
+﻿#Region "Microsoft.VisualBasic::346551c94ff91ce1d129f4098f258673, ..\GCModeller\sub-system\FBA_DP\FBA\Models\gcFBA\PhenoCoefficient.vb"
 
     ' Author:
     ' 
@@ -36,7 +36,7 @@ Imports SMRUCC.genomics.Analysis.RNA_Seq
 Imports SMRUCC.genomics.Analysis.RNA_Seq.dataExprMAT
 Imports SMRUCC.genomics.Analysis.RNA_Seq.RTools.DESeq2
 
-<PackageNamespace("Phenotype.Coefficient")>
+<Package("Phenotype.Coefficient")>
 Public Module PhenoCoefficient
 
     ''' <summary>
@@ -107,10 +107,10 @@ Public Module PhenoCoefficient
                 Call hash(gene.locus).Add(gene.GetLevel(name))
             Next
             For Each flux As Pheno In fluxs
-                If Not hash.ContainsKey(flux.Identifier) Then
-                    Call hash.Add(flux.Identifier, New List(Of Double))
+                If Not hash.ContainsKey(flux.Key) Then
+                    Call hash.Add(flux.Key, New List(Of Double))
                 End If
-                Call hash(flux.Identifier).Add(flux.Properties(name))
+                Call hash(flux.Key).Add(flux.Properties(name))
             Next
         Next
 
@@ -168,7 +168,7 @@ Public Module PhenoCoefficient
         }
 
         For Each flux As PhenoOUT In fluxs
-            Call gSample.Properties.Add(flux.Identifier, MAT.GetValue(locus, flux.Identifier))
+            Call gSample.Properties.Add(flux.Key, MAT.GetValue(locus, flux.Key))
         Next
 
         Return gSample

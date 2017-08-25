@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::ddb6094648c7d0528dafb4594c53aa65, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\Extensions\REngine.vb"
+﻿#Region "Microsoft.VisualBasic::f8d53ce8f9f070709acd2b86ca2a1206, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\Extensions\REngine.vb"
 
     ' Author:
     ' 
@@ -63,6 +63,32 @@ Public Module RExtensionInvoke
     <Extension>
     Public Function AsBoolean(sym As SymbolicExpression) As Boolean
         Return sym.AsLogical.First
+    End Function
+
+    ''' <summary>
+    ''' Is string <paramref name="s"/> R NA null?.(字符串是否为空字符串或者等于R之中的NA值？)
+    ''' </summary>
+    ''' <param name="s$"></param>
+    ''' <returns></returns>
+    <Extension> Public Function StringNULL(s$) As Boolean
+        Return s.StringEmpty OrElse s = "NA"
+    End Function
+
+    ''' <summary>
+    ''' R variable copy
+    ''' </summary>
+    ''' <param name="var$"></param>
+    ''' <returns></returns>
+    <Extension> Public Function copy(var$) As String
+        Dim x$ = App.NextTempName
+
+        SyncLock R
+            With R
+                .call = $"{x} <- {var};"
+            End With
+        End SyncLock
+
+        Return x
     End Function
 
     '''' <summary>

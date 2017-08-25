@@ -1,28 +1,28 @@
-﻿#Region "Microsoft.VisualBasic::a119734f79399a2b2796fabd12b3754b, ..\GCModeller\CLI_tools\MEME\Cli\Regprecise.vb"
+﻿#Region "Microsoft.VisualBasic::65c16ee2012c9af5ba2e05be4eac6ffc, ..\GCModeller\CLI_tools\MEME\Cli\Regprecise.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -30,9 +30,9 @@ Imports System.Runtime.CompilerServices
 Imports System.Text.RegularExpressions
 Imports MEME.Analysis
 Imports MEME.GCModeller.FileSystem.FileSystem
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
+Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Data.csv.Extensions
 Imports Microsoft.VisualBasic.Language
@@ -49,16 +49,11 @@ Imports SMRUCC.genomics.Assembly.MiST2
 Imports SMRUCC.genomics.Assembly.NCBI
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat
-Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
-Imports SMRUCC.genomics.ComponentModel.Loci
-Imports SMRUCC.genomics.ContextModel
 Imports SMRUCC.genomics.Data
 Imports SMRUCC.genomics.Data.Regprecise
 Imports SMRUCC.genomics.Data.Regprecise.WebServices
 Imports SMRUCC.genomics.Data.Xfam
-Imports SMRUCC.genomics.Data.Xfam.Pfam.ProteinDomainArchitecture
 Imports SMRUCC.genomics.Interops.NBCR
-Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.FootprintTraceAPI
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.GenomeMotifFootPrints
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.MotifScans
@@ -66,7 +61,7 @@ Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.ComponentModel
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MEME.LDM
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application
-Imports SMRUCC.genomics.SequenceModel
+Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH.Abstract
 Imports SMRUCC.genomics.SequenceModel.FASTA
 
 Partial Module CLI
@@ -78,6 +73,7 @@ Partial Module CLI
     ''' <returns></returns>
     ''' 
     <ExportAPI("/CORN", Usage:="/CORN /in <operons.csv> /mast <mastDIR> /PTT <genome.ptt> [/out <out.csv>]")>
+    <Group(CLIGrouping.RegPreciseTools)>
     Public Function CORN(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim mastDIR As String = args("/mast")
@@ -142,6 +138,7 @@ Partial Module CLI
     ''' <param name="args"></param>
     ''' <returns></returns>
     <ExportAPI("/LDM.MaxW", Usage:="/LDM.MaxW [/in <sourceDIR>]")>
+    <Group(CLIGrouping.RegPreciseTools)>
     Public Function LDMMaxLen(args As CommandLine) As Integer
         Dim source As String = args.GetValue("/in", GCModeller.FileSystem.GetMotifLDM)
         Dim LDM = (From x As String
@@ -154,6 +151,7 @@ Partial Module CLI
 
     <ExportAPI("/BBH.Select.Regulators", Info:="Select bbh result for the regulators in RegPrecise database from the regulon bbh data.",
                Usage:="/BBH.Select.Regulators /in <bbh.csv> /db <regprecise_downloads.DIR> [/out <out.csv>]")>
+    <Group(CLIGrouping.RegPreciseTools)>
     Public Function SelectRegulatorsBBH(args As CommandLine) As Integer
         Dim inFile As String = args("/in")
         Dim DbDIR As String = args("/db")
@@ -169,13 +167,14 @@ Partial Module CLI
         Dim RegPrecise = (From file As String
                           In FileIO.FileSystem.GetFiles(DbDIR, FileIO.SearchOption.SearchTopLevelOnly, "*.xml").AsParallel
                           Select file.LoadXml(Of Regprecise.BacteriaGenome)).ToArray
-        Dim regulators As String() = RegPrecise.ToArray(Function(x) x.ListRegulators).MatrixToVector
-        Dim regBBH = (From sId As String In regulators.AsParallel Where dict.ContainsKey(sId) Select dict(sId)).ToArray.MatrixToList
+        Dim regulators As String() = RegPrecise.ToArray(Function(x) x.ListRegulators).ToVector
+        Dim regBBH = (From sId As String In regulators.AsParallel Where dict.ContainsKey(sId) Select dict(sId)).ToArray.Unlist
         Return regBBH.SaveTo(out)
     End Function
 
     <ExportAPI("Download.Regprecise", Info:="Download Regprecise database from Web API",
                Usage:="Download.Regprecise [/work ./ /save <saveXml>]")>
+    <Group(CLIGrouping.RegPreciseTools)>
     Public Function DownloadRegprecise2(args As CommandLine) As Integer
         Dim WORK As String = args.GetValue("/work", App.CurrentDirectory & "/RegpreciseDownloads/")
         Dim Db As TranscriptionFactors = WebAPI.Download(WORK)
@@ -192,6 +191,7 @@ Partial Module CLI
     <ExportAPI("wGet.Regprecise",
                Info:="Download Regprecise database from REST API",
                Usage:="wGet.Regprecise [/repository-export <dir.export, default: ./> /updates]")>
+    <Group(CLIGrouping.RegPreciseTools)>
     Public Function DownloadRegprecise(args As CommandLine) As Integer
         Dim Updates As Boolean = args.GetBoolean("/updates")
         Dim Export As String = args.GetValue(Of String)("/repository-export", "./")
@@ -199,10 +199,11 @@ Partial Module CLI
     End Function
 
     <ExportAPI("Regprecise.Compile",
-               Usage:="Regprecise.Compile [<repository>]",
+               Usage:="Regprecise.Compile [/src <repository>]",
                Info:="The repository parameter is a directory path which is the regprecise database root directory in the GCModeller directory, if you didn't know how to set this value, please leave it blank.")>
+    <Group(CLIGrouping.RegPreciseTools)>
     Public Function CompileRegprecise(args As CommandLine) As Integer
-        Dim repository As String = args.Tokens.Get(1)
+        Dim repository As String = args <= "/src"
         If String.IsNullOrEmpty(repository) Then
             Call Settings.Session.Initialize()
             repository = RegpreciseRoot
@@ -223,6 +224,7 @@ Partial Module CLI
     ''' <returns></returns>
     <ExportAPI("mast.compile",
                Usage:="mast.compile /mast <mast.xml> /ptt <genome.ptt> [/no-meme /no-regInfo /p-value 1e-3 /mast-ldm <DIR default:=GCModeller/Regprecise/MEME/MAST_LDM> /atg-dist 250]")>
+    <Group(CLIGrouping.RegPreciseTools)>
     Public Function CompileMast(args As CommandLine) As Integer
         Dim PTT As TabularFormat.PTT = TabularFormat.PTT.Load(args("/ptt"))
         Dim mast As XmlOutput.MAST.MAST =
@@ -232,7 +234,7 @@ Partial Module CLI
         Dim atgDist As Integer = args.GetValue("/atg-dist", 250)
 
         If args.GetBoolean("/no-meme") Then
-            sites = __mastNoMEME(mast)
+            sites = __mastNoMEME(mast, args("/mast"))
         Else
             Dim pwmFa As String = RegpreciseRoot & "/MEME/pwm"
             Dim mastLDM As String = args.GetValue("/mast-ldm", MotifLDM)
@@ -249,12 +251,13 @@ Partial Module CLI
 
         sites = (From site In sites Where site.pValue <= pvalue Select site).ToArray
 
-        Dim table = (From site In sites.AsParallel
+        Dim table = (From site As MastSites
+                     In sites
                      Where Not site Is Nothing
                      Select site,
                          genes = site.GetRelatedUpstream(PTT, atgDist))
         Call "Extract duplicated genes".__DEBUG_ECHO
-        Dim LQuery = (From site In table.AsParallel Select __extract(site.site, site.genes)).ToArray.MatrixToList
+        Dim LQuery = (From site In table.AsParallel Select __extract(site.site, site.genes)).ToArray.Unlist
         Return LQuery.SaveTo(args("/mast").TrimSuffix & ".csv").CLICode
     End Function
 
@@ -269,16 +272,17 @@ Partial Module CLI
                Usage:="mast.compile.bulk /source <source_dir> [/ptt <genome.ptt> /atg-dist <500> /no-meme /no-regInfo /p-value 1e-3 /mast-ldm <DIR default:=GCModeller/Regprecise/MEME/MAST_LDM> /related.all]")>
     <Argument("/no-meme", True,
                    Description:="Specific that the mast site construction will without and meme pwm MAST_LDM model.")>
+    <Group(CLIGrouping.RegPreciseTools)>
     Public Function CompileMastBuck(args As CommandLine) As Integer
         Call $"Start loading mast documents from source {args("/source")}".__DEBUG_ECHO
 
         Dim masts = FileIO.FileSystem.GetFiles(args("/source"), FileIO.SearchOption.SearchAllSubDirectories, "*.xml") _
-            .ToArray(Function(xml) xml.LoadXml(Of XmlOutput.MAST.MAST)(ThrowEx:=False))
-        masts = (From obj In masts Where Not obj.__isNothing Select obj).ToArray
+            .ToArray(Function(xml) New NamedValue(Of XmlOutput.MAST.MAST)(xml, xml.LoadXml(Of XmlOutput.MAST.MAST)(ThrowEx:=False)))
+        masts = (From obj In masts Where Not obj.Value.__isNothing Select obj).ToArray
         Call $"Start compile {masts.Length} mast documents...".__DEBUG_ECHO
         Dim sites As MastSites()  ' 导出扫描得到的位点
         If args.GetBoolean("/no-meme") Then
-            sites = masts.ToArray(Function(mast) MastSites.Compile(mast), Parallel:=True).MatrixToVector
+            sites = masts.ToArray(Function(mast) MastSites.Compile(mast.Value, mast.Name), parallel:=True).ToVector
         Else
             Dim pwmFa As String = RegpreciseRoot & "/MEME/pwm"
             Dim mastLDM As String = args.GetValue("/mast-ldm", MotifLDM)
@@ -289,10 +293,10 @@ Partial Module CLI
 
             sites = masts.ToArray(
                 Function(mast) MastSites.Compile(
-                mast,
+                mast.Value,
                 mastLDM,
                 faDIR:=pwmFa),
-                Parallel:=True).MatrixToVector
+                parallel:=True).ToVector
         End If
 
         Dim pvalue As Double = args.GetValue("/p-value", 0.001)  ' 过滤掉不需要的位点
@@ -351,7 +355,7 @@ Partial Module CLI
                      Select site,
                          genes = site.GetRelatedUpstream(PTT, atgDist)).ToArray
         Call "Extract duplicated genes".__DEBUG_ECHO
-        Dim LQuery = (From site In table.AsParallel Select __extract(site.site, site.genes)).ToArray.MatrixToList
+        Dim LQuery = (From site In table.AsParallel Select __extract(site.site, site.genes)).ToArray.Unlist
         Dim trims = (From site As MastSites
                      In LQuery
                      Where Math.Abs(site.ATGDist) <= atgDist AndAlso  ' Not site.HasEmptyMappings AndAlso  这一个条件和no-meme有冲突
@@ -364,8 +368,8 @@ Partial Module CLI
         Return LQuery.ToArray
     End Function
 
-    Private Function __mastNoMEME(mastXml As XmlOutput.MAST.MAST) As MastSites()
-        Return MastSites.Compile(mastXml)
+    Private Function __mastNoMEME(mastXml As XmlOutput.MAST.MAST, path$) As MastSites()
+        Return MastSites.Compile(mastXml, path)
     End Function
 
     ''' <summary>
@@ -375,6 +379,7 @@ Partial Module CLI
     ''' <param name="args"></param>
     ''' <returns></returns>
     <ExportAPI("--mapped-Back", Usage:="--mapped-Back /meme <meme.text> /mast <mast.xml> /ptt <genome.ptt> [/out <out.csv> /offset <10> /atg-dist <250>]")>
+    <Group(CLIGrouping.RegPreciseTools)>
     Public Function SiteMappedBack(args As CommandLine) As Integer
         Dim MEME As String = args("/meme")
         Dim mastXml As String = args("/mast")
@@ -392,19 +397,19 @@ Partial Module CLI
 
         ' 只需要将mast文档里面的位置取出来就可以了
         ' 由于只是扫描自己的基因组，所以mast文档里面只有一条序列的
-        Dim sites As MastSites() = mastHits.ToArray(Function(seq) __compile(seq, MEMEMotifs, offset)).MatrixToVector
+        Dim sites As MastSites() = mastHits.ToArray(Function(seq) __compile(seq, MEMEMotifs, offset)).ToVector
         Dim table = (From site As MastSites
                      In sites.AsParallel
                      Where Not site Is Nothing
                      Select site,
                          genes = site.GetRelatedUpstream(PTT, atgDist))
         Call "Extract duplicated genes".__DEBUG_ECHO
-        Dim LQuery = (From site In table.AsParallel Select __extract(site.site, site.genes)).ToArray.MatrixToList
+        Dim LQuery = (From site In table.AsParallel Select __extract(site.site, site.genes)).ToArray.Unlist
         Return LQuery.SaveTo(args("/mast").TrimSuffix & ".csv").CLICode
     End Function
 
     Private Function __compile(hit As XmlOutput.MAST.Segment, MEMEMotifs As Dictionary(Of String, Motif), offset As Integer) As MastSites()
-        Dim sequence As String = hit.SegmentData.TrimVBCrLf
+        Dim sequence As String = hit.SegmentData.TrimNewLine("")
         Dim resultSet = hit.Hits.ToArray(Function(loci) __compile(loci, MEMEMotifs, sequence, offset, hit.start))
         Return resultSet
     End Function
@@ -472,7 +477,10 @@ Partial Module CLI
         End Try
     End Function
 
-    <ExportAPI("regulators.compile", Info:="Regprecise regulators data source compiler.")>
+    <ExportAPI("/regulators.compile",
+               Info:="Regprecise regulators data source compiler.",
+               Usage:="/regulators.compile")>
+    <Group(CLIGrouping.RegPreciseTools)>
     Public Function RegulatorsCompile() As Integer
         Dim regulatorsRepository As String = RegpreciseRoot & "/Fasta/Regulators/"
         Dim regulators As FastaReaders.Regulator() =
@@ -481,7 +489,7 @@ Partial Module CLI
                                        "*.fasta").ToArray(Function(fasta) FastaReaders.Regulator.LoadDocument(FastaToken.Load(fasta)))
         Dim regprecise = FileIO.FileSystem.GetFiles(RegpreciseRoot & "/regulators/",
                                                     FileIO.SearchOption.SearchAllSubDirectories, "*.xml").ToArray(
-                                                    Function(xml) xml.LoadXml(Of JSONLDM.regulator())).MatrixToList
+                                                    Function(xml) xml.LoadXml(Of JSONLDM.regulator())).Unlist
         Dim regpreciseGroup = (From regulator In regprecise
                                Where Not regulator Is Nothing AndAlso
                                    Not String.IsNullOrEmpty(regulator.locusTag)
@@ -515,15 +523,16 @@ Partial Module CLI
                Usage:="regulators.bbh /bbh <bbhDIR/bbh.index.Csv> [/save <save.csv> /direct /regulons /maps <genome.gb>]")>
     <Argument("/regulons", True,
                    Description:="The data source of the /bbh parameter is comes from the regulons bbh data.")>
+    <Group(CLIGrouping.RegPreciseTools)>
     Public Function RegulatorsBBh(args As CommandLine) As Integer
         Dim KEGGFamilies = GCModeller.FileSystem.KEGGFamilies.LoadCsv(Of FastaReaders.Regulator) _
             .ToDictionary(Function(prot) prot.KEGG)
         Dim regprecise = (RegpreciseRoot & "/MEME/regulators.csv").LoadCsv(Of Model_Repository.Regulator).ToDictionary(Function(regulator) regulator.KEGG)
         Dim direct As Boolean = args.GetBoolean("/direct")
-        Dim bbhs As List(Of BBH.BBHIndex)
+        Dim bbhs As List(Of BBHIndex)
 
         If direct Then
-            bbhs = args("/bbh").LoadCsv(Of BBH.BBHIndex)
+            bbhs = args("/bbh").LoadCsv(Of BBHIndex)
         Else
             If args.GetBoolean("/regulons") Then
                 Dim regulons = (From file As String
@@ -532,25 +541,26 @@ Partial Module CLI
                                 Where Not regulon Is Nothing AndAlso
                                     Not regulon.Regulons Is Nothing AndAlso
                                     Not regulon.Regulons.Regulators.IsNullOrEmpty
-                                Select regulon.Regulons.Regulators).MatrixAsIterator
-                bbhs = regulons.ToArray(
-                    Function(x) New BBH.BBHIndex With {
+                                Select regulon.Regulons.Regulators).IteratesALL
+                bbhs = regulons.ToList(
+                    Function(x) New BBHIndex With {
                         .HitName = x.LocusTag.Key,
-                        .QueryName = x.LocusTag.Value}).ToList
+                        .QueryName = x.LocusTag.Value})
             Else
                 bbhs = FileIO.FileSystem.GetFiles(
                     args("/bbh"), FileIO.SearchOption.SearchTopLevelOnly, "*.csv").ToArray(
-                        Function(csv) csv.LoadCsv(Of BBH.BBHIndex)).MatrixToList
+                        Function(csv) csv.LoadCsv(Of BBHIndex)).Unlist
             End If
         End If
 
-        Dim bbhsPaired = (From pair As BBH.BBHIndex
-                          In bbhs.AsParallel
-                          Let regEntry As String = __getEntry(pair, direct)
-                          Where pair.Matched AndAlso regprecise.ContainsKey(regEntry)
-                          Select pair,
-                              reg = regprecise(regEntry),
-                              KEGGFamily = KEGGFamilies(regEntry)).ToList
+        Dim bbhsPaired = From pair As BBHIndex
+                         In bbhs.AsParallel
+                         Let regEntry As String = __getEntry(pair, direct)
+                         Where pair.Matched AndAlso regprecise.ContainsKey(regEntry)
+                         Select pair,
+                             reg = regprecise(regEntry),
+                             KEGGFamily = KEGGFamilies(regEntry)
+
         Dim result As bbhMappings() = bbhsPaired.ToArray(
             Function(regulator) New bbhMappings With {
                 .definition = regulator.reg.Definition,
@@ -583,7 +593,7 @@ Partial Module CLI
         Return result.SaveTo(save).CLICode
     End Function
 
-    Private Function __getEntry(bbhPair As BBH.BBHIndex, direct As Boolean) As String
+    Private Function __getEntry(bbhPair As BBHIndex, direct As Boolean) As String
         If direct Then
             Return bbhPair.HitName
         Else
@@ -601,6 +611,7 @@ Partial Module CLI
                Usage:="--build.Regulations /bbh <regprecise.bbhMapped.csv> /mast <mastSites.csv> [/cutoff <0.6> /out <out.csv> /sp <spName> /DOOR <genome.opr> /DOOR.extract]")>
     <Argument("/DOOR.extract", True,
                    Description:="Extract the operon structure genes after assign the operon information.")>
+    <Group(CLIGrouping.RegPreciseTools)>
     Public Function Build(args As CommandLine) As Integer
         Dim bbh = RegpreciseSummary.LoadRegpreciseBBH(args("/bbh"))
         Dim mastSites As IEnumerable(Of MastSites) = RegpreciseSummary.LoadMEME(args("/mast"))
@@ -629,6 +640,7 @@ Partial Module CLI
 
     <ExportAPI("--build.Regulations.From.Motifs",
                Usage:="--build.Regulations.From.Motifs /bbh <regprecise.bbhMapped.csv> /motifs <motifSites.csv> [/cutoff <0.6> /sp <spName> /out <out.csv>]")>
+    <Group(CLIGrouping.RegPreciseTools)>
     Public Function BuildFromMotifSites(args As CommandLine) As Integer
         Dim bbh = RegpreciseSummary.LoadRegpreciseBBH(args("/bbh"))
         Dim motifSites = args("/motifs").LoadCsv(Of MotifSite)
@@ -645,17 +657,20 @@ Partial Module CLI
 
     <ExportAPI("--TCS.Regulations",
                Usage:="--TCS.Regulations /TCS <DIR.TCS.csv> /modules <DIR.mod.xml> /regulations <virtualfootprint.csv>")>
+    <Group(CLIGrouping.RegPreciseTools)>
     Public Function TCSRegulations(args As CommandLine) As Integer
         Dim TCS = FileIO.FileSystem.GetFiles(args("/TCS"), FileIO.SearchOption.SearchAllSubDirectories, "*.csv") _
             .ToArray(Function(file) _
-                     file.LoadCsv(Of SwissTCS.CrossTalks)).MatrixToList
+                     file.LoadCsv(Of SwissTCS.CrossTalks)).Unlist
         Dim mods = FileIO.FileSystem.GetFiles(args("/modules"), FileIO.SearchOption.SearchAllSubDirectories, "*.xml") _
             .ToArray(Function(file) file.LoadCsv(Of bGetObject.Module))
         Dim ModsRegulation = args("/regulations").LoadCsv(Of PredictedRegulationFootprint)
-        ModsRegulation = (From regulates As PredictedRegulationFootprint
-                          In ModsRegulation
-                          Where Not String.IsNullOrEmpty(regulates.Regulator)
-                          Select regulates).ToList
+        ModsRegulation = LinqAPI.MakeList(Of PredictedRegulationFootprint) <=
+            From regulates As PredictedRegulationFootprint
+            In ModsRegulation
+            Where Not String.IsNullOrEmpty(regulates.Regulator)
+            Select regulates
+
         ' 所有的双组分系统的反应调控蛋白
         Dim RR As String() = TCS.ToArray(Function(cTk) cTk.Regulator).Distinct.ToArray
         '  Dim RRMods As Dictionary(Of String, String()) =      ' 调控的代谢途径
@@ -671,9 +686,10 @@ Partial Module CLI
 
     <ExportAPI("--TCS.Module.Regulations",
                Usage:="--TCS.Module.Regulations /MiST2 <MiST2.xml> /footprint <footprints.csv> /Pathways <KEGG_Pathways.DIR>")>
+    <Group(CLIGrouping.RegPreciseTools)>
     Public Function TCSRegulateModule(args As CommandLine) As Integer
         Dim MiST2 = args("/MiST2").LoadXml(Of MiST2)
-        Dim footprints = args("/footprint").LoadCsv(Of GenomeMotifFootPrints.PredictedRegulationFootprint)
+        Dim footprints = args("/footprint").LoadCsv(Of PredictedRegulationFootprint)
         Dim Pathways = FileIO.FileSystem.GetFiles(args("/pathways"),
                                                   FileIO.SearchOption.SearchAllSubDirectories,
                                                   "*.xml").ToArray(
@@ -684,7 +700,7 @@ Partial Module CLI
                       Where Not String.IsNullOrEmpty(regu.Regulator) AndAlso
                           Array.IndexOf(TCS, regu.Regulator) > -1
                       Select regu).ToArray
-        Dim Csv As New DocumentStream.File
+        Dim Csv As New IO.File
         Dim pwyBrits = BriteHEntry.Pathway.LoadFromResource.ToDictionary(Function(x) x.EntryId)
         Dim pwyGroup = (From gr In (From pwy In Pathways
                                     Let brite = pwyBrits(pwy.BriteId)
@@ -700,7 +716,7 @@ Partial Module CLI
 
         For Each pwy In pwyGroup
             For Each subPwy In pwy.cate
-                Dim genes = subPwy.Group.ToArray(Function(x) x.pwy.GetPathwayGenes).MatrixToList.Distinct.ToArray
+                Dim genes = subPwy.Group.ToArray(Function(x) x.pwy.GetPathwayGenes).Unlist.Distinct.ToArray
                 Dim fLQuery = (From regu In LQuery Where Array.IndexOf(genes, regu.ORF) > -1 Select regu).ToArray
                 Call Csv.Add(pwy.Class, subPwy.Category, CStr(fLQuery.Length))
             Next
@@ -716,6 +732,7 @@ Partial Module CLI
     ''' <returns></returns>
     <ExportAPI("--Dump.KEGG.Family", Usage:="--Dump.KEGG.Family /in <in.fasta> [/out <out.csv>]")>
     <Argument("/in", False, Description:="The RegPrecise formated title fasta file.")>
+    <Group(CLIGrouping.RegPreciseTools)>
     Public Function KEGGFamilyDump(args As CommandLine) As Integer
         Dim inFile As String = args("/in")
         Dim outFile As String = args.GetValue("/out", inFile.TrimSuffix & "_KEGG.csv")
@@ -725,6 +742,7 @@ Partial Module CLI
     End Function
 
     <ExportAPI("/Build.FamilyDb", Usage:="/Build.FamilyDb /prot <RegPrecise.prot.fasta> /pfam <pfam-string.csv> [/out <out.Xml>]")>
+    <Group(CLIGrouping.RegPreciseTools)>
     Public Function BuildFamilyDb(args As CommandLine) As Integer
         Dim prot As String = args("/prot")
         Dim pfam As String = args("/pfam")
@@ -736,7 +754,7 @@ Partial Module CLI
                                          Select (From s As String
                                                  In fs
                                                  Select Family = s.ToLower.Trim,
-                                                     TF = x).ToArray).ToArray.MatrixToList
+                                                     TF = x).ToArray).ToArray.Unlist
                             Select reg
                             Group reg By reg.Family Into Group).ToArray
         Dim pfamHash = (From x As Pfam.PfamString.PfamString
@@ -758,7 +776,7 @@ Partial Module CLI
     End Function
 
     Private Function __getFamily(l As String, source As FastaReaders.Regulator()) As String
-        Dim all = (From x In source Select x.KEGGFamily.Replace("\", "/").Split("/"c)).MatrixToList.Distinct.ToArray
+        Dim all = (From x In source Select x.KEGGFamily.Replace("\", "/").Split("/"c)).Unlist.Distinct.ToArray
         Dim LQuery = (From x In all Where String.Equals(l, x, StringComparison.OrdinalIgnoreCase) Select x).FirstOrDefault
         If String.IsNullOrEmpty(LQuery) Then
             LQuery = l

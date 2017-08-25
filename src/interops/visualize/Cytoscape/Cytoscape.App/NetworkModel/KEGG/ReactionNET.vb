@@ -43,7 +43,7 @@ Namespace NetworkModel.KEGG
     ''' <summary>
     ''' 反应过程对象之间构成网络
     ''' </summary>
-    <PackageNamespace("Cytoscape.Reaction.NET")>
+    <Package("Cytoscape.Reaction.NET")>
     Public Module ReactionNET
 
         <ExportAPI("Reaction.Loads")>
@@ -72,12 +72,12 @@ Namespace NetworkModel.KEGG
                             Let LDM As Equation = x.ReactionModel
                             Select (From cp As CompoundSpecieReference
                                     In LDM.GetMetabolites
-                                    Select cp.Identifier,
-                                        rxn = x)).MatrixAsIterator
+                                    Select cp.ID,
+                                        rxn = x)).IteratesALL
             Dim hash = (From x In preCache
                         Select x
-                        Group x By x.Identifier Into Group) _
-                             .ToDictionary(Function(x) x.Identifier,
+                        Group x By x.ID Into Group) _
+                             .ToDictionary(Function(x) x.ID,
                                            Function(x) x.Group.ToArray(Function(xx) xx.rxn))
             Return hash
         End Function
@@ -89,7 +89,7 @@ Namespace NetworkModel.KEGG
         ''' <returns></returns>
         ''' 
         <ExportAPI("NET.Build")>
-        Public Function BuildNET(source As String) As FileStream.Network
+        Public Function BuildNET(source As String) As FileStream.NetworkTables
             Return BuildNET(LoadObjects(source))
         End Function
 
@@ -100,27 +100,27 @@ Namespace NetworkModel.KEGG
         ''' <returns></returns>
         ''' 
         <ExportAPI("NET.Build")>
-        Public Function BuildNET(source As IEnumerable(Of bGetObject.Reaction)) As FileStream.Network
+        Public Function BuildNET(source As IEnumerable(Of bGetObject.Reaction)) As FileStream.NetworkTables
             Dim cpHash = BuildCompoundHash(source)
             Dim nodes As New List(Of FileStream.Node)
-            Dim nodeTmp As FileStream.Node() = source.ToArray(Function(x) New FileStream.Node With {.Identifier = x.Entry, .NodeType = "Flux"})
+            Dim nodeTmp As FileStream.Node() = source.ToArray(Function(x) New FileStream.Node With {.ID = x.Entry, .NodeType = "Flux"})
             Call nodes.AddRange(nodeTmp)
             nodeTmp = cpHash.ToArray(Function(x) New FileStream.Node With {
-                                         .Identifier = x.Key,
+                                         .ID = x.Key,
                                          .NodeType = "Metabolite",
                                          .Properties = New Dictionary(Of String, String) From {{"associate", x.Value.Length}}})
             Call nodes.AddRange(nodeTmp)
 
-            Dim edges As FileStream.NetworkEdge() = cpHash.ToArray(Function(x) __buildNET(x.Key, x.Value), Parallel:=True).MatrixToVector
+            Dim edges As FileStream.NetworkEdge() = cpHash.ToArray(Function(x) __buildNET(x.Key, x.Value), Parallel:=True).ToVector
 
-            Return New FileStream.Network With {
+            Return New FileStream.NetworkTables With {
                 .Edges = edges.ToArray,
                 .Nodes = nodes.ToArray
             }
         End Function
 
         <ExportAPI("NET.Build")>
-        Public Function ModelNET(model As XmlModel, Optional sourceDIR As String = "") As FileStream.Network
+        Public Function ModelNET(model As XmlModel, Optional sourceDIR As String = "") As FileStream.NetworkTables
             Dim maps As EC_Mapping() = model.EC_Mappings
             Dim source As Dictionary(Of String, bGetObject.Reaction()) = (From x As bGetObject.Reaction
                                                                           In LoadObjects(sourceDIR)
@@ -129,13 +129,13 @@ Namespace NetworkModel.KEGG
                                                                                 .ToDictionary(Function(x) x.Entry,
                                                                                               Function(x) x.Group.ToArray)
             Dim mapsSource = (From x As String
-                              In maps.ToArray(Function(xx) xx.ECMaps.ToArray(Function(xxx) xxx.Reactions)).MatrixAsIterator.MatrixAsIterator
+                              In maps.ToArray(Function(xx) xx.ECMaps.ToArray(Function(xxx) xxx.Reactions)).IteratesALL.IteratesALL
                               Where source.ContainsKey(x)
-                              Select source(x)).MatrixAsIterator
-            Dim rxns = (From x In source.Values.MatrixAsIterator
+                              Select source(x)).IteratesALL
+            Dim rxns = (From x In source.Values.IteratesALL
                         Where StringHelpers.IsNullOrEmpty(x.ECNum)
                         Select x).Join(mapsSource).ToArray
-            Dim net As FileStream.Network = BuildNET(rxns)
+            Dim net As FileStream.NetworkTables = BuildNET(rxns)
             Return net
         End Function
 
@@ -149,8 +149,8 @@ Namespace NetworkModel.KEGG
                           Select New FileStream.NetworkEdge With {
                               .FromNode = from,
                               .ToNode = toNode,
-                              .InteractionType = itr,
-                              .Confidence = s,
+                              .Interaction = itr,
+                              .value = s,
                               .Properties = New Dictionary(Of String, String) From {{"def", x.Equation}}}).ToArray
             Return LQuery
         End Function

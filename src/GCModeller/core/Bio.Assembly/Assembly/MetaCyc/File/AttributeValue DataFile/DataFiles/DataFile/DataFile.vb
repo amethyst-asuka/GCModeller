@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::302192dcac201384b62e5c130f5b51f4, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\DataFile\DataFile.vb"
+﻿#Region "Microsoft.VisualBasic::0b6917a6f7c506ac6fb7fb3727d351c0, ..\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\DataFile\DataFile.vb"
 
     ' Author:
     ' 
@@ -192,7 +192,9 @@ Namespace Assembly.MetaCyc.File.DataFiles
         End Function
 
         Private Function IDictionary_TryGetValue(key As String, ByRef value As T) As Boolean Implements IDictionary(Of String, T).TryGetValue
-            Return FrameObjects.TryGetValue(key, value)
+            Dim success As Boolean
+            value = FrameObjects.TryGetValue(key, success)
+            Return success
         End Function
 
         Public Sub Add(item As KeyValuePair(Of String, T)) Implements ICollection(Of KeyValuePair(Of String, T)).Add

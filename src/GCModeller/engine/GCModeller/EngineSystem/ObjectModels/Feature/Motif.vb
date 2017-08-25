@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::c0b47a06af25d627341e1e94834743b0, ..\GCModeller\engine\GCModeller\EngineSystem\ObjectModels\Feature\Motif.vb"
+﻿#Region "Microsoft.VisualBasic::f22cc40ee4559ebb9ebe2f2f487ea3b7, ..\GCModeller\engine\GCModeller\EngineSystem\ObjectModels\Feature\Motif.vb"
 
     ' Author:
     ' 
@@ -72,13 +72,13 @@ Namespace EngineSystem.ObjectModels.Feature
             Dim effect As Double = If(Effects, (From n In DLQuery Where n >= 0 Select n).ToArray.Sum, (From n In DLQuery Where n <= 0 Select n).ToArray.Sum)
 
             '   Call Randomize()
-            If RandomDouble() >= 0.4 Then 'factor越大，则阈值越低，即事件越容易发生
+            If Rnd() >= 0.4 Then 'factor越大，则阈值越低，即事件越容易发生
                 Return effect
             Else
 BASAL_EXPRESSION:
                 '  Call Randomize()
 
-                If RandomDouble() < 0.1 Then '默认状态是不激活，有较低的概率处于激活状态，即本底表达
+                If Rnd() < 0.1 Then '默认状态是不激活，有较低的概率处于激活状态，即本底表达
                     Return 0.1
                 Else
                     Return -1

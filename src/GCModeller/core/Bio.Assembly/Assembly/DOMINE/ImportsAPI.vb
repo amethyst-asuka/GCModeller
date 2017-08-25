@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::0fe20920a3739f15e07a924af1d1f33c, ..\GCModeller\core\Bio.Assembly\Assembly\DOMINE\ImportsAPI.vb"
+﻿#Region "Microsoft.VisualBasic::0fe20920a3739f15e07a924af1d1f33c, ..\core\Bio.Assembly\Assembly\DOMINE\ImportsAPI.vb"
 
     ' Author:
     ' 
@@ -32,7 +32,7 @@ Imports Microsoft.VisualBasic
 
 Namespace Assembly.DOMINE
 
-    <PackageNamespace("DOMINE.API")>
+    <Package("DOMINE.API")>
     Public Module ImportsAPI
 
         <ExportAPI("ImportsDb")>
@@ -57,7 +57,7 @@ Namespace Assembly.DOMINE
 
         Private Function Interaction(Tokens As String()) As DOMINE.Tables.Interaction
             Dim vec As List(Of Integer) = (From str As String In Tokens.Skip(2).Take(15)
-                                           Select CType(Val(str), Integer)).ToList _
+                                           Select CType(Val(str), Integer)).AsList _
                                                  .Join({CType(Val(Tokens.Last), Integer)})
             Dim Db As New DOMINE.Tables.Interaction With {
                 .Domain1 = Tokens(0),

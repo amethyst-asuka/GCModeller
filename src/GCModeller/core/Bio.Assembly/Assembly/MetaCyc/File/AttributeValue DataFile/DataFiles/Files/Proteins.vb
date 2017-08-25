@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::3362ef02ef250249e60d46992290270c, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Files\Proteins.vb"
+﻿#Region "Microsoft.VisualBasic::3362ef02ef250249e60d46992290270c, ..\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Files\Proteins.vb"
 
     ' Author:
     ' 
@@ -73,7 +73,7 @@ Namespace Assembly.MetaCyc.File.DataFiles
         ''' <remarks></remarks>
         Public Function GetProteinComplexByComponent(Component As String) As Slots.Protein()
             Dim LQuery = (From Protein As Slots.Protein In Me.AsParallel Where Protein.Components.IndexOf(Component) Select Protein).ToArray  '先查找出包含有当前Component对象的Protein列表
-            Dim List As List(Of Slots.Protein) = LQuery.ToList '生成返回数据的集合
+            Dim List As List(Of Slots.Protein) = LQuery.AsList '生成返回数据的集合
             For Each Protein In LQuery
                 Call List.AddRange(GetProteinComplexByComponent(Protein.Identifier)) '以查找出来的数据进行递归查找
             Next

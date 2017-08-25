@@ -1,45 +1,51 @@
-﻿#Region "Microsoft.VisualBasic::c36c8da3b402d2d4ef786ba6aac880dd, ..\GCModeller\CLI_tools\KEGG\CLI\CLI.vb"
+﻿#Region "Microsoft.VisualBasic::c8847432b7b7da75f2723138b2261724, ..\GCModeller\CLI_tools\KEGG\CLI\CLI.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports System.Text
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
+Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Data.csv.Extensions
 Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Language.UnixBash
 Imports Microsoft.VisualBasic.Linq.Extensions
 Imports Microsoft.VisualBasic.Scripting.MetaData
+Imports Microsoft.VisualBasic.Serialization.JSON
+Imports Oracle.LinuxCompatibility.MySQL
 Imports SMRUCC.genomics.Assembly.KEGG
 Imports SMRUCC.genomics.Assembly.KEGG.DBGET
+Imports SMRUCC.genomics.Assembly.KEGG.DBGET.BriteHEntry
 Imports SMRUCC.genomics.Assembly.KEGG.DBGET.ReferenceMap
 Imports SMRUCC.genomics.Assembly.KEGG.WebServices
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank
+Imports SMRUCC.genomics.Data
+Imports SMRUCC.genomics.Data.KEGG
 Imports SMRUCC.genomics.SequenceModel
 Imports SMRUCC.genomics.SequenceModel.FASTA
 
@@ -113,7 +119,7 @@ Susumu Goto", Year:=2000, Volume:=28, Issue:="1",
       Journal:="Nucleic Acids Research", Pages:="27-30",
       StartPage:=27,
       URL:="http://www.genome.ad.jp/kegg/")>
-<PackageNamespace("KEGG.WebServices.CLI",
+<Package("KEGG.WebServices.CLI",
                   Publisher:="xie.guigang@gcmodeller.org",
                   Category:=APICategories.CLI_MAN,
                   Url:="http://www.kegg.jp/",
@@ -128,7 +134,7 @@ Module CLI
 
         For Each seq As FastaToken In query
             Dim path As String = $"{out}/{seq.Title.NormalizePathString(False)}.csv"
-            Dim result = KEGG_tools.Blastn.Submit(seq)
+            Dim result = Global.KEGG_tools.Blastn.Submit(seq)
             Call result.SaveTo(path)
         Next
 
@@ -144,10 +150,10 @@ Module CLI
         Dim GeneList As String()
         Dim ExportedDir As String = args("-export")
         If Not GBK Then
-            GeneList = IO.File.ReadAllLines(args("-i"))
+            GeneList = args("-i").ReadAllLines()
         Else
             Dim gb = GBFF.File.Load(args("-i"))
-            GeneList = gb.GeneList.ToArray(Function(g) g.Key)
+            GeneList = gb.GeneList.ToArray(Function(g) g.Name)
         End If
 
         If Not GBK Then
@@ -160,11 +166,23 @@ Module CLI
         Return 0
     End Function
 
+    <ExportAPI("/ko.index.sub.match", Usage:="/ko.index.sub.match /index <index.csv> /maps <maps.csv> /key <key> /map <mapTo> [/out <out.csv>]")>
+    Public Function IndexSubMatch(args As CommandLine) As Integer
+        Dim index As String = args("/index")
+        Dim maps As String = args("/maps")
+        Dim key As String = args("/key")
+        Dim map As String = args("/map")
+        Dim out As String = args.GetValue("/out", maps.TrimSuffix & ".sub_matches.csv")
+        Dim mappings As IEnumerable(Of Map(Of String, String)) = maps.LoadMappings(key, map)
+        Dim result As KO_gene() = KEGGOrthology.IndexSubMatch(mappings, index).ToArray
+        Return result.SaveTo(out).CLICode
+    End Function
+
     <ExportAPI("/Imports.SSDB", Usage:="/Imports.SSDB /in <source.DIR> [/out <ssdb.csv>]")>
     Public Function ImportsDb(args As CommandLine) As Integer
         Dim inDIR As String = args("/in")
         Dim out As String = args.GetValue("/out", inDIR & ".Csv")
-        Dim ssdb = DBGET.bGetObject.SSDB.API.Transform(inDIR)
+        Dim ssdb = SMRUCC.genomics.Assembly.KEGG.DBGET.bGetObject.SSDB.API.Transform(inDIR)
         Return ssdb.SaveTo(out).CLICode
     End Function
 
@@ -222,15 +240,15 @@ Module CLI
         Dim Inputs As String() = FileIO.FileSystem.GetFiles(argvs("-i"), FileIO.SearchOption.SearchTopLevelOnly, "*.csv").ToArray
         Dim GeneData = (From path As String
                         In Inputs.AsParallel
-                        Select ID = IO.Path.GetFileNameWithoutExtension(path),
+                        Select ID = path.BaseName,
                             DataRow = (From entry As QueryEntry
                                        In path.LoadCsv(Of QueryEntry)(False)
                                        Select entry
                                        Group By entry.SpeciesId Into Group) _
                                                .ToDictionary(Function(obj) obj.SpeciesId,
                                                              Function(obj) obj.Group.First)).ToArray
-        Dim File As New DocumentStream.File
-        Dim MatrixBuilder As New DocumentStream.File
+        Dim File As New IO.File
+        Dim MatrixBuilder As New IO.File
 
         Call File.AppendLine({"sp.Class", "sp.Kingdom", "sp.Phylum", "sp.KEGGId"})
         Call MatrixBuilder.AppendLine({"Class", "sp"})
@@ -240,13 +258,13 @@ Module CLI
             Call MatrixBuilder.Last.Add(col.ID)
         Next
 
-        Dim OrganismList = DBGET.bGetObject.Organism.GetOrganismListFromResource
+        Dim OrganismList = bGetObject.Organism.GetOrganismListFromResource
         'Dim [ClassList] = (From sp In OrganismList.ToArray Select sp.Class Distinct).ToArray
         'For Each cls In ClassList
         '    Call MatrixBuilder.Last.Add("Class." & cls)
         'Next
 
-        For Each sp As DBGET.bGetObject.Organism.Organism In OrganismList.Eukaryotes.ToList + OrganismList.Prokaryote
+        For Each sp As SMRUCC.genomics.Assembly.KEGG.DBGET.bGetObject.Organism.Organism In OrganismList.Eukaryotes.Join(OrganismList.Prokaryote)
             Call File.Add(New String() {sp.Class, sp.Kingdom, sp.Phylum, sp.KEGGId})
             Call MatrixBuilder.AppendLine({sp.Class, sp.KEGGId})
 
@@ -277,11 +295,11 @@ Module CLI
 
     <ExportAPI("-query.orthology", Usage:="-query.orthology -keyword <gene_name> -o <output_csv>")>
     Public Function QueryOrthology(argvs As CommandLine) As Integer
-        Dim EntryList = DBGET.bGetObject.SSDB.API.HandleQuery(argvs("-keyword"))
+        Dim EntryList = SMRUCC.genomics.Assembly.KEGG.DBGET.bGetObject.SSDB.API.HandleQuery(argvs("-keyword"))
         Dim GeneEntries As List(Of QueryEntry) = New List(Of QueryEntry)
 
         For Each EntryPoint As QueryEntry In EntryList
-            Call GeneEntries.AddRange(DBGET.bGetObject.SSDB.API.HandleDownload(EntryPoint.LocusId))
+            Call GeneEntries.AddRange(SMRUCC.genomics.Assembly.KEGG.DBGET.bGetObject.SSDB.API.HandleDownload(EntryPoint.LocusId))
         Next
 
         Call GeneEntries.SaveTo(argvs("-o"), False)
@@ -291,18 +309,6 @@ Module CLI
 
     Sub New()
         Call Settings.Session.Initialize()
-    End Sub
-
-    <ExportAPI("/Pull.Seq", Info:="Downloads the missing sequence in the local KEGG database from the KEGG database server.")>
-    Public Function PullSequence(args As CommandLine) As Integer
-        Dim donwloader As New SeuqneceDownloader(MySQLExtensions.GetURI)
-        Call donwloader.RunTask()
-        Return 0
-    End Function
-
-    Private Sub __fillMissing()
-        Dim LocalMySQL As New Procedures.Orthology(MySQL)
-        Call LocalMySQL.FillMissing()
     End Sub
 
     <ExportAPI("--Export.KO")>
@@ -317,46 +323,95 @@ Module CLI
     <ExportAPI("-Build.KO", Usage:="-Build.KO [/fill-missing]", Info:="Download data from KEGG database to local server.")>
     Public Function BuildKEGGOrthology(args As CommandLine) As Integer
         '   If args.GetBoolean("/fill-missing") Then
-        Call __fillMissing()
-        Return 0
+        ' Call __fillMissing()
+        ' Return 0
         '  End If
 
-        Dim LocalMySQL As New Procedures.Orthology(MySQL)
-        Dim stateFile As String = "./orthology.xml"
-        Dim last = stateFile.LoadXml(Of DBGET.bGetObject.SSDB.Orthology)(ThrowEx:=False)
-        Dim start As Integer
-        Dim Entries As String() = (From s As String
-                                   In LocalMySQL.BriefData.GetEntries
-                                   Where Not String.IsNullOrEmpty(s)
-                                   Select s
-                                   Distinct
-                                   Order By s Ascending).ToArray
-        If last Is Nothing Then
-            start = 0
-        Else
-            start = Array.IndexOf(Entries, last.Entry)
-        End If
+        '  Dim mysql As New ConnectionUri With {.Database = "jp_kegg2", .IPAddress = "localhost", .Password = 1234, .User = "root", .ServicesPort = 3306}
+
+        ' Dim LocalMySQL As New Procedures.Orthology(mysql)
+        '  Dim stateFile As String = "./orthology.xml"
+        '  Dim last = LocalMySQL.GetLast
+        'Dim start As Integer
+        'Dim Entries As String() = (From s As String
+        '                           In LocalMySQL.BriefData.GetEntries
+        '                           Where Not String.IsNullOrEmpty(s)
+        '                           Select s
+        '                           Distinct
+        '                           Order By s Ascending).ToArray
+        'If last Is Nothing Then
+        '    start = 0
+        'Else
+        '    start = Array.IndexOf(Entries, last.Entry)
+        'End If
 
         ' Dim fggfdg = SMRUCC.genomics.Assembly.KEGG.DBGET.WebParser.QueryURL("E:\GCModeller\BuildTools\K  02992.html")
         ' Call LocalMySQL.Update(fggfdg)
 
-        For i As Integer = start To Entries.Count - 1
-            Dim entry As String = Entries(i)
+        Dim entries$() = htext.ko00001 _
+            .Hierarchical _
+            .GetEntries _
+            .Where(Function(s) Not String.IsNullOrEmpty(s)) _
+            .Distinct _
+            .ToArray
 
-            Try
-                Dim orthology = bGetObject.SSDB.API.Query(entry)
+        Using progress As New Terminal.ProgressBar("Download KO database...",, True)
+            Dim tick As New Terminal.ProgressProvider(entries.Length)
 
-                Call LocalMySQL.Update(orthology)
-                Call orthology.GetXml.SaveTo(stateFile)
-                Call $"  ({i + 1}/{Entries.Count})..........{i / Entries.Count * 100}%".__DEBUG_ECHO
-            Catch ex As Exception
-                ex = New Exception(entry, ex)
-                Call FileIO.FileSystem.WriteAllText("./failure.txt", text:=ex.ToString & vbCrLf & vbCrLf, append:=True)
-                Call ex.PrintException
-            End Try
+            WebServiceUtils.Proxy = "http://127.0.0.1:8087/"
 
-            Call Threading.Thread.Sleep(5 * 1000)
-        Next
+            For Each ko$ In entries
+                Dim stateFile As String = $"{App.HOME}/ko00001/{ko}.xml"
+
+                Try
+                    If Not stateFile.FileExists Then
+                        Dim orthology = bGetObject.SSDB.API.Query(ko)
+                        '  Call LocalMySQL.Update(orthology)
+                        Call Threading.Thread.Sleep(1 * 1000)
+                        Call orthology.GetXml.SaveTo(stateFile)
+                    End If
+                Catch ex As Exception
+                    ex = New Exception(ko, ex)
+                    Call ex.PrintException
+                    Call App.LogException(ex)
+                End Try
+
+                Call progress.SetProgress(
+                    tick.StepProgress(),
+                    "ETA " & tick.ETA(progress.ElapsedMilliseconds).FormatTime)
+            Next
+        End Using
+
+        Return 0
+    End Function
+
+    <ExportAPI("/Build.Ko.repository", Usage:="/Build.Ko.repository /DIR <DIR> /repo <root>")>
+    Public Function BuildKORepository(args As CommandLine) As Integer
+        Dim DIR As String = args("/DIR")
+        Dim repoRoot As String = args("/repo")
+
+        Call KEGGOrthology.FileCopy(DIR, repoRoot & "/ko00001/") _
+            .ToArray _
+            .GetJson _
+            .SaveTo(repoRoot & "/ko00001.copy_failures.json")
+
+        Dim repo As New KEGGOrthology(repoRoot)
+
+        Call repo.BuildLocusIndex()
+
+        Return 0
+    End Function
+
+    <ExportAPI("/Imports.KO",
+               Info:="Imports the KEGG reference pathway map and KEGG orthology data as mysql dumps.",
+               Usage:="/Imports.KO /pathways <DIR> /KO <DIR> [/save <DIR>]")>
+    Public Function ImportsKODatabase(args As CommandLine) As Integer
+        Dim pathway$ = args <= "/pathways"
+        Dim KO$ = args <= "/KO"
+        Dim save$ = args.GetValue("/save", pathway & "-" & KO.BaseName & ".Dumps/")
+
+        '  Call DumpProcedures.DumpReferencePathwayMap(pathway, save)
+        Call DumpProcedures.DumpKO(KO, save)
 
         Return 0
     End Function
@@ -374,30 +429,22 @@ Module CLI
         Return True
     End Function
 
-    <ExportAPI("-ref.map.download", Usage:="-ref.map.download -o <out_dir>")>
-    Public Function DownloadReferenceMapDatabase(argvs As CommandLine) As Integer
-        Dim OutDir As String = argvs("-o")
-        Dim IDList = DBGET.BriteHEntry.Pathway.LoadFromResource
-        Dim DownloadLQuery = (From ID As DBGET.BriteHEntry.Pathway
-                              In IDList
-                              Let MapID As String = "map" & ID.EntryId
-                              Let Map = ReferenceMapData.Download(MapID)
-                              Select Map.GetXml.SaveTo(OutDir & "/" & MapID & ".xml")).ToArray
-        Return 0
-    End Function
-
     <ExportAPI("-function.association.analysis", Usage:="-function.association.analysis -i <matrix_csv>")>
     Public Function FunctionAnalysis(argvs As CommandLine) As Integer
-        Dim MAT = DocumentStream.File.FastLoad(argvs("-i"))
+        Dim MAT = IO.File.FastLoad(argvs("-i"))
         Call PathwayAssociationAnalysis.Analysis(MAT)
         Return 0
     End Function
 
-    <ExportAPI("/16S_rRNA", Usage:="/16s_rna [/out <outDIR>]")>
+    <ExportAPI("/16S_rRNA", 
+               Info:="Download 16S rRNA data from KEGG.", 
+               Usage:="/16s_rna [/out <outDIR>]")>
     Public Function Download16SRNA(args As CommandLine) As Integer
         Dim outDIR As String = args.GetValue("/out", App.CurrentDirectory & "/")
-        Dim fasta As FASTA.FastaFile = Download16S_rRNA(outDIR)
-        Return fasta.Save($"{outDIR}/16S_rRNA.fasta", Encoding.ASCII).CLICode
+        Dim fasta As FastaFile = Download16S_rRNA(outDIR)
+        Return fasta _
+            .Save($"{outDIR}/16S_rRNA.fasta", Encoding.ASCII) _
+            .CLICode
     End Function
 
     <ExportAPI("/Fasta.By.Sp",
@@ -465,17 +512,5 @@ Module CLI
             Select New FastaToken(fa)
 
         Return New FastaFile(result).Save(out & ".fasta")
-    End Function
-
-    <ExportAPI("/Download.Pathway.Maps",
-               Usage:="/Download.Pathway.Maps /sp <kegg.sp_code> [/out <EXPORT_DIR>]")>
-    Public Function DownloadPathwayMaps(args As CommandLine) As Integer
-        Dim sp As String = args("/sp")
-        Dim EXPORT As String = args.GetValue("/out", App.CurrentDirectory & "/" & sp)
-        Dim all = LinkDB.Pathways.AllEntries(sp).ToArray
-
-        Call LinkDB.Pathways.Downloads(sp, EXPORT).ToArray
-
-        Return 0
     End Function
 End Module

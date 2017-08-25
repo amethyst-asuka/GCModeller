@@ -1,28 +1,28 @@
-﻿#Region "Microsoft.VisualBasic::54e3dfb5462c0c4f3c84661fca97208f, ..\GCModeller\core\Bio.Assembly\SequenceModel\FASTA\IO\FastaFile.vb"
+﻿#Region "Microsoft.VisualBasic::35b438addb4c2cb32a7e25b5f1ce90aa, ..\core\Bio.Assembly\SequenceModel\FASTA\IO\FastaFile.vb"
 
-' Author:
-' 
-'       asuka (amethyst.asuka@gcmodeller.org)
-'       xieguigang (xie.guigang@live.com)
-'       xie (genetics@smrucc.org)
-' 
-' Copyright (c) 2016 GPL3 Licensed
-' 
-' 
-' GNU GENERAL PUBLIC LICENSE (GPL3)
-' 
-' This program is free software: you can redistribute it and/or modify
-' it under the terms of the GNU General Public License as published by
-' the Free Software Foundation, either version 3 of the License, or
-' (at your option) any later version.
-' 
-' This program is distributed in the hope that it will be useful,
-' but WITHOUT ANY WARRANTY; without even the implied warranty of
-' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-' GNU General Public License for more details.
-' 
-' You should have received a copy of the GNU General Public License
-' along with this program. If not, see <http://www.gnu.org/licenses/>.
+    ' Author:
+    ' 
+    '       asuka (amethyst.asuka@gcmodeller.org)
+    '       xieguigang (xie.guigang@live.com)
+    '       xie (genetics@smrucc.org)
+    ' 
+    ' Copyright (c) 2016 GPL3 Licensed
+    ' 
+    ' 
+    ' GNU GENERAL PUBLIC LICENSE (GPL3)
+    ' 
+    ' This program is free software: you can redistribute it and/or modify
+    ' it under the terms of the GNU General Public License as published by
+    ' the Free Software Foundation, either version 3 of the License, or
+    ' (at your option) any later version.
+    ' 
+    ' This program is distributed in the hope that it will be useful,
+    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
+    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    ' GNU General Public License for more details.
+    ' 
+    ' You should have received a copy of the GNU General Public License
+    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -30,6 +30,7 @@ Imports System.IO
 Imports System.Text
 Imports System.Text.RegularExpressions
 Imports Microsoft.VisualBasic
+Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.FileIO
 Imports Microsoft.VisualBasic.Language
@@ -45,10 +46,13 @@ Namespace SequenceModel.FASTA
     ''' (一个包含有多条序列数据的FASTA文件)
     ''' </summary>
     ''' <remarks></remarks>
+    ''' 
+    <ActiveViews(FastaToken.SampleView, type:="bash")>
     Public Class FastaFile : Inherits ITextFile
         Implements IDisposable
         Implements IEnumerable(Of FastaToken)
         Implements IList(Of FastaToken)
+        Implements ICloneable
 
         Public Overloads Shared Widening Operator CType(File As Path) As FastaFile
             Return FastaFile.Read(File)
@@ -66,7 +70,7 @@ Namespace SequenceModel.FASTA
         End Sub
 
         Sub New(source As IEnumerable(Of FastaToken), path As String)
-            Call Me.New(source.ToList)
+            Call Me.New(source.AsList)
             FilePath = path
         End Sub
 
@@ -94,10 +98,10 @@ Namespace SequenceModel.FASTA
             Call Me.New(fa.ToArray(Function(x) New FastaToken(x)))
         End Sub
 
-        Sub New(path As String, Optional deli As Char() = Nothing)
-            FilePath = path
+        Sub New(path As String, Optional deli As Char() = Nothing, Optional throwEx As Boolean = True)
+            FilePath = path.FixPath
             _innerList = DocParser(
-                FileIO.FileSystem.ReadAllText(path),
+                path.ReadAllText(throwEx:=throwEx, suppress:=True),
                 If(deli.IsNullOrEmpty, {"|"c}, deli))
         End Sub
 
@@ -141,7 +145,7 @@ Namespace SequenceModel.FASTA
             Dim List = CType((From fasta As FastaToken
                               In Me.__innerList
                               Select fasta
-                              Order By fasta.Title Ascending).ToList, List(Of FastaToken))
+                              Order By fasta.Title Ascending).AsList, List(Of FastaToken))
             For i As Integer = 1 To List.Count - 1
                 If String.Equals(List(i).Title, List(i - 1).Title) Then
                     Call List.RemoveAt(i)
@@ -177,7 +181,7 @@ Namespace SequenceModel.FASTA
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Overloads Shared Function Read(File As Path, Optional Explicit As Boolean = True, Optional deli As Char = "|"c) As FastaFile
-            If Not File.FileExists Then
+            If Not File.FixPath.FileExists Then
                 If Explicit Then
                     Throw New Exception($"File ""{File.ToFileURL}"" is not exists on the file system!")
                 Else
@@ -229,32 +233,41 @@ NULL_DATA:      Call $"""{path.ToFileURL}"" fasta data isnull or empty!".__DEBUG
             Return Data
         End Function
 
-        Public Shared Function DocParser(TokenLines As String(), Optional deli As Char() = Nothing) As List(Of FastaToken)
+        ''' <summary>
+        ''' 当<paramref name="lines"/>参数为空的时候，会返回一个空集合而非返回空值
+        ''' </summary>
+        ''' <param name="lines"></param>
+        ''' <param name="deli"></param>
+        ''' <returns></returns>
+        Public Shared Function DocParser(lines As String(), Optional deli As Char() = Nothing) As List(Of FastaToken)
             Dim faToken As New List(Of String)
-            Dim faList As New List(Of FastaToken)
+            Dim FASTA As New List(Of FastaToken)
 
+            If lines.IsNullOrEmpty Then
+                Return FASTA
+            End If
             If deli.IsNullOrEmpty Then
                 deli = {"|"c}
             End If
 
-            For Each Line As String In TokenLines
+            For Each Line As String In lines
                 If String.IsNullOrEmpty(Line) Then
                     Continue For
                 ElseIf Line.Chars(Scan0) = ">"c Then  'New FASTA Object
-                    Call faList.Add(FastaToken.ParseFromStream(faToken, deli))
+                    Call FASTA.Add(FastaToken.ParseFromStream(faToken, deli))
                     Call faToken.Clear()
                 End If
 
                 Call faToken.Add(Line)
             Next
 
-            If faList.Count > 0 Then
-                Call faList.RemoveAt(Scan0)
+            If FASTA.Count > 0 Then
+                Call FASTA.RemoveAt(Scan0)
             End If
 
-            Call faList.Add(FastaToken.ParseFromStream(faToken, deli))
+            Call FASTA.Add(FastaToken.ParseFromStream(faToken, deli))
 
-            Return faList
+            Return FASTA
         End Function
 
         Public Shared Function DocParser(doc As String, deli As Char()) As List(Of FastaToken)
@@ -297,7 +310,7 @@ NULL_DATA:      Call $"""{path.ToFileURL}"" fasta data isnull or empty!".__DEBUG
                                                        Where Find(Fasta.Attributes, KeyWord, CaseSensitive)
                                                        Select Fasta '
             Return New FastaFile With {
-                .__innerList = LQuery.ToList
+                .__innerList = LQuery.AsList
             }
         End Function
 
@@ -391,11 +404,16 @@ NULL_DATA:      Call $"""{path.ToFileURL}"" fasta data isnull or empty!".__DEBUG
         ''' Save the fasta file into the local filesystem.
         ''' </summary>
         ''' <param name="Path"></param>
-        ''' <param name="encoding">不同的程序会对这个由要求，例如meme程序在linux系统之中要求序列文件为unicode编码格式而windows版本的meme程序则要求ascii格式</param>
+        ''' <param name="encoding">
+        ''' 不同的程序会对这个由要求，例如
+        ''' + meme程序在linux系统之中要求序列文件为unicode编码格式
+        ''' + 而windows版本的meme程序则要求ascii格式，
+        ''' + blast+则要求必须为ASCII编码格式的。
+        ''' </param>
         ''' <remarks></remarks>
         Public Overloads Function Save(LineBreak As Integer, Optional Path As String = "", Optional encoding As Encodings = Encodings.ASCII) As Boolean
             Try
-                Return Save(LineBreak, Path, encoding.GetEncodings)
+                Return Save(LineBreak, Path, encoding.CodePage)
             Catch ex As Exception
                 Throw New Exception(Path, ex)
             End Try
@@ -515,7 +533,7 @@ NULL_DATA:      Call $"""{path.ToFileURL}"" fasta data isnull or empty!".__DEBUG
 
         Public Shared Shadows Widening Operator CType(source As FastaToken()) As FastaFile
             Return New FastaFile With {
-                .__innerList = source.ToList
+                .__innerList = source.AsList
             }
         End Operator
 
@@ -642,7 +660,7 @@ NULL_DATA:      Call $"""{path.ToFileURL}"" fasta data isnull or empty!".__DEBUG
         End Operator
 
         Public Overloads Shared Operator +(FASTA As FastaFile, source As IEnumerable(Of IEnumerable(Of FastaToken))) As FastaFile
-            Return FASTA + source.MatrixAsIterator
+            Return FASTA + source.IteratesALL
         End Operator
 
         Public Shared Operator >(source As FastaFile, path As String) As Boolean
@@ -656,6 +674,20 @@ NULL_DATA:      Call $"""{path.ToFileURL}"" fasta data isnull or empty!".__DEBUG
         Public Shared Function IsValidFastaFile(path As String) As Boolean
             Dim firstLine$ = path.ReadFirstLine
             Return firstLine.First = ">"c
+        End Function
+
+        ''' <summary>
+        ''' 完完全全的按值複製
+        ''' </summary>
+        ''' <returns></returns>
+        Public Function Clone() As Object Implements ICloneable.Clone
+            Dim list As New List(Of FastaToken)
+
+            For Each x In Me._innerList
+                Call list.Add(x.Copy)
+            Next
+
+            Return New FastaFile(list)
         End Function
     End Class
 End Namespace

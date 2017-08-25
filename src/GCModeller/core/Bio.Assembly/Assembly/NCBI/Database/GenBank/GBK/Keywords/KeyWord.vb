@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::e148bfdeee9423f1e0ee53e8face39b6, ..\GCModeller\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\GBK\Keywords\KeyWord.vb"
+﻿#Region "Microsoft.VisualBasic::e148bfdeee9423f1e0ee53e8face39b6, ..\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\GBK\Keywords\KeyWord.vb"
 
     ' Author:
     ' 
@@ -86,7 +86,7 @@ Namespace Assembly.NCBI.GenBank.GBFF.Keywords
 
             str = Strings.Split(String.Join(" ", str), "; ")
             Return New KEYWORDS With {
-                .KeyWordList = str.ToList
+                .KeyWordList = str.AsList
             }
         End Function
 

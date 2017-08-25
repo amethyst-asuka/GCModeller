@@ -1,38 +1,46 @@
 ﻿#Region "Microsoft.VisualBasic::860b3fe7ae505890ad0659c49e0f4a0c, ..\interops\visualize\Cytoscape\CLI_tool\CLI\Module1.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
+Imports Microsoft.VisualBasic.Data.visualize.Network
+Imports Microsoft.VisualBasic.Data.visualize.Network.Analysis
+Imports Microsoft.VisualBasic.Data.visualize.Network.FileStream
+Imports Microsoft.VisualBasic.Data.visualize.Network.FileStream.Cytoscape
+Imports Microsoft.VisualBasic.Data.visualize.Network.Layouts
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
+Imports Microsoft.VisualBasic.Scripting.Runtime
+Imports Microsoft.VisualBasic.Text
+Imports SMRUCC.genomics.Visualize.Cytoscape.Tables
 
 Partial Module CLI
 
@@ -108,7 +116,7 @@ Partial Module CLI
                                   Where Not x.GeneNames.IsNullOrEmpty
                                   Select From name
                                              In x.GeneNames
-                                         Select name, node = x).MatrixAsIterator
+                                         Select name, node = x).IteratesALL
                        Select o
                        Group o By o.name Into Group).ToDictionary(
                        Function(x) x.name,
@@ -136,5 +144,41 @@ Partial Module CLI
         Return net.SaveTo(out & "/net.Csv").CLICode
     End Function
 
+    <ExportAPI("/linkage.knowledge.network",
+               Usage:="/linkage.knowledge.network /in <knowledge.network.csv/DIR> [/schema <material> /no-type_prefix /out <out.network.DIR>]")>
+    Public Function LinkageKnowledgeNetwork(args As CommandLine) As Integer
+        Dim in$ = args <= "/in"
+        Dim schema$ = args.GetValue("/schema", "material")
+        Dim typePrefix As Boolean = Not args.GetBoolean("/no-type_prefix")
+        Dim out As String = args.GetValue("/out", [in].ParentPath & "/" & [in].BaseName & ".knowledge_network/")
+        Dim network As NetworkTables
 
+        If [in].DirectoryExists Then
+        Else
+            Dim data As File = File.Load([in])
+            network = LinkageNetwork.BuildNetwork(data, typePrefix, schema)
+        End If
+
+        Return network.Save(out, Encodings.ASCII)
+    End Function
+
+    <ExportAPI("/Plot.Cytoscape.Table",
+               Usage:="/Plot.Cytoscape.Table /in <table.csv> [/size <default=1600,1440> /out <out.DIR>]")>
+    Public Function PlotCytoscapeTable(args As CommandLine) As Integer
+        Dim in$ = args <= "/in"
+        Dim out$ = args.GetValue("/out", [in].TrimSuffix & ".visualize/")
+        Dim network = [in].LoadCsv(Of Edges).CytoscapeNetworkFromEdgeTable
+        Dim size$ = args.GetValue("/size", "1600,1440")
+
+        Call network.doRandomLayout
+        Call network.doForceLayout
+        Call network.ComputeNodeDegrees
+        Call network _
+            .DrawImage(canvasSize:=size,
+                       scale:=network.AutoScaler(size.SizeParser).Expression,
+                       labelColorAsNodeColor:=True) _
+            .Save(out & "/network.png")
+
+        Return network.Tabular.Save(out & "/").CLICode
+    End Function
 End Module

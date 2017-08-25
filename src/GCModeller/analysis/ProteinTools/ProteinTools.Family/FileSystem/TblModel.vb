@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::182c8d4d51ada80e21f11755728880a9, ..\GCModeller\analysis\ProteinTools\ProteinTools.Family\FileSystem\TblModel.vb"
+﻿#Region "Microsoft.VisualBasic::6232abaa8fa5e32337c96aeb33b623c1, ..\GCModeller\analysis\ProteinTools\ProteinTools.Family\FileSystem\TblModel.vb"
 
     ' Author:
     ' 
@@ -79,7 +79,7 @@ Namespace FileSystem
         End Function
 
         Private Shared Function __trace(pfam As PfamString()) As String()
-            Dim Pfams As String() = pfam.ToArray(Function(x) x.PfamString.Split("+"c).ToArray(Function(pf) pf.Split("("c).First)).MatrixToVector
+            Dim Pfams As String() = pfam.ToArray(Function(x) x.PfamString.Split("+"c).ToArray(Function(pf) pf.Split("("c).First)).ToVector
             Dim Groups = (From x As String In Pfams Select x Group x By x.ToLower Into Group).ToArray
             Dim l As Integer = pfam.Length * 0.95
             Dim lst As String() = (From pf In Groups
@@ -193,7 +193,7 @@ Namespace FileSystem
         Public Shared Function CreateObject(Name As String, proteins As PfamString(), Optional describ As KeyValuePair() = Nothing) As Family
             Dim Domains As String() = proteins _
                 .ToArray(Function(x) x.Domains) _
-                .MatrixAsIterator _
+                .IteratesALL _
                 .ToArray(Function(x) x.Split(":"c).First) _
                 .Distinct _
                 .ToArray

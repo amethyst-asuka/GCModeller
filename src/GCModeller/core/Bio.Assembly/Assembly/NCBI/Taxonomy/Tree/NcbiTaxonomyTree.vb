@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::ed30f7865395dd49c98829b48601ace6, ..\GCModeller\core\Bio.Assembly\Assembly\NCBI\Taxonomy\NcbiTaxonomyTree.vb"
+﻿#Region "Microsoft.VisualBasic::75e03d5e9047c6d0a80c6e9225c63636, ..\core\Bio.Assembly\Assembly\NCBI\Taxonomy\Tree\NcbiTaxonomyTree.vb"
 
     ' Author:
     ' 
@@ -32,7 +32,7 @@ Imports Microsoft.VisualBasic.Language.Python
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Serialization.JSON
 
-Namespace Assembly.NCBI
+Namespace Assembly.NCBI.Taxonomy
 
     ''' <summary>
     ''' Builds the following dictionnary from NCBI taxonomy ``nodes.dmp`` and 
@@ -95,9 +95,18 @@ Namespace Assembly.NCBI
         ''' <returns></returns>
         Public ReadOnly Property Taxonomy As New Dictionary(Of Integer, TaxonomyNode)
 
+        ''' <summary>
+        ''' 当<paramref name="taxid"/>不存在的时候，这个只读属性会返回空值
+        ''' </summary>
+        ''' <param name="taxid%"></param>
+        ''' <returns></returns>
         Default Public ReadOnly Property GetNode(taxid%) As TaxonomyNode
             Get
-                Return _Taxonomy(taxid%)
+                If Not Taxonomy.ContainsKey(taxid) Then
+                    Return Nothing
+                Else
+                    Return _Taxonomy(taxid%)
+                End If
             End Get
         End Property
 

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::f189f36ebccd13c5ea7dd4f3adf1ff0c, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Files\Reactions.vb"
+﻿#Region "Microsoft.VisualBasic::f189f36ebccd13c5ea7dd4f3adf1ff0c, ..\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Files\Reactions.vb"
 
     ' Author:
     ' 
@@ -78,8 +78,8 @@ Namespace Assembly.MetaCyc.File.DataFiles
         End Function
 
         Protected Friend Shared Function Trim(Reaction As Slots.Reaction) As Slots.Reaction
-            Reaction.Left = (From str As String In Reaction.Left Select Reactions.Trim(str)).ToList
-            Reaction.Right = (From str As String In Reaction.Right Select Reactions.Trim(str)).ToList
+            Reaction.Left = (From str As String In Reaction.Left Select Reactions.Trim(str)).AsList
+            Reaction.Right = (From str As String In Reaction.Right Select Reactions.Trim(str)).AsList
             Return Reaction
         End Function
 

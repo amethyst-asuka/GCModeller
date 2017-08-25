@@ -47,7 +47,7 @@ Namespace NetworkModel.StringDB
     ''' 构建蛋白质互作网络的绘图模型
     ''' </summary>
     ''' 
-    <[PackageNamespace]("String-Db.Interactions", Category:=APICategories.ResearchTools, Publisher:="xie.guigang@gmail.com")>
+    <Package("String-Db.Interactions", Category:=APICategories.ResearchTools, Publisher:="xie.guigang@gmail.com")>
     Public Module PINetwork
 
         <ExportAPI("Build", Info:="Build the protein interaction network cytoscape visualization model file.")>
@@ -65,7 +65,7 @@ Namespace NetworkModel.StringDB
                            In PTT.GeneObjects.AsParallel
                            Select New XGMML.Node With {
                                .label = GeneObject.Synonym,
-                               .Attributes = __attributes(GeneObject)}).AddHandle '使用PTT文件首先生成节点
+                               .Attributes = __attributes(GeneObject)}).WriteAddress '使用PTT文件首先生成节点
 
             Dim Network As New List(Of Edge)
 
@@ -81,7 +81,7 @@ Namespace NetworkModel.StringDB
                 Call Console.Write(".")
             Next
 
-            Model.Edges = Network.AddHandle
+            Model.Edges = Network.WriteAddress
 
             Dim nodes = Model.Nodes.ToDictionary(Function(obj) obj.id,
                                                  Function(obj) New Value(Of Integer)(0))

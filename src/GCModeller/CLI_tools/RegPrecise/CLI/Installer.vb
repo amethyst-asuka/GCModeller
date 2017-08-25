@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::3d50a6c1b52e1cc9c06ec8713599971f, ..\GCModeller\CLI_tools\RegPrecise\CLI\Installer.vb"
+﻿#Region "Microsoft.VisualBasic::ca6f5fdfb0c5115a78b337101471ee32, ..\GCModeller\CLI_tools\RegPrecise\CLI\Installer.vb"
 
     ' Author:
     ' 
@@ -26,10 +26,10 @@
 
 #End Region
 
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
+Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Text
@@ -37,7 +37,7 @@ Imports SMRUCC.genomics.Data
 Imports SMRUCC.genomics.Data.Regprecise
 Imports SMRUCC.genomics.Data.Regtransbase.WebServices.Regulator
 Imports SMRUCC.genomics.Data.Xfam.Pfam.PfamString
-Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH
+Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH.Abstract
 Imports SMRUCC.genomics.SequenceModel.FASTA
 
 Partial Module CLI

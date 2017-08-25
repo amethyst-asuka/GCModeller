@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::fda92a7d1d59aa2fc96e9d96927f9cf4, ..\GCModeller\models\Networks\Network.BLAST\BBHAPI.vb"
+﻿#Region "Microsoft.VisualBasic::d1ce6e486cb508896cb10a0d0f11e22d, ..\GCModeller\models\Networks\Network.BLAST\BBHAPI.vb"
 
     ' Author:
     ' 
@@ -28,6 +28,7 @@
 
 Imports System.Runtime.CompilerServices
 Imports Microsoft.VisualBasic
+Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq.Extensions
 Imports Microsoft.VisualBasic.Parallel
 Imports Microsoft.VisualBasic.Parallel.Tasks
@@ -134,10 +135,10 @@ Public Module BBHAPI
                                                        Select xx
                                                        Group xx By xx.HitName Into Group) _
                                                             .ToDictionary(Function(xx) xx.HitName,
-                                                                          Function(xx) xx.Group.ToList))
+                                                                          Function(xx) xx.Group.AsList))
 
             Call "Dictionary hash table created done!".__DEBUG_ECHO
-            partitions = sbh.Split(102400).ToArray(Function(x) x.ToList, Parallel:=True)
+            partitions = sbh.Split(102400).ToArray(Function(x) x.AsList, Parallel:=True)
             Call $"{partitions.Length} partitions...".__DEBUG_ECHO
         End Sub
 

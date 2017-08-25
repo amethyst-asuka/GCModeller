@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::eabedecf65be76e21c78bea55aed6b4a, ..\GCModeller\core\Bio.Assembly\Assembly\NCBI\Database\COG\Category.vb"
+﻿#Region "Microsoft.VisualBasic::83e4bdf85799172577dd146a8fb7a00a, ..\core\Bio.Assembly\Assembly\NCBI\Database\COG\Category.vb"
 
     ' Author:
     ' 
@@ -35,49 +35,28 @@ Imports Microsoft.VisualBasic.Linq.Extensions
 
 Namespace Assembly.NCBI.COG
 
-    Public Class Category
+    Public Class Catalog
 
         <XmlAttribute> Public Property [Class] As COGCategories
         <XmlAttribute> Public Property Description As String
-        <XmlElement> Public Property SubClasses As KeyValuePair()
-            Get
-                Return __innerArray
-            End Get
-            Set(value As KeyValuePair())
-                __innerArray = value
-                If __innerArray Is Nothing Then
-                    __innerArray = New KeyValuePair() {}
-                End If
-
-                Dim Full = __innerArray.Join(__innerArray.ToArray(
-                                             Function(obj) New KeyValuePair With {
-                                                 .Key = obj.Key.ToLower,
-                                                 .Value = obj.Value}))
-                __innerHash = New SortedDictionary(Of Char, String)(
-                    Full.ToDictionary(Function(obj) obj.Key(Scan0),
-                                      Function(obj) obj.Value))
-            End Set
-        End Property
-
-        Protected Friend __innerHash As SortedDictionary(Of Char, String)
-        Protected Friend __innerArray As KeyValuePair()
+        <XmlElement> Public Property SubClasses As Dictionary(Of Char, String)
 
         Public Overrides Function ToString() As String
             Return Description
         End Function
 
-        Public Function ToArray() As COGFunc()
+        Public Function ToArray() As COGFunction()
             Return SubClasses.ToArray(
-                Function(x) New COGFunc With {
+                Function(x) New COGFunction With {
                     .Category = [Class],
-                    .COG = x.Key,
-                    .Func = x.Value
+                    .Catalog = x.Key,
+                    .Description = x.Value
             })
         End Function
 
         Public Function GetDescription(COG As Char, ByRef description As String) As Boolean
-            If __innerHash.ContainsKey(COG) Then
-                description = __innerHash(COG)
+            If _SubClasses.ContainsKey(COG) Then
+                description = _SubClasses(COG)
                 Return True
             Else
                 description = ""

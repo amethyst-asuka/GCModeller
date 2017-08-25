@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::ef064ee1fca8d6ff20989334b7b1f309, ..\GCModeller\analysis\SequenceToolkit\SequencePatterns\Pattern\PatternSearch.vb"
+﻿#Region "Microsoft.VisualBasic::e22985cff605a8881ee29018b9e90723, ..\GCModeller\analysis\SequenceToolkit\SequencePatterns\Pattern\PatternSearch.vb"
 
     ' Author:
     ' 
@@ -28,13 +28,10 @@
 
 Imports System.Runtime.CompilerServices
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
-Imports SMRUCC.genomics.ComponentModel.Loci
 Imports SMRUCC.genomics.SequenceModel.FASTA
-Imports SMRUCC.genomics.SequenceModel.FASTA.FastaFile
 
 Namespace Pattern
 
@@ -59,7 +56,7 @@ Namespace Pattern
                          Select Segment
                          Order By Segment.First.First Ascending '
 
-            Dim df As New File(LQuery.MatrixAsIterator)
+            Dim df As New File(LQuery.IteratesALL)
 
             Return df
         End Function
@@ -70,8 +67,7 @@ Namespace Pattern
                                              In Match(Seq.SequenceData, pattern)
                                              Select Segment.ToRow).ToArray).ToArray
             Dim Head As RowObject = {Seq.ToString}, Count As RowObject = {"Hits count:", CStr(LQuery.Count)}
-            Dim RowList As List(Of RowObject) =
-                New List(Of RowObject) From {Head, Count}
+            Dim RowList As New List(Of RowObject) From {Head, Count}
 
             If LQuery.Length = 0 Then
                 Return Nothing

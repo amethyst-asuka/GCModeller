@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::c43ad49642abac6e8e58afc837027c3d, ..\GCModeller\analysis\VirtualFootprint\Regulon.vb"
+﻿#Region "Microsoft.VisualBasic::b6d79bb9f14ef8d36469d15a109f3784, ..\GCModeller\analysis\VirtualFootprint\Regulon.vb"
 
     ' Author:
     ' 
@@ -51,13 +51,13 @@ Public Class RegPreciseRegulon
         Return Me.GetJson
     End Function
 
-    Public Shared Function ToNetwork(source As IEnumerable(Of RegPreciseRegulon)) As FileStream.Network
+    Public Shared Function ToNetwork(source As IEnumerable(Of RegPreciseRegulon)) As FileStream.NetworkTables
         Dim Nodes As Dictionary(Of String, FileStream.Node) =
             New Dictionary(Of String, FileStream.Node)
         For Each x As RegPreciseRegulon In source
             If Not Nodes.ContainsKey(x.Regulator) Then
                 Dim TF As New FileStream.Node With {
-                    .Identifier = x.Regulator,
+                    .ID = x.Regulator,
                     .NodeType = "TF"
                 }
                 Call Nodes.Add(x.Regulator, TF)
@@ -65,7 +65,7 @@ Public Class RegPreciseRegulon
             For Each member In x.Members
                 If Not Nodes.ContainsKey(member) Then
                     Dim Target As New FileStream.Node With {
-                        .Identifier = member,
+                        .ID = member,
                         .NodeType = "Member"
                     }
                     Call Nodes.Add(member, Target)
@@ -82,18 +82,18 @@ Public Class RegPreciseRegulon
 
         For Each xGroup In Regulations
             Dim toNodes As String() =
-                xGroup.Group.ToArray(Function(x) x.Members).MatrixToList.Distinct.ToArray
+                xGroup.Group.ToArray(Function(x) x.Members).Unlist.Distinct.ToArray
             For Each member As String In toNodes
                 Dim edge As New NetworkEdge With {
                     .FromNode = xGroup.Regulator,
                     .ToNode = member,
-                    .InteractionType = "Regulates"
+                    .Interaction = "Regulates"
                 }
                 Call edges.Add(edge)
             Next
         Next
 
-        Return New FileStream.Network With {
+        Return New FileStream.NetworkTables With {
             .Edges = edges.ToArray,
             .Nodes = Nodes.Values.ToArray
         }
@@ -107,10 +107,10 @@ Public Class RegPreciseRegulon
 
     Private Shared Function __merge(source As IEnumerable(Of Regulator)) As RegPreciseRegulon
         Dim __1st = source.First
-        Dim regulates = (From x In source Select x.Regulates.ToArray(Function(xx) xx.LocusId)).MatrixToList
+        Dim regulates = (From x In source Select x.Regulates.ToArray(Function(xx) xx.LocusId)).Unlist
         Dim effectors = (From x In source Select x.Effector Distinct).ToArray
         Dim hits = (From x In source Select x.LocusTag.Value Distinct Order By Value Ascending).ToArray
-        Dim sites = (From x In source Select x.RegulatorySites.ToArray(Function(xx) xx.UniqueId)).MatrixToList
+        Dim sites = (From x In source Select x.RegulatorySites.ToArray(Function(xx) xx.UniqueId)).Unlist
         Dim regulon As New RegPreciseRegulon With {
             .Family = __1st.Family,
             .BiologicalProcess = __1st.BiologicalProcess,
@@ -130,7 +130,7 @@ Public Class RegPreciseRegulon
                      Select xml.LoadXml(Of BacteriaGenome)).ToArray
         Dim regulons = (From x As BacteriaGenome In loads
                         Where x.NumOfRegulons > 0
-                        Select x.Regulons.Regulators).MatrixToList
+                        Select x.Regulons.Regulators).Unlist
         Dim Groups = (From xx In (From x As Regulator
                                   In regulons
                                   Select x,
@@ -145,7 +145,7 @@ Public Class RegPreciseRegulon
         Dim LQuery = (From x
                       In Groups.AsParallel
                       Select x.parts.Values.ToArray(
-                          Function(xx) RegPreciseRegulon.Merge(xx))).MatrixToList.MatrixToVector
+                          Function(xx) RegPreciseRegulon.Merge(xx))).Unlist.ToVector
         Return LQuery
     End Function
 End Class

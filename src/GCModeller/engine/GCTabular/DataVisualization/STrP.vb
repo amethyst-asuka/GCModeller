@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::142a8be7899a9f835370121ef53f556b, ..\GCModeller\engine\GCTabular\DataVisualization\STrP.vb"
+﻿#Region "Microsoft.VisualBasic::4aa29fbb77bb1b8087750f9a1e807a0f, ..\GCModeller\engine\GCTabular\DataVisualization\STrP.vb"
 
     ' Author:
     ' 
@@ -26,11 +26,10 @@
 
 #End Region
 
-Imports System.Text
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.Data.csv.Extensions
-Imports SMRUCC.genomics.Data
+Imports SMRUCC.genomics.Model.Network.STRING
+Imports SMRUCC.genomics.Model.Network.STRING.Models
 
 Namespace DataVisualization
 
@@ -40,9 +39,9 @@ Namespace DataVisualization
     ''' <remarks></remarks>
     Public Class STrP
 
-        Dim STrPNetwork As StringDB.StrPNet.Network, TFRegulations As FileStream.TranscriptUnit()
+        Dim STrPNetwork As Network, TFRegulations As FileStream.TranscriptUnit()
 
-        Sub New(STrPNetwork As StringDB.StrPNet.Network, TFRegulations As FileStream.TranscriptUnit())
+        Sub New(STrPNetwork As Network, TFRegulations As FileStream.TranscriptUnit())
             Me.STrPNetwork = STrPNetwork
             Me.TFRegulations = TFRegulations
         End Sub
@@ -105,13 +104,13 @@ Namespace DataVisualization
         End Function
 
         Private Shared Function CreateNodeAttributes(OCS As KeyValuePair()) As NodeAttributes()
-            Return (From Item In OCS Select New NodeAttributes With {.Identifier = Item.Key, .NodeType = "OCS"}).ToArray
+            Return (From Item In OCS Select New NodeAttributes With {.ID = Item.Key, .NodeType = "OCS"}).ToArray
         End Function
 
-        Private Shared Function CreateNodeAttributes(TCSSystem As StringDB.StrPNet.TCS.TCS()) As NodeAttributes()
-            Dim LQuery = (From TCS In TCSSystem Select New NodeAttributes() {New NodeAttributes With {.Identifier = TCS.Chemotaxis, .NodeType = "Chemotaxis"},
-                               New NodeAttributes With {.Identifier = TCS.HK, .NodeType = "HK"},
-                               New NodeAttributes With {.Identifier = TCS.RR, .NodeType = "RR"}}).ToArray
+        Private Shared Function CreateNodeAttributes(TCSSystem As TCS.TCS()) As NodeAttributes()
+            Dim LQuery = (From TCS In TCSSystem Select New NodeAttributes() {New NodeAttributes With {.ID = TCS.Chemotaxis, .NodeType = "Chemotaxis"},
+                               New NodeAttributes With {.ID = TCS.HK, .NodeType = "HK"},
+                               New NodeAttributes With {.ID = TCS.RR, .NodeType = "RR"}}).ToArray
             Dim ChunkList As List(Of NodeAttributes) = New List(Of NodeAttributes)
             For Each item In LQuery
                 Call ChunkList.AddRange(item)
@@ -119,29 +118,29 @@ Namespace DataVisualization
             Return ChunkList.ToArray
         End Function
 
-        Private Shared Function CreateNodeAttributes(STrP As StringDB.StrPNet.Pathway) As NodeAttributes()
+        Private Shared Function CreateNodeAttributes(STrP As Pathway) As NodeAttributes()
             Dim List As List(Of NodeAttributes) = New List(Of NodeAttributes)
             Call List.AddRange(CreateNodeAttributes(STrP.OCS))
             Call List.AddRange(CreateNodeAttributes(STrP.TCSSystem))
-            Call List.Add(New NodeAttributes With {.Identifier = STrP.TF, .NodeType = "TF"})
+            Call List.Add(New NodeAttributes With {.ID = STrP.TF, .NodeType = "TF"})
 
             Return List.ToArray
         End Function
 
         Private Shared Function GenerateNetwork(Regulation As FileStream.TranscriptUnit) As Interactions()
-            Dim LQuery = (From Id As String In Regulation.OperonGenes Select (From motif As String In Regulation.Motifs Select New Interactions With {.FromNode = motif, .ToNode = Id, .InteractionType = "Regulates"}).ToArray).ToArray.MatrixToVector
+            Dim LQuery = (From Id As String In Regulation.OperonGenes Select (From motif As String In Regulation.Motifs Select New Interactions With {.FromNode = motif, .ToNode = Id, .Interaction = "Regulates"}).ToArray).ToArray.ToVector
             Return LQuery
         End Function
 
-        Private Shared Function GenerateNetwork(objStrP As StringDB.StrPNet.Pathway) As Interactions()
+        Private Shared Function GenerateNetwork(objStrP As Pathway) As Interactions()
             Dim List As List(Of Interactions) = New List(Of Interactions)
             Dim CreateOCSNetwork = Sub(ocs)
-                                       Call List.Add(New Interactions With {.FromNode = ocs.Key, .ToNode = objStrP.TF, .InteractionType = "Signal Transduct"})
+                                       Call List.Add(New Interactions With {.FromNode = ocs.Key, .ToNode = objStrP.TF, .Interaction = "Signal Transduct"})
                                    End Sub
-            Dim CreateTCSNetwork = Sub(tcs As StringDB.StrPNet.TCS.TCS)
-                                       Call List.Add(New Interactions With {.FromNode = tcs.Chemotaxis, .ToNode = tcs.HK, .InteractionType = "Phosphorylate Sensing"})
-                                       Call List.Add(New Interactions With {.FromNode = tcs.HK, .ToNode = tcs.RR, .InteractionType = "Cross Talk"})
-                                       Call List.Add(New Interactions With {.FromNode = tcs.RR, .ToNode = objStrP.TF, .InteractionType = "Signal Transduct"})
+            Dim CreateTCSNetwork = Sub(tcs As TCS.TCS)
+                                       Call List.Add(New Interactions With {.FromNode = tcs.Chemotaxis, .ToNode = tcs.HK, .Interaction = "Phosphorylate Sensing"})
+                                       Call List.Add(New Interactions With {.FromNode = tcs.HK, .ToNode = tcs.RR, .Interaction = "Cross Talk"})
+                                       Call List.Add(New Interactions With {.FromNode = tcs.RR, .ToNode = objStrP.TF, .Interaction = "Signal Transduct"})
                                    End Sub
             If Not objStrP.OCS.IsNullOrEmpty Then
                 For Each item In objStrP.OCS
@@ -157,7 +156,7 @@ Namespace DataVisualization
             Return List.ToArray
         End Function
 
-        Public Shared Function Exists(Id As String, objSTrp As StringDB.StrPNet.Pathway) As Boolean
+        Public Shared Function Exists(Id As String, objSTrp As Pathway) As Boolean
             If String.Equals(Id, objSTrp.TF) Then
                 Return True
             Else

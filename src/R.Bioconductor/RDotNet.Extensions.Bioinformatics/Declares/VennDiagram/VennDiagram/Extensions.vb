@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::e82f3b0da27f0b9021f99871ad20456f, ..\R.Bioconductor\RDotNet.Extensions.Bioinformatics\Declares\VennDiagram\VennDiagram\Extensions.vb"
+﻿#Region "Microsoft.VisualBasic::7f4b9ed714baf99c08ca80058b7b474f, ..\R.Bioconductor\RDotNet.Extensions.Bioinformatics\Declares\VennDiagram\VennDiagram\Extensions.vb"
 
     ' Author:
     ' 
@@ -28,6 +28,7 @@
 
 Imports System.Runtime.CompilerServices
 Imports Microsoft.VisualBasic
+Imports Microsoft.VisualBasic.Language
 
 Namespace VennDiagram.ModelAPI
 

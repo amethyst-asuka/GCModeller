@@ -1,28 +1,28 @@
 ﻿#Region "Microsoft.VisualBasic::0c7e8022372bfeed197a5312c29de023, ..\interops\visualize\Circos\Circos\ConfFiles\Circos.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -30,6 +30,7 @@ Imports System.Text
 Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.ComponentModel.Settings
 Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Linq
 Imports SMRUCC.genomics.Visualize.Circos.Configurations.Nodes.Plots
 Imports SMRUCC.genomics.Visualize.Circos.Karyotype
 
@@ -66,6 +67,7 @@ Namespace Configurations
     ''' </remarks>
     Public Class Circos : Inherits CircosConfig
         Implements ICircosDocument
+        Implements IEnumerable(Of ITrackPlot)
 
         ''' <summary>
         ''' The basically genome structure plots: Chromosome name, size and color definition.(基本的数据文件)
@@ -203,7 +205,7 @@ Namespace Configurations
                 If SkeletonKaryotype Is Nothing Then
                     Return 0
                 End If
-                Return _SkeletonKaryotype.Size - SkeletonKaryotype.LoopHole.Value
+                Return _SkeletonKaryotype.Size - SkeletonKaryotype.LoopHole.value
             End Get
         End Property
 
@@ -221,6 +223,16 @@ Namespace Configurations
 
         Dim _plots As New List(Of ITrackPlot)
 
+        ''' <summary>
+        ''' Gets the number of the tracks that defined in this circos model
+        ''' </summary>
+        ''' <returns></returns>
+        Public ReadOnly Property NumberOfTracks As Integer
+            Get
+                Return _plots.Count
+            End Get
+        End Property
+
         Sub New()
             Call MyBase.New("circos.conf", Nothing)
             Me.main = Me
@@ -237,31 +249,32 @@ Namespace Configurations
 
             App.CurrentDirectory = outDIR
 
-            For i As Integer = 0 To _plots.Count - 1
-                Dim x As ITrackPlot = _plots(i)
-                Dim FileName As String = $"data/{x.type}_data_{i}.txt"
+            For Each i As SeqValue(Of ITrackPlot) In _plots.SeqIterator
+                Dim track As ITrackPlot = i.value
+                Dim path$ = $"data/{track.type}_data_{i.i + 1}.txt"
 
-                x.file = FileName
-                x.Save(FileName, Encoding.ASCII)
+                track.file = path
+                track.Save(path, Encoding.ASCII)  ' 首先保存数据文件
             Next
 
             Call _SkeletonKaryotype.Save(karyotype, encoding:=Encoding.ASCII)
 
             App.CurrentDirectory = outDIR
 
+            ' 最后在这里生成配置文件
             Return Build(0).SaveTo(FilePath, Encoding.ASCII)
         End Function
 
         Public Overloads Shared Function CreateObject() As Circos
-            Dim CircosConfig As Circos = New Circos With {
+            Dim circos As New Circos With {
                 .Includes = New List(Of CircosConfig)
             }
 
-            Call CircosConfig.Includes.Add(CircosDistributed.ColorFontsPatterns)
-            Call CircosConfig.Includes.Add(CircosDistributed.HouseKeeping)
-            Call CircosConfig.Includes.Add(CircosDistributed.Image)
+            Call circos.Includes.Add(CircosDistributed.ColorFontsPatterns)
+            Call circos.Includes.Add(CircosDistributed.HouseKeeping)
+            Call circos.Includes.Add(CircosDistributed.Image)
 
-            Return CircosConfig
+            Return circos
         End Function
 
 #Region "默认的图形属性"
@@ -298,15 +311,15 @@ Namespace Configurations
         ''' <summary>
         ''' 强制所指定的绘图元素自动布局
         ''' </summary>
-        ''' <param name="elements"></param>
-        Public Shared Sub ForceAutoLayout(elements As ITrackPlot())
-            Dim d = 0.8 / elements.Length / 2
+        ''' <param name="tracks"></param>
+        Public Shared Sub ForceAutoLayout(tracks As ITrackPlot())
+            Dim d = 0.8 / tracks.Length / 2
             Dim p As Double = 0.95
 
-            For Each item In elements
-                item.r1 = p & "r"
+            For Each track As ITrackPlot In tracks
+                track.r1 = p & "r"
                 p -= d
-                item.r0 = p & "r"
+                track.r0 = p & "r"
                 p -= d / 5
             Next
         End Sub
@@ -339,6 +352,21 @@ Namespace Configurations
             End If
 
             Return sb.ToString
+        End Function
+
+        Public Shared Operator +(circos As Circos, track As ITrackPlot) As Circos
+            Call circos.AddTrack(track)
+            Return circos
+        End Operator
+
+        Public Iterator Function GetEnumerator() As IEnumerator(Of ITrackPlot) Implements IEnumerable(Of ITrackPlot).GetEnumerator
+            For Each x As ITrackPlot In _plots
+                Yield x
+            Next
+        End Function
+
+        Private Iterator Function IEnumerable_GetEnumerator() As IEnumerator Implements IEnumerable.GetEnumerator
+            Yield GetEnumerator()
         End Function
     End Class
 End Namespace

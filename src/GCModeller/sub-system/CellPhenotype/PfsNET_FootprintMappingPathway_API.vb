@@ -1,34 +1,34 @@
-﻿#Region "Microsoft.VisualBasic::84075b9bf0343cf385bc5cd4da02af1a, ..\GCModeller\sub-system\CellPhenotype\PfsNET_FootprintMappingPathway_API.vb"
+﻿#Region "Microsoft.VisualBasic::56709fac17a024c27b0eb19e0a87042e, ..\GCModeller\sub-system\CellPhenotype\PfsNET_FootprintMappingPathway_API.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine.Reflection
-Imports Microsoft.VisualBasic.ComponentModel.DataStructures
+Imports Microsoft.VisualBasic.ComponentModel.Algorithm.base
 Imports Microsoft.VisualBasic.Data.visualize.Network.FileStream
 Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Language
@@ -45,7 +45,7 @@ Imports SMRUCC.genomics.GCModeller.ModellingEngine.Assembly.GCTabular
 Imports SMRUCC.genomics.GCModeller.ModellingEngine.Assembly.GCTabular.Compiler.Components
 Imports SMRUCC.genomics.GCModeller.ModellingEngine.Assembly.GCTabular.FileStream.IO
 Imports SMRUCC.genomics.Visualize.Cytoscape.NetworkModel.PfsNET
-Imports __KEGG_NETWORK_ = Microsoft.VisualBasic.Data.visualize.Network.FileStream.Network(Of
+Imports __KEGG_NETWORK_ = Microsoft.VisualBasic.Data.visualize.Network.FileStream.Generic.Network(Of
     SMRUCC.genomics.Visualize.Cytoscape.NetworkModel.PfsNET.Enzyme,
     SMRUCC.genomics.Visualize.Cytoscape.NetworkModel.PfsNET.Interaction)
 
@@ -67,7 +67,7 @@ Module PFSNet
     End Function
 End Module
 
-<[PackageNamespace]("PfsNET.Footprint.Mapping.Pathway",
+<Package("PfsNET.Footprint.Mapping.Pathway",
                     Description:="This module determines the specific pathway for the motif mapping to a specific cell phenotype.",
                     Publisher:="xie.guigang@gcmodeller.org")>
 Module PfsNET_FootprintMappingPathway_API
@@ -122,7 +122,7 @@ Module PfsNET_FootprintMappingPathway_API
                                              Array.IndexOf(GeneIdList, item.ToNode) > -1
                                          Select (From pwyID As String
                                                  In item.Pathways
-                                                 Select String.Join(vbTab, pwyID, item.FromNode, item.ToNode)).ToArray).MatrixAsIterator.Distinct.ToArray
+                                                 Select String.Join(vbTab, pwyID, item.FromNode, item.ToNode)).ToArray).IteratesALL.Distinct.ToArray
         Dim file3 As String = __fileName("FOOTPRINT_PATHWAY_NETWORK_file3")
 
         Dim InternalCreateMatrix = Function(data As ExprSamples()) As String()
@@ -165,7 +165,7 @@ Module PfsNET_FootprintMappingPathway_API
                       In Result
                       Let p1 = SubNetTable.CreateObject(item.Phenotype1, item.DataTag & ".Class1", Pathways, 1)
                       Let p2 = SubNetTable.CreateObject(item.Phenotype2, item.DataTag & ".Class2", Pathways, 2)
-                      Select {p1, p2}.MatrixToList).ToArray.MatrixToVector
+                      Select {p1, p2}.Unlist).ToArray.ToVector
         Dim KEGGCategory = KEGGPhenotypes.PhenotypeAssociations(LQuery, KEGG.Archives.Csv.Pathway.CreateObjects(Model.KEGG_Pathways))
         Return KEGGCategory
     End Function
@@ -232,7 +232,7 @@ Module PfsNET_FootprintMappingPathway_API
         Dim FiltedNetwork As String() = (From Edge As SMRUCC.genomics.Visualize.Cytoscape.NetworkModel.PfsNET.Interaction
                                          In Network.Edges
                                          Where Array.IndexOf(GeneIdList, Edge.FromNode) > -1 AndAlso Array.IndexOf(GeneIdList, Edge.ToNode) > -1
-                                         Select (From pwyID As String In Edge.Pathways Select String.Join(vbTab, pwyID, Edge.FromNode, Edge.ToNode)).ToArray).ToArray.MatrixToVector.Distinct.ToArray
+                                         Select (From pwyID As String In Edge.Pathways Select String.Join(vbTab, pwyID, Edge.FromNode, Edge.ToNode)).ToArray).ToArray.ToVector.Distinct.ToArray
 
         Dim File3 As String = __fileName("GenomeProgrammingInfoNetwork.File3")
         Dim InternalCreateMatrix = Function(data As ExprSamples()) As String()
@@ -292,7 +292,7 @@ Module PfsNET_FootprintMappingPathway_API
     ''' <remarks></remarks>
     <ExportAPI("Data.Serials.Create.SlideWindows", Info:="The offset parameter should be a integer and bigger than the number ZERO.")>
     Public Function CreateExpressionWindows(<Parameter("Expression.Matrix.ChipData", "This data is comes from the GCModeller calculation result or the Monte Carlo created matrix data.")>
-                                            ChipData As DocumentStream.File,
+                                            ChipData As IO.File,
                                             <Parameter("Window.Size")> WindowSize As Integer,
                                             <Parameter("Index.OffSets", "The offset parameter should be a integer and bigger than the number ZERO.")>
                                             Optional OffSet As Integer = 1) As ExprSamples()()
@@ -312,7 +312,7 @@ Module PfsNET_FootprintMappingPathway_API
             Select (From GeneSample In LQuery
                     Select New ExprSamples With {
                         .locusId = GeneSample.locusId,
-                        .Values = GeneSample.SlideWindowSamples(i).Elements}).ToArray).ToArray
+                        .Values = GeneSample.SlideWindowSamples(i).Items}).ToArray).ToArray
         Return ChunkBuffer
     End Function
 End Module

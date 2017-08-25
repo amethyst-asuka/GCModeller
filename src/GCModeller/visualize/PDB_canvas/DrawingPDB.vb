@@ -1,46 +1,44 @@
-﻿#Region "Microsoft.VisualBasic::ee1696dc344a9e82fa23b1a7b62c0615, ..\GCModeller\visualize\PDB_canvas\DrawingPDB.vb"
+﻿#Region "Microsoft.VisualBasic::ee1696dc344a9e82fa23b1a7b62c0615, ..\visualize\PDB_canvas\DrawingPDB.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports System.Drawing
 Imports System.Runtime.CompilerServices
 Imports Microsoft.VisualBasic.CommandLine.Reflection
-Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel.SchemaMaps
 Imports Microsoft.VisualBasic.Imaging
-Imports Microsoft.VisualBasic.Imaging.Drawing3D
+Imports Microsoft.VisualBasic.Imaging.Drawing3D.Math3D
 Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports SMRUCC.genomics.Data.RCSB.PDB
-Imports SMRUCC.genomics.Visualize
 
 ''' <summary>
 ''' Visualize the protein 3D structure from the PDB file.
 ''' </summary>
-<[PackageNamespace]("Drawing.Protein.3D.PDB",
+<Package("Drawing.Protein.3D.PDB",
                     Description:="Visualize the protein 3D structure from the PDB file.",
                     Publisher:="amethyst.asuka@gcmodeller.org", Url:="http://gcmodeller.org")>
 Public Module DrawingPDB
@@ -59,7 +57,7 @@ Public Module DrawingPDB
     <ExportAPI("Drawing.Invoke", Info:="Drawing a protein structure from its pdb data.")>
     <Extension>
     Public Function MolDrawing(PDB As PDB, Optional hideAtoms As Boolean = True, Optional DisplayAAID As Boolean = True) As Image
-        Dim Device As GDIPlusDeviceHandle = (New Size(3000, 3000)).CreateGDIDevice
+        Dim Device As Graphics2D = (New Size(3000, 3000)).CreateGDIDevice
         Dim offset As Point = Device.Center
         Dim AASequence As AminoAcid() = PDB.AminoAcidSequenceData
         Dim PreAA As AminoAcid = AASequence.First
@@ -94,7 +92,7 @@ Public Module DrawingPDB
     End Function
 
     <Extension>
-    Private Sub __drawingOfAA(AA As AminoAcid, ByRef pt2d As Point, offset As Point, Device As GDIPlusDeviceHandle, DisplayAAID As Boolean, AAFont As Font, hideAtoms As Boolean)
+    Private Sub __drawingOfAA(AA As AminoAcid, ByRef pt2d As Point, offset As Point, Device As Graphics2D, DisplayAAID As Boolean, AAFont As Font, hideAtoms As Boolean)
         Dim Carbon As Keywords.AtomUnit = AA.Carbon
         Dim pt3d As Drawing3D.Point3D = New Drawing3D.Point3D(Carbon.Location.X * ScaleFactor, Carbon.Location.Y * ScaleFactor, Carbon.Location.Z * ScaleFactor)
         pt2d = pt3d.SpaceToGrid(xRotate:=XRotation, offset:=offset)

@@ -1,28 +1,28 @@
-﻿#Region "Microsoft.VisualBasic::dc8daa69800f8f730df3d0afffdc65b4, ..\GCModeller\CLI_tools\ProteinInteraction\CLI\Interactions.vb"
+﻿#Region "Microsoft.VisualBasic::ff25bc2f223971d2e46c74099436e2a9, ..\GCModeller\CLI_tools\ProteinInteraction\CLI\Interactions.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -35,6 +35,7 @@ Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Linq.Extensions
 Imports Microsoft.VisualBasic.Parallel.Tasks
 Imports Microsoft.VisualBasic.Text
+Imports Microsoft.VisualBasic.Text.Levenshtein
 Imports SMRUCC.genomics
 Imports SMRUCC.genomics.Analysis.ProteinTools
 Imports SMRUCC.genomics.Data.Xfam
@@ -77,7 +78,7 @@ Partial Module CLI
             .Attributes = {predict.ProteinId},
             .SequenceData = prot(tokens.First).SequenceData & prot(tokens.Last).SequenceData
         }
-        Dim struct = predict.GetDomainData(False).ToArray(Function(x) x.Identifier)
+        Dim struct = predict.GetDomainData(False).ToArray(Function(x) x.Name)
         Dim LQuery = (From x In subject.AsParallel
                       Let fm_tokens As String() = x.Family.Split("+"c)
                       Let score = LevenshteinDistance.Similarity(struct, fm_tokens, 0.95)
@@ -117,8 +118,8 @@ Partial Module CLI
         ' category = category.Folk(1, 5)
 
         Dim n As Integer = CInt(category.Signature.Length / 2) - 1
-        Dim source = (From x In category.Signature Select New FASTA.FastaToken(x)).ToList
-        Call source.Add(seq.CopyVector(n))
+        Dim source = (From x In category.Signature Select New FASTA.FastaToken(x)).AsList
+        Call source.Add(seq.Repeats(n))
         Dim tmp = App.GetAppSysTempFile(".fasta")
         Call New FASTA.FastaFile(source).Save(tmp)
         Dim aln = clustal.MultipleAlignment(tmp)
@@ -171,7 +172,7 @@ Partial Module CLI
                       In inPfam.AsParallel
                       Let order As String = (From id As ProteinModel.DomainObject
                                              In x.GetDomainData(False)
-                                             Select id.Identifier).ToArray.JoinBy("+")
+                                             Select id.Name).JoinBy("+")
                       Select order, x
                       Group By order Into Group) _
                  .ToDictionary(Function(x) x.order,
@@ -250,7 +251,7 @@ Partial Module CLI
                       In inPfam.AsParallel
                       Let order As String = (From id As ProteinModel.DomainObject
                                              In x.GetDomainData(False)
-                                             Select id.Identifier).ToArray.JoinBy("+")
+                                             Select id.Name).ToArray.JoinBy("+")
                       Select order, x
                       Group By order Into Group) _
                          .ToDictionary(Function(x) x.order,
@@ -354,7 +355,7 @@ Partial Module CLI
                                Where Not fa.IsNullOrEmpty
                                Select fa.ToArray(Function(x) New With {
                                    .Id = x.Attributes.First.Split.First.Split(":"c).Last,
-                                   .fa = x})).ToArray.MatrixToList
+                                   .fa = x})).ToArray.Unlist
                     Select x
                     Group x By x.Id Into Group) _
                       .ToDictionary(Function(x) x.Id, elementSelector:=Function(x) x.Group.First.fa)
@@ -410,7 +411,7 @@ Partial Module CLI
         Dim clustal = ClustalOrg.Clustal.CreateSession
         Dim align = clustal.MultipleAlignment(input)
         Dim SRChain As SRChain() = SR.FromAlign(align, 0.85)
-        Dim Name As String = IO.Path.GetFileNameWithoutExtension(args("/in"))
+        Dim Name As String = BaseName(args("/in"))
         Dim file As String = args("/in").TrimSuffix & ".Pfam-String.csv"
         ' Call SRChain.SaveTo(args("/in").TrimFileExt & ".Blocks.csv")
         Call SRChain.ToArray(Function(x) x.ToPfamString()).SaveTo(file)

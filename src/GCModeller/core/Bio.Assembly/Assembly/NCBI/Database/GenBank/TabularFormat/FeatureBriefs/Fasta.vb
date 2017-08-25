@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::4a1a6ce8cd54e32550d1f5e360edf77a, ..\GCModeller\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\TabularFormat\FeatureBriefs\Fasta.vb"
+﻿#Region "Microsoft.VisualBasic::1998681c3d586b9640a6154be9ce4a30, ..\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\TabularFormat\FeatureBriefs\Fasta.vb"
 
     ' Author:
     ' 
@@ -33,13 +33,7 @@ Namespace Assembly.NCBI.GenBank.TabularFormat.FastaObjects
 
     Public Class Fasta : Inherits FastaToken
 
-        Dim _UniqueId As String
-
         Public ReadOnly Property UniqueId As String
-            Get
-                Return _UniqueId
-            End Get
-        End Property
 
         Protected Sub New()
         End Sub

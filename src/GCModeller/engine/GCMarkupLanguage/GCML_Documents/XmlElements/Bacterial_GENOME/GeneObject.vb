@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::2e84ea43cad7a2cb5abfe3b11d850bda, ..\GCModeller\engine\GCMarkupLanguage\GCML_Documents\XmlElements\Bacterial_GENOME\GeneObject.vb"
+﻿#Region "Microsoft.VisualBasic::f249248bd2e45aa5e7556ed1975cbbe2, ..\GCModeller\engine\GCMarkupLanguage\GCML_Documents\XmlElements\Bacterial_GENOME\GeneObject.vb"
 
     ' Author:
     ' 
@@ -62,8 +62,8 @@ Namespace GCML_Documents.XmlElements.Bacterial_GENOME
         ''' <remarks></remarks>
         Public Property TranscriptProduct As String
 
-        <XmlType("ProteinProduct")> Public Class Protein : Implements sIdEnumerable
-            <XmlAttribute> Public Property Identifier As String Implements sIdEnumerable.Identifier
+        <XmlType("ProteinProduct")> Public Class Protein : Implements INamedValue
+            <XmlAttribute> Public Property Identifier As String Implements INamedValue.Key
             <XmlAttribute("Pfam")> Public Property Domains As String()
         End Class
 

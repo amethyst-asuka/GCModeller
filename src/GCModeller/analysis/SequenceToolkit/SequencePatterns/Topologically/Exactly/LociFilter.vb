@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::55fdc3777910fb501e877ccb07f7c411, ..\GCModeller\analysis\SequenceToolkit\SequencePatterns\Topologically\Exactly\LociFilter.vb"
+﻿#Region "Microsoft.VisualBasic::b26bf07e5ccece7d4554235e45ed5e14, ..\GCModeller\analysis\SequenceToolkit\SequencePatterns\Topologically\Exactly\LociFilter.vb"
 
     ' Author:
     ' 
@@ -27,12 +27,52 @@
 #End Region
 
 Imports System.Runtime.CompilerServices
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
+Imports Microsoft.VisualBasic.ComponentModel.Ranges
 Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Linq
 Imports SMRUCC.genomics.Analysis.SequenceTools.SequencePatterns.Topologically
+Imports SMRUCC.genomics.ComponentModel.Loci.Abstract
 
 Public Module LociFilter
+
+    <Extension>
+    Public Iterator Function RangeSelects(Of T As ILoci)(range As IntRange, data As IEnumerable(Of NamedValue(Of T())), lociProvider As Func(Of T, Integer())) As IEnumerable(Of NamedValue(Of T()))
+        For Each part As NamedValue(Of T()) In data
+            Dim out As New List(Of T)
+
+            For Each x As T In part.Value
+                If range.InsideAny(lociProvider(x)) Then
+                    Call out.Add(x)
+                End If
+            Next
+
+            Yield New NamedValue(Of T()) With {
+                .Name = part.Name,
+                .Value = out
+            }
+        Next
+    End Function
+
+    <Extension>
+    Public Function RangeSelects(range As IntRange, data As IEnumerable(Of NamedValue(Of RepeatsView()))) As IEnumerable(Of NamedValue(Of RepeatsView()))
+        Return range.RangeSelects(data, Function(x) {x.Left})
+    End Function
+
+    <Extension>
+    Public Function RangeSelects(range As IntRange, data As IEnumerable(Of NamedValue(Of RevRepeatsView()))) As IEnumerable(Of NamedValue(Of RevRepeatsView()))
+        Return range.RangeSelects(data, Function(x) {x.Left})
+    End Function
+
+    <Extension>
+    Public Function RangeSelects(range As IntRange, data As IEnumerable(Of NamedValue(Of PalindromeLoci()))) As IEnumerable(Of NamedValue(Of PalindromeLoci()))
+        Return range.RangeSelects(data, Function(x) x.Start.Join({x.PalEnd, x.Mirror}).ToArray)
+    End Function
+
+    <Extension>
+    Public Function RangeSelects(range As IntRange, data As IEnumerable(Of NamedValue(Of ImperfectPalindrome()))) As IEnumerable(Of NamedValue(Of ImperfectPalindrome()))
+        Return range.RangeSelects(data, Function(x) {x.Left, x.Paloci})
+    End Function
 
     Public Enum Compares
         ''' <summary>
@@ -61,6 +101,7 @@ Public Module LociFilter
                            Optional compare As Compares = Compares.Interval,
                            Optional returnsAll As Boolean = False,
                            Optional lenMin As Integer = 4) As IEnumerable(Of T)
+
         Return data.__filtering(
             Function(x) x.Locis,
             Sub(x, l) x.Locis = l,
@@ -157,4 +198,3 @@ Public Module LociFilter
                                 returnsAll, lenMin)
     End Function
 End Module
-

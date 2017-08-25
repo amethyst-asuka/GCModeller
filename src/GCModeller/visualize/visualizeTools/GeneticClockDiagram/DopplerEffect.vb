@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::c77e5e95f55835279bdaab196a076e79, ..\GCModeller\visualize\visualizeTools\GeneticClockDiagram\DopplerEffect.vb"
+﻿#Region "Microsoft.VisualBasic::c77e5e95f55835279bdaab196a076e79, ..\visualize\visualizeTools\GeneticClockDiagram\DopplerEffect.vb"
 
     ' Author:
     ' 
@@ -56,7 +56,7 @@ Namespace GeneticClock
             Dim DopplerEffects = (From Sample In Data
                                   Select New SerialsData With {
                                       .Tag = Sample.UniqueId,
-                                      .ChunkBuffer = (From item In Sample.Sample.TSerials Select item.Value).ToArray}).ToList   '计算出其中的周期变化
+                                      .ChunkBuffer = (From item In Sample.Sample.TSerials Select item.Value).ToArray}).AsList   '计算出其中的周期变化
             Dim init As New SerialsData With {
                 .Tag = "Time",
                 .ChunkBuffer = (From n As Integer

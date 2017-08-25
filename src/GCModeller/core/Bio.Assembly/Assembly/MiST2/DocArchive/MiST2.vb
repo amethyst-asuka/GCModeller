@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::a17f254a8a8a671088990bd3ca448c1e, ..\GCModeller\core\Bio.Assembly\Assembly\MiST2\DocArchive\MiST2.vb"
+﻿#Region "Microsoft.VisualBasic::038afd6db047392d27be075c7af0f3e3, ..\core\Bio.Assembly\Assembly\MiST2\DocArchive\MiST2.vb"
 
     ' Author:
     ' 
@@ -31,6 +31,7 @@ Imports System.Xml.Serialization
 Imports SMRUCC.genomics.SequenceModel
 Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.Text
+Imports Microsoft.VisualBasic.Language
 
 Namespace Assembly.MiST2
 
@@ -121,18 +122,18 @@ Namespace Assembly.MiST2
                 End If
             Next
 
-            Dim p As Integer
+            Dim p As int = Scan0
 
-            RepliconMajorModule.OneComponent = WebServices.Download(url(p.MoveNext))
+            RepliconMajorModule.OneComponent = WebServices.Download(url(++p))
             RepliconMajorModule.TwoComponent = New TwoComponent With {
-                    .HisK = WebServices.Download(url(p.MoveNext)),
-                    .HHK = WebServices.Download(url(p.MoveNext)),
-                    .RR = WebServices.Download(url(p.MoveNext)),
-                    .HRR = WebServices.Download(url(p.MoveNext)),
-                    .Other = WebServices.Download(url(p.MoveNext))}
-            RepliconMajorModule.Chemotaxis = WebServices.Download(url(p.MoveNext))
-            RepliconMajorModule.ECF = WebServices.Download(url(p.MoveNext))
-            RepliconMajorModule.Other = WebServices.Download(url(p.MoveNext))
+                    .HisK = WebServices.Download(url(++p)),
+                    .HHK = WebServices.Download(url(++p)),
+                    .RR = WebServices.Download(url(++p)),
+                    .HRR = WebServices.Download(url(++p)),
+                    .Other = WebServices.Download(url(++p))}
+            RepliconMajorModule.Chemotaxis = WebServices.Download(url(++p))
+            RepliconMajorModule.ECF = WebServices.Download(url(++p))
+            RepliconMajorModule.Other = WebServices.Download(url(++p))
 
             Return RepliconMajorModule
         End Function
@@ -155,7 +156,7 @@ Namespace Assembly.MiST2
         End Function
 
         Public Function Save(Optional Path As String = "", Optional encoding As Encodings = Encodings.UTF8) As Boolean Implements ISaveHandle.Save
-            Return Save(Path, encoding.GetEncodings)
+            Return Save(Path, encoding.CodePage)
         End Function
     End Class
 End Namespace

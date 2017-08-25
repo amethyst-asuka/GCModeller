@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::499a9750d471a6b73e1139457264ea70, ..\GCModeller\core\Bio.InteractionModel\RegulonModels\API.vb"
+﻿#Region "Microsoft.VisualBasic::945dd53963113a9f4dffe86eeaad4d38, ..\core\Bio.InteractionModel\RegulonModels\API.vb"
 
     ' Author:
     ' 
@@ -45,7 +45,7 @@ Namespace Regulon
         <Extension> Public Function GetRegulators(Of TRegulation As IRegulatorRegulation)(data As IEnumerable(Of TRegulation)) As String()
             Dim LQuery As String() = (From reg As TRegulation
                                   In data
-                                      Select reg.Regulators).MatrixAsIterator.Distinct.ToArray
+                                      Select reg.Regulators).IteratesALL.Distinct.ToArray
             Return LQuery
         End Function
 
@@ -77,7 +77,7 @@ Namespace Regulon
                           In Regulations
                               Let RegulatorIdlist As String() = reg.Regulators
                               Where Not RegulatorIdlist.IsNullOrEmpty
-                              Select RegulatorIdlist).MatrixAsIterator.Distinct
+                              Select RegulatorIdlist).IteratesALL.Distinct
             Dim LQuery As Regulon() =
             LinqAPI.Exec(Of Regulon) <= From Regulator As String
                                         In Regulators.AsParallel
@@ -113,7 +113,7 @@ Namespace Regulon
                                         Where String.Equals(locusId, item.LocusId)
                                         Let Regulators = item.Regulators
                                         Where Not Regulators.IsNullOrEmpty
-                                        Select Regulators).ToArray.MatrixToVector.Distinct.ToArray).ToArray
+                                        Select Regulators).ToArray.ToVector.Distinct.ToArray).ToArray
             Dim ObjectCreation = (From Pair In LQuery
                                   Let Regulation As RegulatorRegulation = New RegulatorRegulation With {.LocusId = Pair.locusId, .Regulators = Pair.Regulators}
                                   Select Regulation).ToArray

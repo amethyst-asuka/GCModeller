@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::62d0c8750d0be9208d9e985d430a30c7, ..\GCModeller\CLI_tools\RegPrecise\CLI\CORN.vb"
+﻿#Region "Microsoft.VisualBasic::e00eb8782b2b5f04f71970c32bd39500, ..\GCModeller\CLI_tools\RegPrecise\CLI\CORN.vb"
 
     ' Author:
     ' 
@@ -32,8 +32,8 @@ Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream.Linq
+Imports Microsoft.VisualBasic.Data.csv.IO
+Imports Microsoft.VisualBasic.Data.csv.IO.Linq
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports Microsoft.VisualBasic.Linq
@@ -74,7 +74,7 @@ Partial Module CLI
             (From data As NamedValue(Of RegPreciseOperon())
              In BatchQueue.ReadQueue(Of RegPreciseOperon)(regulons)
              Let name As String = data.Name
-             Let buf As RegPreciseOperon() = data.x
+             Let buf As RegPreciseOperon() = data.Value
              Let datahash As Dictionary(Of String, RegPreciseOperon()) = (From x As RegPreciseOperon
                                                                           In buf
                                                                           Select x
@@ -104,7 +104,7 @@ Partial Module CLI
             (From file As NamedValue(Of MotifLog())
              In BatchQueue.ReadQueue(Of MotifLog)(masts)
              Let name As String = file.Name
-             Let data As IEnumerable(Of MotifLog) = file.x
+             Let data As IEnumerable(Of MotifLog) = file.Value
              Let datahash As Dictionary(Of String, Dictionary(Of String, MotifLog())) =
                  (From x As MotifLog
                   In data
@@ -179,7 +179,7 @@ Partial Module CLI
             CLI = (ls - l - r - wildcards("*.csv") <= sitesDIR) _
                 .Select(AddressOf BaseName) _
                 .Select(build) _
-                .MatrixToVector
+                .ToVector
         Else
             CLI = build(name)
         End If
@@ -356,7 +356,7 @@ Partial Module CLI
                                                                   Select From r As RegPreciseOperon
                                                                          In hits
                                                                          Where Array.IndexOf(r.Operon, gene) > -1
-                                                                         Select r).MatrixAsIterator   ' 得到包含有这个基因的所有的操纵子列表
+                                                                         Select r).IteratesALL   ' 得到包含有这个基因的所有的操纵子列表
 
                 For Each candRef As RegPreciseOperon In LQuery
                     If String.Equals(bbh, candRef.bbhUID, StringComparison.OrdinalIgnoreCase) Then
@@ -448,7 +448,7 @@ Partial Module CLI
                            In x.df
                            Select x.BaseName,
                                __logs = log.__logs([long]),
-                               support = log.tags("support")).MatrixAsIterator
+                               support = log.tags("support")).IteratesALL
         Dim GroupLogs = (From x In data
                          Select x
                          Group x By x.__logs Into Group).ToArray
@@ -464,13 +464,13 @@ Partial Module CLI
                                                     Function(x) x.BaseName,
                                                     Function(x) x.Group.Sum(Function(o) Val(o.support)).ToString)
                                              Select New EntityObject With {
-                                                 .Identifier = id,
+                                                 .ID = id,
                                                  .Properties = df
                                              }
         If args.GetBoolean("/T") Then
             Call outDf.SaveTo(out, metaBlank:="0")
 
-            Dim df As DocumentStream.File = DocumentStream.File.Load(out)
+            Dim df As IO.File = IO.File.Load(out)
             df = df.Transpose
             Return df.Save(out, Encodings.ASCII)
         Else

@@ -195,7 +195,7 @@ Namespace My.Resources
         
         '''<summary>
         '''  Looks up a localized string similar to +D
-        '''#&lt;h2&gt;&lt;a href=&quot;/kegg/kegg2.html&quot;&gt;&lt;img src=&quot;/Fig/bget/kegg3.gif&quot; align=&quot;middle&quot; border=0&gt;&lt;/a&gt; &amp;nbsp; Pesticides&lt;/h2&gt;
+        '''#&lt;h2&gt;&lt;a href=&quot;/kegg/kegg2.html&quot;&gt;&lt;img src=&quot;/Fig/bget/kegg3.gif&quot; align=&quot;middle&quot; border=0&gt;&lt;/a&gt;&amp;nbsp; Pesticides&lt;/h2&gt;
         '''#&lt;!---
         '''#ENTRY       br08007
         '''#NAME        Pesticides
@@ -214,7 +214,7 @@ Namespace My.Resources
         '''D      C18547  Boscalid
         '''D      C11255  Carboxin
         '''D      C10932  Carpropamid
-        '''D      C185 [rest of string was truncated]&quot;;.
+        '''D      C1857 [rest of string was truncated]&quot;;.
         '''</summary>
         Friend ReadOnly Property br08007() As String
             Get
@@ -284,7 +284,12 @@ Namespace My.Resources
         End Property
         
         '''<summary>
-        '''  Looks up a localized string similar to 
+        '''  Looks up a localized string similar to +E	Reaction
+        '''#&lt;h2&gt;&lt;a href=&quot;/kegg/kegg2.html&quot;&gt;&lt;img src=&quot;/Fig/bget/kegg3.gif&quot; align=&quot;middle&quot; border=0&gt;&lt;/a&gt;&amp;nbsp; Enzymatic Reactions&lt;/h2&gt;
+        '''#&lt;!---
+        '''#ENTRY       br08201
+        '''#DEFINITION  Enzymatic reactions
+        '''#---&gt;
         '''!
         '''A&lt;b&gt;1. Oxidoreductase reactions&lt;/b&gt;
         '''B  1.1  Acting on the CH-OH group of donors
@@ -292,14 +297,71 @@ Namespace My.Resources
         '''D      1.1.1.1
         '''E        R00623  Primary alcohol + NAD+ &lt;=&gt; Aldehyde + NADH + H+
         '''E        R00624  Secondary alcohol + NAD+ &lt;=&gt; Ketone + NADH + H+
-        '''E        R00754  Ethanol + NAD+ &lt;=&gt; Acetaldehyde + NADH + H+
-        '''E        R02124  Retinol + NAD+ &lt;=&gt; Retinal + NADH + H+
-        '''E        R02878  1-Octanol + NAD+ &lt;=&gt; 1-Octanal + NADH + H+
-        '''E        R04805  3alpha,7alpha,26-Trihydroxy-5beta-cholestane +  [rest of string was truncated]&quot;;.
+        '''E        R00754  Ethanol + NAD+ &lt;=&gt; Acet [rest of string was truncated]&quot;;.
         '''</summary>
         Friend ReadOnly Property br08201() As String
             Get
                 Return ResourceManager.GetString("br08201", resourceCulture)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Looks up a localized string similar to +D	Reaction	Substrate	Product	Substrate2	Product2
+        '''%&lt;style type=&quot;text/css&quot;&gt;&lt;!--#grid{table-layout:fixed;font-family:monospace;position:relative;color:black;width:1400px;}.col1{position:relative;background:white;z-index:1;overflow:hidden;width:200px;}.col2{position:relative;background:white;z-index:2;padding-left:10px;overflow:hidden;width:300px;}.col3{position:relative;background:white;z-index:3;padding-left:10px;overflow:hidden;width:300px;}.col4{position:relative;background:white;z-index:2;padding-left:10p [rest of string was truncated]&quot;;.
+        '''</summary>
+        Friend ReadOnly Property br08202() As String
+            Get
+                Return ResourceManager.GetString("br08202", resourceCulture)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Looks up a localized string similar to +B	Glycosyltransferase reaction
+        '''#&lt;h2&gt;&lt;a href=&quot;/kegg/kegg2.html&quot;&gt;&lt;img src=&quot;/Fig/bget/kegg3.gif&quot; align=&quot;middle&quot; border=0&gt;&lt;/a&gt; &amp;nbsp; Glycosyltransferase Reactions&lt;/h2&gt;
+        '''#&lt;!---
+        '''#ENTRY       br08203
+        '''#DEFINITION  Glycosyltransferase reactions
+        '''#---&gt;
+        '''!
+        '''A&lt;b&gt;Glucosyltransferase reactions&lt;/b&gt;
+        '''B  R06264  Glc a1-2 Glc [KO:K03850] [PATH:rn00510]
+        '''B  R03118  Glc a1-3 Glc [KO:K00706] [PATH:rn00500]
+        '''B  R06263  Glc a1-3 Glc [KO:K03849] [PATH:rn00510]
+        '''B  R00292  Glc a1-4 Glc [KO:K00693] [PATH:rn00500]
+        '''B  R06184  Glc a1-6 Glc
+        '''B [rest of string was truncated]&quot;;.
+        '''</summary>
+        Friend ReadOnly Property br08203() As String
+            Get
+                Return ResourceManager.GetString("br08203", resourceCulture)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Looks up a localized string similar to +U
+        '''#&lt;h2&gt;&lt;a href=&quot;/kegg/kegg2.html&quot;&gt;&lt;img src=&quot;/Fig/bget/kegg3.gif&quot; align=&quot;middle&quot; border=0&gt;&lt;/a&gt;&amp;nbsp; KEGG Organisms in the NCBI Taxonomy&lt;/h2&gt;
+        '''#&lt;!---
+        '''#ENTRY       br08610
+        '''#DEFINITION  KEGG Organisms in the NCBI taxonomy
+        '''#---&gt;
+        '''!
+        '''AEukaryota
+        '''B  Metazoa
+        '''C    Chordata
+        '''D      Craniata
+        '''E        Vertebrata
+        '''F          Euteleostomi
+        '''G            Mammalia
+        '''H              Eutheria
+        '''I                Euarchontoglires
+        '''J                  Primates
+        '''K                    Haplorrhini
+        '''L                      Catarrhini
+        '''M              [rest of string was truncated]&quot;;.
+        '''</summary>
+        Friend ReadOnly Property br08610() As String
+            Get
+                Return ResourceManager.GetString("br08610", resourceCulture)
             End Get
         End Property
         
@@ -385,7 +447,7 @@ Namespace My.Resources
         '''C    Carbon fixation
         '''D      M00165  Reductive pentose phosphate cycle (Calvin cycle) [PATH:map01200 map00710]
         '''E        K00855  PRK, prkB; phosphoribulokinase [EC:2.7.1.19]
-        '''E        K01601  rbcL; ribulose-bisphosphate carboxylase large chain [EC:4.1.1. [rest of string was truncated]&quot;;.
+        '''E        K01601  rbcL; ribulose-bisphosphate carboxylase large ch [rest of string was truncated]&quot;;.
         '''</summary>
         Friend ReadOnly Property ko00002_keg() As String
             Get

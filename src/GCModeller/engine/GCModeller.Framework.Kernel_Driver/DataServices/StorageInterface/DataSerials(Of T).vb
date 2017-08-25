@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::90a546a4e41b9ab56534e47adc9bab01, ..\GCModeller\engine\GCModeller.Framework.Kernel_Driver\DataServices\StorageInterface\DataSerials(Of T).vb"
+﻿#Region "Microsoft.VisualBasic::c16f84d47c9e0ae881799306c7fbe99a, ..\GCModeller\engine\GCModeller.Framework.Kernel_Driver\DataServices\StorageInterface\DataSerials(Of T).vb"
 
     ' Author:
     ' 
@@ -31,7 +31,7 @@ Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Scripting.MetaData
@@ -43,11 +43,11 @@ Namespace DataStorage.FileModel
     ''' </summary>
     ''' <typeparam name="T"><see cref="Integer"></see>; <see cref="Double"></see>; <see cref="Boolean"></see></typeparam>
     ''' <remarks></remarks>
-    Public Class DataSerials(Of T) : Implements IAddressHandle
+    Public Class DataSerials(Of T) : Implements IAddressOf
 
         Public Property UniqueId As String
         Public Property Samples As T()
-        Public Property Handle As Integer Implements IAddressHandle.Address
+        Public Property Handle As Integer Implements IAddressOf.Address
 
         Public Overrides Function ToString() As String
             Return String.Format("[{0}] {1}   ", Handle, UniqueId) & String.Join(",", (From obj In Samples Select s = obj.ToString).ToArray)
@@ -109,37 +109,5 @@ Namespace DataStorage.FileModel
 
             Return File
         End Function
-
-#Region "IDisposable Support"
-        Private disposedValue As Boolean ' To detect redundant calls
-
-        ' IDisposable
-        Protected Overridable Sub Dispose(disposing As Boolean)
-            If Not Me.disposedValue Then
-                If disposing Then
-                    ' TODO: dispose managed state (managed objects).
-                End If
-
-                ' TODO: free unmanaged resources (unmanaged objects) and override Finalize() below.
-                ' TODO: set large fields to null.
-            End If
-            Me.disposedValue = True
-        End Sub
-
-        ' TODO: override Finalize() only if Dispose( disposing As Boolean) above has code to free unmanaged resources.
-        'Protected Overrides Sub Finalize()
-        '    ' Do not change this code.  Put cleanup code in Dispose( disposing As Boolean) above.
-        '    Dispose(False)
-        '    MyBase.Finalize()
-        'End Sub
-
-        ' This code added by Visual Basic to correctly implement the disposable pattern.
-        Public Sub Dispose() Implements IDisposable.Dispose
-            ' Do not change this code.  Put cleanup code in Dispose(disposing As Boolean) above.
-            Dispose(True)
-            GC.SuppressFinalize(Me)
-        End Sub
-#End Region
-
     End Class
 End Namespace

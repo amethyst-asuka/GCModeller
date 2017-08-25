@@ -42,7 +42,7 @@ Namespace Analysis
     ''' 基因能够被比对得上，并且motif位点也能够恰好被比对上，就认为是一个成功预测的Regulon？？
     ''' </summary>
     ''' 
-    <PackageNamespace("MEME.Regulon.Def", Category:=APICategories.ResearchTools)>
+    <Package("MEME.Regulon.Def", Category:=APICategories.ResearchTools)>
     Public Module RegulonDef
 
         Public ReadOnly Property MAST_LDM As Dictionary(Of String, AnnotationModel)
@@ -73,18 +73,18 @@ Namespace Analysis
             Dim regulons = FileIO.FileSystem.GetFiles(regulonBBH, FileIO.SearchOption.SearchTopLevelOnly, "*.xml") _
                 .ToArray(Function(x) x.LoadXml(Of Regprecise.BacteriaGenome))
             Dim tomOUTs = FileIO.FileSystem.GetFiles(tomOUT, FileIO.SearchOption.SearchAllSubDirectories, "*.csv") _
-                .ToArray(Function(x) x.LoadCsv(Of Analysis.Similarity.TOMQuery.CompareResult)).MatrixToVector
+                .ToArray(Function(x) x.LoadCsv(Of Analysis.Similarity.TOMQuery.CompareResult)).ToVector
             Dim tomHash = (From x As Similarity.TOMQuery.CompareResult
                            In tomOUTs
-                           Select uid = IO.Path.GetFileNameWithoutExtension(x.QueryName),
+                           Select uid = basename(x.QueryName),
                                x
                            Group By uid Into Group) _
                                 .ToDictionary(Function(x) x.uid,
                                               Function(x) x.Group.ToArray(Function(xx) xx.x))
             Dim regulonHash = (From x In regulons
                                Where Not x.Regulons Is Nothing
-                               Select x.Regulons.Regulators.ToArray(Function(xx) New With {.uid = uid(xx), .regulon = xx})).MatrixToVector
-            Dim regulonResults = (From x In regulonHash Where tomHash.ContainsKey(x.uid) Select x.regulon.__creates(tomHash(x.uid))).MatrixToVector
+                               Select x.Regulons.Regulators.ToArray(Function(xx) New With {.uid = uid(xx), .regulon = xx})).ToVector
+            Dim regulonResults = (From x In regulonHash Where tomHash.ContainsKey(x.uid) Select x.regulon.__creates(tomHash(x.uid))).ToVector
             Return regulonResults
         End Function
 

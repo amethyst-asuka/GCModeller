@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::2636797d926840aa2698843fc2994c29, ..\GCModeller\data\RCSB PDB\PDB\PdbExport.vb"
+﻿#Region "Microsoft.VisualBasic::bec8755368564a7ac6066728a5716c57, ..\GCModeller\data\RCSB PDB\PDB\PdbExport.vb"
 
     ' Author:
     ' 
@@ -29,9 +29,9 @@
 Imports System.Text
 Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports Microsoft.VisualBasic.Data.csv.Extensions
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.ComponentModel
+Imports Microsoft.VisualBasic.ComponentModel.Algorithm.base
 
 ''' <summary>
 ''' PDB File Format
@@ -107,11 +107,11 @@ Public Module PdbExport
                 Dim TempChunk As List(Of String()) = New List(Of String()) From {TargetProtein}
                 Call TempChunk.AddRange(ChainIdLQuery)
 
-                Dim ProteinComplexesAssembly = Comb.Generate(TempChunk.ToArray) '利用Entry里面的记录在Lquery里面进行筛选，使用组合的方式进行组装蛋白质
+                Dim ProteinComplexesAssembly = Combination.Generate(TempChunk.ToArray) '利用Entry里面的记录在Lquery里面进行筛选，使用组合的方式进行组装蛋白质
 
                 For Each item In ProteinComplexesAssembly
-                    Dim Row As RowObject = New RowObject From {item.Count}
-                    Dim sBuilder As StringBuilder = New StringBuilder(1024)
+                    Dim Row As New RowObject From {item.Count}
+                    Dim sBuilder As New StringBuilder(1024)
                     For Each ProteinId As String In (From strData As String In item Select strData Order By strData Ascending).ToArray
                         Call sBuilder.Append(ProteinId & ", ")
                     Next

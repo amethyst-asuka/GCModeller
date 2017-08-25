@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::829be4fcfd434bf0d1cd9898d03a00de, ..\R.Bioconductor\Bioconductor\Bioconductor\biocPkgs\WGCNA\goodSamplesGenes.vb"
+﻿#Region "Microsoft.VisualBasic::395857c3462361747787deaf4ced6d06, ..\R.Bioconductor\Bioconductor\Bioconductor\biocPkgs\WGCNA\goodSamplesGenes.vb"
 
     ' Author:
     ' 
@@ -26,7 +26,7 @@
 
 #End Region
 
-Imports Microsoft.VisualBasic.DocumentFormat.Csv.StorageProvider.Reflection
+Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports Microsoft.VisualBasic.Serialization
 Imports RDotNET.Extensions.VisualBasic
 Imports RDotNET.Extensions.VisualBasic.SymbolBuilder

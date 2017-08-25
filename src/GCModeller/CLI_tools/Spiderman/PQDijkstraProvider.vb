@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::a6456c6735f1b688b5ea061fc02f6ebe, ..\GCModeller\CLI_tools\Spiderman\PQDijkstraProvider.vb"
+﻿#Region "Microsoft.VisualBasic::4d0177efdff21c638d40407b5eff2443, ..\GCModeller\CLI_tools\Spiderman\PQDijkstraProvider.vb"
 
     ' Author:
     ' 
@@ -38,7 +38,7 @@ Imports SMRUCC.genomics.GCModeller.ModellingEngine.Assembly.GCTabular.DataVisual
 
 Namespace PathRoutes
 
-    <[PackageNamespace]("SpiderMan.PQDijkstraProvider", Category:=APICategories.UtilityTools, Description:="Tools for finding path in a network.", Publisher:="xie.guigang@gmail.com", Url:="")>
+    <Package("SpiderMan.PQDijkstraProvider", Category:=APICategories.UtilityTools, Description:="Tools for finding path in a network.", Publisher:="xie.guigang@gmail.com", Url:="")>
     Public Class PQDijkstraProvider : Inherits PQDijkstra.PQDijkstraProvider
 
         Dim OriginalNodes As NodeAttributes()
@@ -51,7 +51,7 @@ Namespace PathRoutes
             Call MyBase.New(Nodes.Count)
 
             Me._nodes = Nodes.SeqIterator.ToArray
-            Me._nodeHash = _nodes.ToDictionary(Function(x) x.obj.Identifier)
+            Me._nodeHash = _nodes.ToDictionary(Function(x) x.value.ID)
             Me.OriginalNodes = Nodes
             Me.NetworkInteractions = Network
         End Sub
@@ -80,13 +80,13 @@ Namespace PathRoutes
             Dim Path As New List(Of Interactions)
             For i As Integer = 0 To routes.Count - 2
                 Dim NodeA = routes(i), NodeB = routes(i + 1)
-                Dim Interaction = (From itr In provider.NetworkInteractions Where itr.Equals(NodeA.Identifier, NodeB.Identifier) Select itr).First
+                Dim Interaction = (From itr In provider.NetworkInteractions Where itr.Equals(NodeA.ID, NodeB.ID) Select itr).First
                 Call Path.Add(Interaction)
             Next
 
             Dim sBuilder As StringBuilder = New StringBuilder(1024)
             For Each node In Path
-                Call sBuilder.AppendLine(String.Format("{0}  {1} --> {2}", String.Format("[{0}  ""{1}""]", node.UniqueId, node.InteractionType.ToString), node.FromNode, node.ToNode))
+                Call sBuilder.AppendLine(String.Format("{0}  {1} --> {2}", String.Format("[{0}  ""{1}""]", node.UniqueId, node.Interaction), node.FromNode, node.ToNode))
             Next
 
             Call Console.WriteLine(sBuilder.ToString)
@@ -111,9 +111,9 @@ Namespace PathRoutes
             Dim AdjacencyLQuery = (From itr In NetworkInteractions.AsParallel Where itr.Equals(start, ends) Select itr).ToArray
             If Not AdjacencyLQuery.IsNullOrEmpty Then  '是直接相邻的两个节点
                 Dim AdjacencyPath = New NodeAttributes() {
-                    OriginalNodes.GetItem(uniqueId:=start),
-                    OriginalNodes.GetItem(uniqueId:=AdjacencyLQuery.First.UniqueId),
-                    OriginalNodes.GetItem(uniqueId:=ends)}
+                    OriginalNodes.Take(uniqueId:=start),
+                    OriginalNodes.Take(uniqueId:=AdjacencyLQuery.First.UniqueId),
+                    OriginalNodes.Take(uniqueId:=ends)}
                 Return AdjacencyPath
             End If
 
@@ -124,7 +124,7 @@ Namespace PathRoutes
 
             Dim path = Compute(idx_start, idx_ends)
             Dim nodes = (From x In Me._nodeHash.Values Select x Order By x.i Ascending).ToArray
-            Dim LQuery = (From idx As Integer In path Select nodes(idx).obj).ToArray
+            Dim LQuery = (From idx As Integer In path Select nodes(idx).value).ToArray
             Return LQuery
         End Function
 
@@ -136,8 +136,8 @@ Namespace PathRoutes
         ''' <returns></returns>
         ''' <remarks></remarks>
         Protected Overrides Function getInternodeTraversalCost(start As Integer, finish As Integer) As Single
-            Dim NodeA As String = _nodes(start).obj.Identifier
-            Dim NodeB As String = _nodes(finish).obj.Identifier
+            Dim NodeA As String = _nodes(start).value.ID
+            Dim NodeB As String = _nodes(finish).value.ID
 
             Dim LQuery = (From itr In NetworkInteractions.AsParallel Where itr.Equals(NodeA, NodeB) Select itr).ToArray
             If LQuery.IsNullOrEmpty Then
@@ -148,7 +148,7 @@ Namespace PathRoutes
         End Function
 
         Protected Overrides Function GetNearbyNodes(startingNode As Integer) As IEnumerable(Of Integer)
-            Dim Node As String = _nodes(startingNode).obj.Identifier
+            Dim Node As String = _nodes(startingNode).value.ID
             Dim LQuery = (From Interaction As Interactions
                           In NetworkInteractions
                           Let strId As String = __getNearbyNodeId(Node, Interaction)

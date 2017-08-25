@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::3d3bb65fda3728a886102b67802d3fd7, ..\GCModeller\data\RegulonDatabase\Regprecise\FastaReaders\Regulator.vb"
+﻿#Region "Microsoft.VisualBasic::e0bce84c0a7e7089817be3a8831bfa13, ..\GCModeller\data\RegulonDatabase\Regprecise\FastaReaders\Regulator.vb"
 
     ' Author:
     ' 
@@ -38,13 +38,13 @@ Namespace Regprecise.FastaReaders
     ''' > xcb:XC_1184|Family|Regulates|Regulog|Definition
     ''' </summary>
     Public Class Regulator : Inherits FASTA.FastaToken
-        Implements sIdEnumerable
+        Implements INamedValue
 
         ''' <summary>
         ''' &lt;(KEGG)species_code>:&lt;locusTag>
         ''' </summary>
         ''' <returns></returns>
-        Public Property KEGG As String Implements sIdEnumerable.Identifier
+        Public Property KEGG As String Implements INamedValue.Key
             Get
                 Return _kegg
             End Get

@@ -26,11 +26,10 @@
 
 #End Region
 
-Imports Microsoft.VisualBasic.Data.visualize.Network.Abstract
 Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
+Imports Microsoft.VisualBasic.Data.visualize.Network.Graph.Abstract
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
-Imports Microsoft.VisualBasic.Serialization
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
 Imports SMRUCC.genomics.ComponentModel.Loci
@@ -133,7 +132,7 @@ Namespace Analysis.GenomeMotifFootPrints
         ''' <returns></returns>
         ''' <remarks></remarks>
         Friend Shared Function __createRegulationObject(data As MEMEOutput,
-                                                        GenomeSequence As NucleotideModels.SegmentReader,
+                                                        GenomeSequence As IPolymerSequenceModel,
                                                         Ptt As PTTDbLoader,
                                                         IgnoreDirection As Boolean,
                                                         Optional ATGDistance As Integer = 500) As PredictedRegulationFootprint()
@@ -149,7 +148,7 @@ Namespace Analysis.GenomeMotifFootPrints
                 .Signature = data.RegularExpression
             }
 
-            Regulation.Sequence = GenomeSequence.TryParse(nnnnnnnnnnnnn.Min, Regulation.Length)
+            Regulation.Sequence = GenomeSequence.CutSequenceBylength(nnnnnnnnnnnnn.Min, Regulation.Length).SequenceData
 
             Dim RelatedGeneObjects As Relationship(Of GeneBrief)()
             '   Dim PositionRelative As SMRUCC.genomics.ComponentModel.Loci. SegmentRelationships

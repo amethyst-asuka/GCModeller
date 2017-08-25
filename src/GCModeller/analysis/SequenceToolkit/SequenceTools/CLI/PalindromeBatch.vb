@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::096e93d471858fa4be93a63d30c81850, ..\GCModeller\analysis\SequenceToolkit\SequenceTools\CLI\PalindromeBatch.vb"
+﻿#Region "Microsoft.VisualBasic::9f66c33bdb30fd91479089d4de4a3385, ..\GCModeller\analysis\SequenceToolkit\SequenceTools\CLI\PalindromeBatch.vb"
 
     ' Author:
     ' 
@@ -42,6 +42,7 @@ Imports SMRUCC.genomics.SequenceModel.NucleotideModels
 Partial Module Utilities
 
     <ExportAPI("/check.attrs", Usage:="/check.attrs /in <in.fasta> /n <attrs.count> [/all]")>
+    <Group(CLIGrouping.PalindromeBatchTaskTools)>
     Public Function CheckHeaders(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim n As Integer = args("/n")
@@ -64,6 +65,7 @@ Partial Module Utilities
     <ExportAPI("/Palindrome.BatchTask",
                Usage:="/Palindrome.BatchTask /in <in.DIR> [/num_threads 4 /min 3 /max 20 /min-appears 2 /cutoff <0.6> /Palindrome /max-dist <1000 (bp)> /partitions <-1> /out <out.DIR>]")>
     <Argument("/Palindrome", True, Description:="Only search for Palindrome, not includes the repeats data.")>
+    <Group(CLIGrouping.PalindromeBatchTaskTools)>
     Public Function PalindromeBatchTask(args As CommandLine) As Integer
         Dim inDIR As String = args - "/in"
         Dim min As Integer = args.GetValue("/min", 3)
@@ -95,6 +97,7 @@ Partial Module Utilities
     <Argument("/in", False,
                    Description:="This is a single sequence fasta file.")>
     <Argument("/Palindrome", True, Description:="Only search for Palindrome, not includes the repeats data.")>
+    <Group(CLIGrouping.PalindromeBatchTaskTools)>
     Public Function PalindromeWorkflow(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim min As Integer = args.GetValue("/min", 3)
@@ -104,7 +107,7 @@ Partial Module Utilities
         Dim nt As New FASTA.FastaToken([in])
         Dim minAp As Integer = args.GetValue("/min-appears", 2)
 
-        Dim mirrorPalindrome As PalindromeLoci() = Topologically.SearchMirror(nt, min, max)   ' 镜像回文
+        Dim mirrorPalindrome As PalindromeLoci() = Topologically.SearchMirrorPalindrome(nt, min, max)   ' 镜像回文
 
         Dim palindrome = Topologically.SearchPalindrome(nt, min, max)  ' 简单回文
 
@@ -112,7 +115,7 @@ Partial Module Utilities
         Dim maxDist As Integer = args.GetValue("/max-dist", 1000)
         Dim parts As Integer = args.GetValue("/partitions", -1)
         Dim imPalSearch As New Topologically.Imperfect(nt, min, max, cutoff, maxDist, parts)
-        Call imPalSearch.InvokeSearch()
+        Call imPalSearch.DoSearch()
         Dim imperfectPalindrome As Topologically.ImperfectPalindrome() = imPalSearch.ResultSet   ' 非完全回文
 
         Dim MirrorLocis = mirrorPalindrome.ToLocis

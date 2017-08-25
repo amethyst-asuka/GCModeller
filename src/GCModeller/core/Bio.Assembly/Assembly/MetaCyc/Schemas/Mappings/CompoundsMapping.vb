@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::2de3daceb010c701501ef93a4ff0d9e9, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\Schemas\Mappings\CompoundsMapping.vb"
+﻿#Region "Microsoft.VisualBasic::fbd230379be1db0638c7f8acc0787dac, ..\core\Bio.Assembly\Assembly\MetaCyc\Schemas\Mappings\CompoundsMapping.vb"
 
     ' Author:
     ' 
@@ -27,13 +27,11 @@
 #End Region
 
 Imports System.Text
-Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Microsoft.VisualBasic.Linq
-Imports Microsoft.VisualBasic.Text
-Imports Microsoft.VisualBasic.Text.Similarity
+Imports Microsoft.VisualBasic.Text.Levenshtein
 Imports SMRUCC.genomics.Assembly.MetaCyc.File
 Imports SMRUCC.genomics.Assembly.MetaCyc.File.FileSystem
+Imports SMRUCC.genomics.ComponentModel.EquaionModel
 
 Namespace Assembly.MetaCyc.Schema
 
@@ -76,10 +74,10 @@ Namespace Assembly.MetaCyc.Schema
         End Function
 
         Public Overloads Function Equals(name As String, compound As ICompoundObject) As Double
-            If String.Equals(name, compound.Identifier, StringComparison.OrdinalIgnoreCase) Then
+            If String.Equals(name, compound.Key, StringComparison.OrdinalIgnoreCase) Then
                 Return 100
             End If
-            If String.Equals(name, compound.locusId, StringComparison.OrdinalIgnoreCase) Then
+            If String.Equals(name, compound.KEGG_cpd, StringComparison.OrdinalIgnoreCase) Then
                 Return 100
             End If
 
@@ -107,7 +105,7 @@ Namespace Assembly.MetaCyc.Schema
                 If Not LQuery.IsNullOrEmpty Then '在MetaCyc数据库之中查询到了相对应的记录数据
                     Dim Compound = LQuery.First
 
-                    Effector.MetaCycId = Compound.Identifier.ToUpper
+                    Effector.MetaCycId = Compound.Key.ToUpper
 
                     If Not Compound.CommonNames.IsNullOrEmpty Then
                         Effector.CommonName = (From strName As String In Compound.CommonNames Select strName Order By Len(strName) Ascending).First
@@ -136,7 +134,7 @@ Namespace Assembly.MetaCyc.Schema
                 Next
             End If
 
-            If IsEqually(Effector.Identifier, Compound) Then
+            If IsEqually(Effector.Key, Compound) Then
                 Return True
             Else
                 If Effector.CommonNames.IsNullOrEmpty Then
@@ -148,7 +146,7 @@ Namespace Assembly.MetaCyc.Schema
         End Function
 
         Private Shared Function IsEqually(Effector As String, Compound As ICompoundObject) As Boolean
-            If String.Equals(Effector, Compound.Identifier, StringComparison.OrdinalIgnoreCase) Then
+            If String.Equals(Effector, Compound.Key, StringComparison.OrdinalIgnoreCase) Then
                 Return True
             Else
                 For Each strName As String In Compound.CommonNames

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::4f3119c1c2c44fabeea814e1f9117962, ..\GCModeller\analysis\Metagenome\Metagenome\gast\gast_tools.vb"
+﻿#Region "Microsoft.VisualBasic::5a945f5b6b378c364dbcd1d0d1aaeea7, ..\GCModeller\analysis\Metagenome\Metagenome\gast\gast_tools.vb"
 
     ' Author:
     ' 
@@ -35,11 +35,10 @@ Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports Microsoft.VisualBasic.Language
-Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Serialization.JSON
 Imports Microsoft.VisualBasic.Text
 Imports SMRUCC.genomics.Assembly
-Imports SMRUCC.genomics.Assembly.NCBI
+Imports SMRUCC.genomics.Assembly.NCBI.Taxonomy
 Imports SMRUCC.genomics.SequenceModel.FASTA
 
 Namespace gast
@@ -91,7 +90,7 @@ Namespace gast
 
                 Yield New NamedValue(Of String()) With {
                     .Name = tokens(Scan0),
-                    .x = tokens(1).Split(","c)
+                    .Value = tokens(1).Split(","c)
                 }
             Next
         End Function
@@ -221,24 +220,26 @@ Namespace gast
     ''' <summary>
     ''' *.names
     ''' </summary>
-    Public Class Names : Implements sIdEnumerable
+    Public Class Names : Implements INamedValue
 
-        Public Property Unique As String Implements sIdEnumerable.Identifier
-        <Ignored> Public Property members As String()
+        Public Property Unique As String Implements INamedValue.Key
+        <Ignored>
+        Public Property members As String()
         Public Property NumOfSeqs As Integer
         Public Property taxonomy As String
         Public Property distance As Double
         Public Property refs As String
-        <Meta> Public Property Composition As Dictionary(Of String, String)
+        <Meta>
+        Public Property Composition As Dictionary(Of String, String)
 
         Public Overrides Function ToString() As String
             Return Me.GetJson
         End Function
     End Class
 
-    Public Class gastOUT : Implements sIdEnumerable
+    Public Class gastOUT : Implements INamedValue
 
-        Public Property read_id As String Implements sIdEnumerable.Identifier
+        Public Property read_id As String Implements INamedValue.Key
         Public Property taxonomy As String
         Public Property distance As Double
         Public Property rank As String

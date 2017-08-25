@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::2bf9bff2b2074b69735894c82d3e970e, ..\GCModeller\CLI_tools\GCModeller\CLI\Annotations.vb"
+﻿#Region "Microsoft.VisualBasic::9570134d937f3b95286a2f2eb22662a3, ..\GCModeller\CLI_tools\GCModeller\CLI\Annotations.vb"
 
     ' Author:
     ' 
@@ -29,7 +29,7 @@
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
-Imports SMRUCC.genomics.Analysis.Annotations.BASys
+Imports SMRUCC.genomics.Data.BASys
 
 Partial Module CLI
 

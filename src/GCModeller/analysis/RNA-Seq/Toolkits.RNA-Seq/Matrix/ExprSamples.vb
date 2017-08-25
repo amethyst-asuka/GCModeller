@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::b621a9cdb6b3902691a97fd4a3393303, ..\GCModeller\analysis\RNA-Seq\Toolkits.RNA-Seq\Matrix\ExprSamples.vb"
+﻿#Region "Microsoft.VisualBasic::fb1ec5d2f8fc9676d20272ec94abcfbf, ..\GCModeller\analysis\RNA-Seq\Toolkits.RNA-Seq\Matrix\ExprSamples.vb"
 
     ' Author:
     ' 
@@ -29,10 +29,11 @@
 Imports System.Xml.Serialization
 Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Net.Protocols
 Imports Microsoft.VisualBasic.Serialization
 Imports Microsoft.VisualBasic.Serialization.JSON
+Imports Microsoft.VisualBasic.Language
 
 Namespace dataExprMAT
 
@@ -42,7 +43,7 @@ Namespace dataExprMAT
     ''' <remarks></remarks>
     Public Class ExprSamples : Inherits Streams.Array.Double
         Implements IKeyValuePairObject(Of String, Double())
-        Implements sIdEnumerable, IEnumerable(Of Double)
+        Implements INamedValue, IEnumerable(Of Double)
 
         Public Sub New()
         End Sub
@@ -53,7 +54,7 @@ Namespace dataExprMAT
         End Sub
 
         <XmlAttribute("Id")>
-        Public Property locusId As String Implements sIdEnumerable.Identifier, IKeyValuePairObject(Of String, Double()).Identifier
+        Public Property locusId As String Implements INamedValue.Key, IKeyValuePairObject(Of String, Double()).Key
         Public Overrides Property Values As Double() Implements IKeyValuePairObject(Of String, Double()).Value
 
         Public Overrides Function ToString() As String
@@ -86,7 +87,7 @@ Namespace dataExprMAT
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Shared Function CreateFile(DataSet As IEnumerable(Of ExprSamples)) As File
-            Dim Table As List(Of RowObject) = (From item As ExprSamples In DataSet Select item.ToRow).ToList
+            Dim Table As List(Of RowObject) = (From item As ExprSamples In DataSet Select item.ToRow).AsList
             Dim FirstRow As RowObject = New RowObject((From item As ExprSamples In DataSet Select item.locusId).ToArray)
             Dim File As File = New File(FirstRow + Table)
             Return File

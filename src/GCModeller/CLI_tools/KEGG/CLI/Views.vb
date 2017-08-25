@@ -1,45 +1,84 @@
-﻿#Region "Microsoft.VisualBasic::c9600f1b56f1837d68f4a42defbb3819, ..\GCModeller\CLI_tools\KEGG\CLI\Views.vb"
+﻿#Region "Microsoft.VisualBasic::f92ae51fc037d115d8c938d7378e09fc, ..\GCModeller\CLI_tools\KEGG\CLI\Views.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv
+Imports Microsoft.VisualBasic.Data.csv.IO
+Imports Microsoft.VisualBasic.Extensions
+Imports Microsoft.VisualBasic.Imaging
+Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Serialization.JSON
+Imports SMRUCC.genomics.Assembly.KEGG.DBGET
 Imports SMRUCC.genomics.Assembly.KEGG.DBGET.bGetObject.SSDB
 Imports SMRUCC.genomics.Assembly.KEGG.DBGET.BriteHEntry
 Imports SMRUCC.genomics.Assembly.KEGG.WebServices
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat
+Imports SMRUCC.genomics.ComponentModel
+Imports SMRUCC.genomics.Data
+Imports SMRUCC.genomics.Metagenomics
 Imports SMRUCC.genomics.ProteinModel
 
 Partial Module CLI
+
+    <ExportAPI("/Organism.Table",
+               Usage:="/Organism.Table /in <br08601-htext.keg> [/out <out.csv>]")>
+    Public Function KEGGOrganismTable(args As CommandLine) As Integer
+        Dim in$ = args <= "/in"
+        Dim out As String = args.GetValue("/out", [in].TrimSuffix & ".table.csv")
+        Dim htext As htext = BriteHEntry.htext.StreamParser([in])
+        Dim table As Taxonomy() = htext.FillTaxonomyTable
+        Return table _
+            .SaveTo(out) _
+            .CLICode
+    End Function
+
+    <ExportAPI("/Cut_sequence.upstream", Usage:="/Cut_sequence.upstream /in <list.txt> /PTT <genome.ptt> /org <kegg_sp> [/len <100bp> /overrides /out <outDIR>]")>
+    Public Function CutSequence_Upstream(args As CommandLine) As Integer
+        Dim [in] = args("/in")
+        Dim PTT = args("/PTT")
+        Dim len = args.GetValue("/len", 100)
+        Dim out As String = args.GetValue("/out", [in].TrimSuffix & $"-{len}bp.fasta")
+        Dim genome As PTT = SMRUCC.genomics.Assembly.NCBI.GenBank.LoadPTT(PTT)
+        Dim code$ = args("/org")
+        Dim [overrides] As Boolean = args.GetBoolean("/overrides")
+
+        Call genome.CutSequence_Upstream(
+            geneIDs:=[in].ReadAllLines,
+            len:=len,
+            save:=out,
+            code:=code,
+            [overrides]:=[overrides])
+
+        Return 0
+    End Function
 
     <ExportAPI("/Views.mod_stat", Usage:="/Views.mod_stat /in <KEGG_Modules/Pathways_DIR> /locus <in.csv> [/locus_map Gene /pathway /out <out.csv>]")>
     Public Function Stats(args As CommandLine) As Integer
@@ -52,13 +91,16 @@ Partial Module CLI
             If(ispathway,
             ModuleClassAPI.FromPathway(inDIR),
             ModuleClassAPI.FromModules(inDIR))
-        Dim locusId As String() = EntityObject.LoadDataSet(locus, locus_map).ToArray(Function(x) x.Identifier)
-        Dim LQuery = (From x In modsCls.Modules
-                      Select x.EntryId,
-                          locus_id = (From sid As String
-                                      In x.GetPathwayGenes
-                                      Where Array.IndexOf(locusId, sid) > -1
-                                      Select sid).ToArray).ToList
+        Dim locusId As String() = EntityObject.LoadDataSet(locus, locus_map).ToArray(Function(x) x.ID)
+        Dim LQuery = LinqAPI.MakeList(Of (entryId$, locus_id As String())) <=
+            From x As PathwayBrief
+            In modsCls.Modules
+            Let locus_id As String() = x _
+                .GetPathwayGenes _
+                .Where(Function(sid) Array.IndexOf(locusId, sid) > -1) _
+                .ToArray
+            Select (x.EntryId, locus_id)
+
         Return LQuery > out
     End Function
 

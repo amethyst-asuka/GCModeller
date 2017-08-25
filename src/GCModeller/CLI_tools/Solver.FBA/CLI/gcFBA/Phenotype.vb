@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::3a985dec44d2a91828abe05ba7506523, ..\GCModeller\CLI_tools\Solver.FBA\CLI\gcFBA\Phenotype.vb"
+﻿#Region "Microsoft.VisualBasic::14cc267a6a2dbb7f3ce6c54ca82a06b2, ..\GCModeller\CLI_tools\Solver.FBA\CLI\gcFBA\Phenotype.vb"
 
     ' Author:
     ' 
@@ -280,9 +280,9 @@ Partial Module CLI
                 objective.Info = mods.Description
             Case Else
                 Call $"Unable to determine objective type:  {type}, using list default".__DEBUG_ECHO
-PLANT:          objective.Associates = IO.File.ReadAllLines(file)
+PLANT:          objective.Associates = file.ReadAllLines
                 objective.Comments = "Plant Assigned"
-                objective.Name = IO.Path.GetFileNameWithoutExtension(file)
+                objective.Name = basename(file)
                 objective.Info = file
         End Select
 
@@ -313,7 +313,7 @@ PLANT:          objective.Associates = IO.File.ReadAllLines(file)
                 Function(x) Not String.IsNullOrEmpty(x.Regulator)).Distinct.ToArray
             rpkm = (From x As ExprStats In rpkm
                     Where Array.IndexOf(TF, x.locus) > -1
-                    Select x).ToList
+                    Select x).AsList
         End If
 
         Dim result As RPKMStat() = PhenoCoefficient.Coefficient(flxus, rpkm, sampleTable, Not spcc)
@@ -345,7 +345,7 @@ PLANT:          objective.Associates = IO.File.ReadAllLines(file)
                 Function(x) Not String.IsNullOrEmpty(x.Regulator)).Distinct.ToArray
             rpkm = (From x As ExprStats In rpkm
                     Where Array.IndexOf(TF, x.locus) > -1
-                    Select x).ToList
+                    Select x).AsList
         End If
 
         Dim result As RPKMStat() = PhenoCoefficient.Coefficient(flxus, rpkm, sampleTable, Not spcc)
@@ -363,7 +363,7 @@ PLANT:          objective.Associates = IO.File.ReadAllLines(file)
             file &= ".KEGG"
         End If
         If Not String.IsNullOrEmpty(footprints) Then
-            file &= "." & footprints.GetJustFileName
+            file &= "." & footprints.BaseName
         End If
         file &= ".csv"
         Return file

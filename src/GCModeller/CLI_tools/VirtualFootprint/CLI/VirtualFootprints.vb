@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::2a159c7426f70fb49d13ca30393da44e, ..\GCModeller\CLI_tools\VirtualFootprint\CLI\VirtualFootprints.vb"
+﻿#Region "Microsoft.VisualBasic::5a10834cb266700d2c1b5037cb6f9637, ..\GCModeller\CLI_tools\VirtualFootprint\CLI\VirtualFootprints.vb"
 
     ' Author:
     ' 
@@ -27,17 +27,16 @@
 #End Region
 
 Imports System.Runtime.CompilerServices
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream.Linq
+Imports Microsoft.VisualBasic.Data.csv.IO.Linq
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports Microsoft.VisualBasic.Linq
-Imports Microsoft.VisualBasic.Parallel
+Imports Microsoft.VisualBasic.Math
 Imports Microsoft.VisualBasic.Parallel.Linq
-Imports Microsoft.VisualBasic.Mathematical
+Imports Microsoft.VisualBasic.Text
 Imports SMRUCC.genomics
 Imports SMRUCC.genomics.Analysis.SequenceTools.SequencePatterns
 Imports SMRUCC.genomics.Analysis.SequenceTools.SequencePatterns.Motif
@@ -49,12 +48,11 @@ Imports SMRUCC.genomics.ComponentModel.Loci.Abstract
 Imports SMRUCC.genomics.Data
 Imports SMRUCC.genomics.Data.Regprecise
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MEME
-Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH
+Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH.Abstract
 Imports SMRUCC.genomics.Model.Network.VirtualFootprint
 Imports SMRUCC.genomics.Model.Network.VirtualFootprint.DocumentFormat
 Imports SMRUCC.genomics.SequenceModel.FASTA
 Imports SMRUCC.genomics.SequenceModel.NucleotideModels
-Imports Microsoft.VisualBasic.Text
 
 Partial Module CLI
 
@@ -167,7 +165,7 @@ Partial Module CLI
                                   Where Not x.Regulators.IsNullOrEmpty
                                   Select (From n As String
                                           In x.Regulators
-                                          Select n, operon = x)).MatrixAsIterator
+                                          Select n, operon = x)).IteratesALL
                        Select o
                        Group o By o.n Into Group) _
                             .ToDictionary(Function(x) x.n,
@@ -197,7 +195,7 @@ Partial Module CLI
                           Select (From sid As String
                                   In x.Operon
                                   Select sid,
-                                      opr = x)).MatrixAsIterator
+                                      opr = x)).IteratesALL
             Dim hash = (From x In LQuery
                         Select x
                         Order By x.sid Ascending
@@ -303,14 +301,14 @@ Partial Module CLI
                            In siteLog.Sites
                            Let uid As String = $"{site.LocusTag}:{site.Position}"
                            Where RegPrecise.ContainsKey(uid)
-                           Select RegPrecise(uid)).MatrixAsIterator.Distinct
+                           Select RegPrecise(uid)).IteratesALL.Distinct
                       Select (From TF As String
                               In TFs
                               Where hitsHash.ContainsKey(TF)   ' bbh 没有比对上去的记录，则跳过这个位点
                               Let maps As String() = hitsHash(TF)
                               Select (From TF_locus As String
                                       In maps   ' 生成footprint位点
-                                      Select __copy(x, TF, TF_locus, siteLog.Family)).ToArray).MatrixAsIterator).MatrixAsIterator
+                                      Select __copy(x, TF, TF_locus, siteLog.Family)).ToArray).IteratesALL).IteratesALL
         Return LQuery.ToArray
     End Function
 
@@ -526,9 +524,9 @@ Partial Module CLI
                            Let bp As String() = Strings.Split(x.BiologicalProcess, ";")
                            Select From proc As String
                                   In bp
-                                  Where Not proc.IsBlank
+                                  Where Not proc.StringEmpty
                                   Select bioProc = proc.Trim,
-                                      site = x).MatrixAsIterator
+                                      site = x).IteratesALL
             For Each gr In (From x In Familys Select x Group x By x.bioProc Into Group)
                 Dim source As MotifLog() = gr.Group.ToArray(Function(x) x.site)
                 Dim Groups = source.Groups(offset)
@@ -564,7 +562,7 @@ Partial Module CLI
                           Let g As BacteriaGenome = xml.LoadXml(Of BacteriaGenome)
                           Where Not (g.Regulons Is Nothing OrElse
                               g.Regulons.Regulators.IsNullOrEmpty)
-                          Select tfs = g.Regulons.Regulators).MatrixAsIterator
+                          Select tfs = g.Regulons.Regulators).IteratesALL
         Dim reghash = (From x As Regulator
                        In regulators
                        Select x

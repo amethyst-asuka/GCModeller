@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::0345bdf28f551fe28376d37c6829b501, ..\GCModeller\CLI_tools\S.M.A.R.T\CLI\CLI.vb"
+﻿#Region "Microsoft.VisualBasic::5b9fd2166e37e8fcb4ed26dda1eacccb, ..\GCModeller\CLI_tools\S.M.A.R.T\CLI\CLI.vb"
 
     ' Author:
     ' 
@@ -36,8 +36,9 @@ Imports SMRUCC.genomics.Assembly.NCBI.CDD
 Imports SMRUCC.genomics.Data.Xfam
 Imports SMRUCC.genomics.Interops
 Imports SMRUCC.genomics.Interops.NCBI.Extensions
+Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.BLASTOutput
 
-<PackageNamespace("SMATRT.CLI",
+<Package("SMATRT.CLI",
                   Category:=APICategories.CLI_MAN,
                   Publisher:="xie.guigang@gcmodeller.org, amethyst.asuka@gcmodeller.org",
                   Description:="SMART protein domain structure tools CLI interface.")>
@@ -158,7 +159,7 @@ Public Module CLI
     <ExportAPI("--Export.Pfam-String", Usage:="--Export.Pfam-String /in <blast_out.txt>")>
     Public Function ExportPfamString(args As CommandLine) As Integer
         Dim inFile As String = args("/in")
-        Dim blastOut = LocalBLAST.BLASTOutput.BlastPlus.Parser.TryParse(inFile)
+        Dim blastOut = BlastPlus.Parser.TryParse(inFile)
         Dim PfamString = Pfam.CreatePfamString(blastOut, disableUltralarge:=True)
         Return PfamString.SaveTo(inFile.TrimSuffix & ".Pfam-String.Csv")
     End Function

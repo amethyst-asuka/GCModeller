@@ -29,6 +29,7 @@
 Imports System.Text.RegularExpressions
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
+Imports Microsoft.VisualBasic.Scripting.Runtime
 Imports SMRUCC.genomics.ComponentModel.Loci
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.BLASTOutput.ComponentModel
 
@@ -94,14 +95,14 @@ Namespace LocalBLAST.BLASTOutput.BlastPlus
                 .ToArray  ' 分段
             Dim LQuery As BlastnHit() = Tokens _
                 .Select(AddressOf BlastnTryParse) _
-                .MatrixToVector
+                .ToVector
 
             Return LQuery
         End Function
 
         Private Shared Function BlastnTryParse(Text As String) As BlastnHit()
             Dim Tokens As String() = Regex.Split(Text, "^\s*Score\s*=", RegexOptions.Multiline)
-            Dim Name As String = Strings.Split(Tokens.First, "Length=").First.TrimA
+            Dim Name As String = Strings.Split(Tokens.First, "Length=").First.TrimNewLine
             Dim hitLen As Double = Text.Match("Length=\d+").RegexParseDouble
             Dim LQuery As BlastnHit() = LinqAPI.Exec(Of BlastnHit) <=
  _

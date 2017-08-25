@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::31603529d5833ee57d6568e503fc395f, ..\GCModeller\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\GBK\Keywords\ORIGIN.vb"
+﻿#Region "Microsoft.VisualBasic::eb7c889dbbd6bb1fc5b9276979f4e975, ..\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\GBK\Keywords\ORIGIN.vb"
 
     ' Author:
     ' 
@@ -33,6 +33,7 @@ Imports SMRUCC.genomics.SequenceModel
 Imports SMRUCC.genomics.SequenceModel.FASTA
 Imports SMRUCC.genomics.SequenceModel.NucleotideModels
 Imports Microsoft.VisualBasic.Language
+Imports SMRUCC.genomics.ComponentModel.Loci
 
 Namespace Assembly.NCBI.GenBank.GBFF.Keywords
 
@@ -51,27 +52,13 @@ Namespace Assembly.NCBI.GenBank.GBFF.Keywords
         ''' <value></value>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        <XmlIgnore> Public Property SequenceData As String Implements I_PolymerSequenceModel.SequenceData
-            Get
-                Return __sequenceParser.OriginalSequence
-            End Get
-            Set(value As String)
-                Try
-                    __sequenceParser = New SegmentReader(value)
-                Catch ex As Exception
-                    __sequenceParser = New SegmentReader(NucleicAcid.CopyNT(value))
-                    Call InvalidWarns.Warning
-                End Try
-            End Set
-        End Property
+        <XmlIgnore> Public Property SequenceData As String Implements IPolymerSequenceModel.SequenceData
 
         ''' <summary>
         ''' The origin nucleic acid sequence contains illegal character in the nt sequence, ignored as character N... 
         ''' for <see cref="SequenceData"/>
         ''' </summary>
         Const InvalidWarns As String = "The origin nucleic acid sequence contains illegal character in the nt sequence, ignored as character N..."
-
-        Dim __sequenceParser As SegmentReader
 
         ''' <summary>
         ''' ``<see cref="SequenceData"/> -> index``
@@ -84,19 +71,13 @@ Namespace Assembly.NCBI.GenBank.GBFF.Keywords
             End Get
         End Property
 
-        Public ReadOnly Property SequenceParser As SegmentReader
-            Get
-                Return __sequenceParser
-            End Get
-        End Property
-
         ''' <summary>
         ''' 基因组的大小
         ''' </summary>
         ''' <returns></returns>
-        Public ReadOnly Property Size As Long
+        Public ReadOnly Property Size As Integer
             Get
-                Return Len(__sequenceParser.OriginalSequence)
+                Return SequenceData.Length
             End Get
         End Property
 
@@ -105,8 +86,9 @@ Namespace Assembly.NCBI.GenBank.GBFF.Keywords
         ''' </summary>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Public Function GetFeatureSegment(Feature As Feature) As String
-            Return __sequenceParser.TryParse(Feature.Location.ContiguousRegion).SequenceData
+        Public Function GetFeatureSegment(feature As Feature) As String
+            Dim loci As NucleotideLocation = feature.Location.ContiguousRegion
+            Return Me.CutSequenceLinear(loci).SequenceData
         End Function
 
         Public Overrides Function ToString() As String
@@ -165,7 +147,7 @@ Namespace Assembly.NCBI.GenBank.GBFF.Keywords
 
         Public ReadOnly Property Title As String Implements IAbstractFastaToken.Title
             Get
-                Return MyBase.gbRaw.Definition.Value
+                Return MyBase.gb.Definition.Value
             End Get
         End Property
 

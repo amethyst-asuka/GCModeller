@@ -28,7 +28,7 @@
 
 Imports System.Text
 Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Linq.Extensions
 
 Namespace MatrixFile
@@ -111,7 +111,7 @@ Namespace MatrixFile
                        Let ID As String = Mid(strLine, 1, 10).Trim, strData As String = Mid(strLine, 11).Trim
                        Let Value As String() = strData.Split
                        Let Row As String()() = {New String() {ID}, Value}
-                       Select CType(Row.MatrixToList, RowObject)).ToArray
+                       Select CType(Row.Unlist, RowObject)).ToArray
 
             Dim MATList As New List(Of RowObject)
             Call MATList.Add(New String() {"GENOME_ID"})
@@ -152,9 +152,9 @@ Namespace MatrixFile
                                 Order By InternalSamplingCounts Descending).ToArray.Take(Count).ToArray
             Dim SubMAT = New File
             Call SubMAT.Add(_innerMATRaw.First)
-            Dim TempList = (From row In SelectLQuery Select row.row).ToList
+            Dim TempList = (From row In SelectLQuery Select row.row).AsList
             Call TempList.Add(MainRow)
-            TempList = TempList.Shuffles.ToList
+            TempList = TempList.Shuffles.AsList
 
             Call SubMAT.AppendRange(TempList)
 

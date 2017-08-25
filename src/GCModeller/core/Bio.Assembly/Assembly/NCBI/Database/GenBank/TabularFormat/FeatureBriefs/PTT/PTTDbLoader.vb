@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::ec94ef5a49690f9102c0a02d7bbdfe53, ..\GCModeller\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\TabularFormat\FeatureBriefs\PTT\PTTDbLoader.vb"
+﻿#Region "Microsoft.VisualBasic::aab99a263122e8aa38ef3c4c685f16b8, ..\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\TabularFormat\FeatureBriefs\PTT\PTTDbLoader.vb"
 
     ' Author:
     ' 
@@ -27,14 +27,13 @@
 #End Region
 
 Imports System.Text.RegularExpressions
-Imports System.Text
+Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Linq
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
 Imports SMRUCC.genomics.ComponentModel
 Imports SMRUCC.genomics.ComponentModel.Loci
-Imports SMRUCC.genomics.SequenceModel
 Imports SMRUCC.genomics.ContextModel
-Imports Microsoft.VisualBasic.Language
-Imports Microsoft.VisualBasic.Linq
+Imports SMRUCC.genomics.SequenceModel
 
 Namespace Assembly.NCBI.GenBank.TabularFormat
 
@@ -50,7 +49,7 @@ Namespace Assembly.NCBI.GenBank.TabularFormat
         ''' 整个基因组中的所有基因的集合，包括有蛋白质编码基因和RNA基因
         ''' </summary>
         ''' <remarks></remarks>
-        Dim _genomeContext As Dictionary(Of String, GeneBrief) = New Dictionary(Of String, GeneBrief)
+        Dim _genomeContext As New Dictionary(Of String, GeneBrief)
 
         Public ReadOnly Property GeneFastas As Dictionary(Of String, FastaObjects.Fasta)
         Public ReadOnly Property Proteins As Dictionary(Of String, FastaObjects.Fasta)
@@ -235,10 +234,6 @@ Namespace Assembly.NCBI.GenBank.TabularFormat
                 _RNARnt = PTT.Load(_lstFile.rnt)
             End If
             Return _RNARnt
-        End Function
-
-        Public Function CreateReader() As NucleotideModels.SegmentReader
-            Return New NucleotideModels.SegmentReader(GenomeFasta)
         End Function
 
         ''' <summary>

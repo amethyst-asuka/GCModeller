@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::083993c4ab39f7a6b354fbc7b0319e9f, ..\GCModeller\sub-system\CellPhenotype\TRN\DataVisualization.vb"
+﻿#Region "Microsoft.VisualBasic::8722fb38cfe468efe380948605d06a56, ..\GCModeller\sub-system\CellPhenotype\TRN\DataVisualization.vb"
 
     ' Author:
     ' 
@@ -35,7 +35,7 @@ Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports SMRUCC.genomics.Analysis.RNA_Seq
 Imports SMRUCC.genomics.Analysis.RNA_Seq.dataExprMAT
 
-<[PackageNamespace]("Cellphenotype.DynamicsNetwork", Publisher:="xie.guigang@gcmodeller.org")>
+<Package("Cellphenotype.DynamicsNetwork", Publisher:="xie.guigang@gcmodeller.org")>
 Public Module DataVisualization
 
     Public Class Edge : Inherits NetworkEdge
@@ -60,16 +60,16 @@ Public Module DataVisualization
                                      Select New Edge With {
                                          .FromNode = node.FromNode,
                                          .ToNode = node.ToNode,
-                                         .InteractionType = node.InteractionType,
-                                         .Confidence = node.Confidence,
-                                         .InteractValue = Math.Min([from], [to]) * node.Confidence
+                                         .Interaction = node.Interaction,
+                                         .value = node.value,
+                                         .InteractValue = Math.Min([from], [to]) * node.value
                                      }
         Return LQuery
     End Function
 
     <ExportAPI("Read.Csv.SimulationResult")>
     Public Function LoadResult(path As String) As ExprSamples()
-        Dim Csv As DocumentStream.File = DocumentStream.File.Load(path)
+        Dim Csv As IO.File = IO.File.Load(path)
         Return MatrixAPI.ToSamples(Csv, True)
     End Function
 

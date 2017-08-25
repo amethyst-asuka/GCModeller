@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::e1b1131880549b24310137e6fe442e7c, ..\GCModeller\CLI_tools\RegPrecise\CLI\OperonBuilder.vb"
+﻿#Region "Microsoft.VisualBasic::fdb81ce962f67d5b2f6a3f8cb9539ed1, ..\GCModeller\CLI_tools\RegPrecise\CLI\OperonBuilder.vb"
 
     ' Author:
     ' 
@@ -27,16 +27,14 @@
 #End Region
 
 Imports System.Runtime.CompilerServices
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
+Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports Microsoft.VisualBasic.Linq
-Imports Microsoft.VisualBasic.Parallel
 Imports Microsoft.VisualBasic.Parallel.Linq
 Imports Microsoft.VisualBasic.Serialization.JSON
 Imports SMRUCC.genomics.Assembly.DOOR
@@ -44,8 +42,7 @@ Imports SMRUCC.genomics.Assembly.NCBI.GenBank
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat
 Imports SMRUCC.genomics.ComponentModel.Loci
 Imports SMRUCC.genomics.Data.Regprecise
-Imports SMRUCC.genomics.Data.Xfam.Rfam.Infernal
-Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH
+Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH.Abstract
 Imports gene = SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels.GeneBrief
 
 Partial Module CLI
@@ -56,10 +53,12 @@ Partial Module CLI
         Dim [in] As String = args - "/in"
         Dim opr As String = args - "/DOOR"
         Dim out As String = ("/out" <= args) ^ $"{[in].TrimSuffix}-{opr.BaseName}.opr"
-        Dim operons As List(Of RegPreciseOperon) = (From x As RegPreciseOperon
-                                                    In [in].LoadCsv(Of RegPreciseOperon)
-                                                    Select x
-                                                    Order By x.Operon.Length Descending).ToList
+        Dim operons As List(Of RegPreciseOperon) = LinqAPI.MakeList(Of RegPreciseOperon) <=
+            From x As RegPreciseOperon
+            In [in].LoadCsv(Of RegPreciseOperon)
+            Select x
+            Order By x.Operon.Length Descending
+
         Dim DOOR As DOOR = DOOR_API.Load(opr)
 
         ' 求交集
@@ -91,8 +90,8 @@ Partial Module CLI
         Dim ooo = (From x As SeqValue(Of RegPreciseOperon())
                    In its.SeqIterator
                    Select x.i,
-                       x.obj.ToArray(Function(xx) xx.Operon).MatrixAsIterator.Distinct.ToArray,
-                       TF = x.obj.ToArray(Function(xx) xx.Regulators).MatrixAsIterator.Distinct.ToArray).ToArray
+                       x.value.ToArray(Function(xx) xx.Operon).IteratesALL.Distinct.ToArray,
+                       TF = x.value.ToArray(Function(xx) xx.Regulators).IteratesALL.Distinct.ToArray).ToArray
 
         Call ooo.SaveTo(out.TrimSuffix & ".Csv")
 
@@ -257,17 +256,21 @@ Partial Module CLI
         End If
 
         Dim hits As String() = members.Keys.ToArray
-        Dim locus As New List(Of String)(members.Values.MatrixAsIterator.Distinct)
-        Dim forwards = (From x As String
-                        In locus
-                        Where plus.HasElement(x)
-                        Select gg = plus.Current(x)
-                        Order By gg.node.obj.Location.Left Ascending).ToList
-        Dim reversed = (From x As String
-                        In locus
-                        Where minus.HasElement(x)
-                        Select gg = minus.Current(x)
-                        Order By gg.node.obj.Location.Right Descending).ToList
+        Dim locus As New List(Of String)(members.Values.IteratesALL.Distinct)
+        Dim forwards = LinqAPI.MakeList(Of LinkNode(Of IHashValue(Of gene))) <=
+            From x As String
+            In locus
+            Where plus.HasElement(x)
+            Select gg = plus.Current(x)
+            Order By gg.node.obj.Location.Left Ascending
+
+        Dim reversed = LinqAPI.MakeList(Of LinkNode(Of IHashValue(Of gene))) <=
+            From x As String
+            In locus
+            Where minus.HasElement(x)
+            Select gg = minus.Current(x)
+            Order By gg.node.obj.Location.Right Descending
+
         Dim n As Integer = (From x
                             In members
                             Where Not x.Value.IsNullOrEmpty
@@ -308,24 +311,24 @@ Partial Module CLI
             g = source.First
 
             Do While True
-                Dim rm = (From x In source Where String.Equals(x.node.Identifier, g.node.Identifier) Select x).FirstOrDefault
+                Dim rm = (From x In source Where String.Equals(x.node.ID, g.node.ID) Select x).FirstOrDefault
                 If Not rm Is Nothing Then '  由于Next元素是新构建出来的，指针的位置不对，所以不能够直接使用remove方法移除
                     Call source.Remove(rm)
                 End If
-                gl += g.node.Identifier
+                gl += g.node.ID
                 g = g.Next
                 If g.node Is Nothing Then  ' 到头了，已经没有任何元素了
                     Exit Do
                 End If
-                If -1 = locus.IndexOf(g.node.Identifier) Then  ' 在列表里面不存在，则可能是中间的某一个元素由于进化较远bbh没有比对上，这里是一个缺口，
+                If -1 = locus.IndexOf(g.node.ID) Then  ' 在列表里面不存在，则可能是中间的某一个元素由于进化较远bbh没有比对上，这里是一个缺口，
                     g = g.Next                                 ' 但是后面可能还存在基因的， 试着比较一下下一个基因是否存在
                     If g Is Nothing OrElse g.node Is Nothing Then
                         Exit Do
                     End If
-                    If -1 = locus.IndexOf(g.node.Identifier) Then
+                    If -1 = locus.IndexOf(g.node.ID) Then
                         Exit Do
                     Else
-                        gl += g.Previous.node.Identifier
+                        gl += g.Previous.node.ID
                     End If
                 End If
             Loop

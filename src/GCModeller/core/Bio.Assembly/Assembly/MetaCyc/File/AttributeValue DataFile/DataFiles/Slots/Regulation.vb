@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::41a187d95d6c7011d54c9ee230baa71d, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Slots\Regulation.vb"
+﻿#Region "Microsoft.VisualBasic::1ee73e8331343fcf7818b53df9b1f2f5, ..\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Slots\Regulation.vb"
 
     ' Author:
     ' 
@@ -26,9 +26,10 @@
 
 #End Region
 
+Imports Microsoft.VisualBasic
+Imports Microsoft.VisualBasic.Language
 Imports SMRUCC.genomics.Assembly.MetaCyc.File.DataFiles.Reflection
 Imports SMRUCC.genomics.Assembly.MetaCyc.Schema.Reflection
-Imports Microsoft.VisualBasic
 
 Namespace Assembly.MetaCyc.File.DataFiles.Slots
 

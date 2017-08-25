@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::2ab2ac25bf98e79c484d4615c12ec9d8, ..\GCModeller\CLI_tools\Xfam\CLI\Rfam.vb"
+﻿#Region "Microsoft.VisualBasic::2192624da72d675f8e8a1daa1dc77617, ..\GCModeller\CLI_tools\Xfam\CLI\Rfam.vb"
 
     ' Author:
     ' 
@@ -30,6 +30,7 @@ Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
+Imports Microsoft.VisualBasic.Language
 Imports SMRUCC.genomics.Assembly
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat
@@ -144,7 +145,7 @@ Partial Module CLI
         Dim out As String =
             args.GetValue("/out", sites.TrimSuffix & $".{[in].BaseName}.fasta")
         Dim fa As New FASTA.FastaToken([in])
-        Dim parser As New SegmentReader(fa, LinearMolecule:=False)
+        Dim parser As IPolymerSequenceModel = fa
         Dim seqs As New List(Of Bac_sRNA.org.Sequence)
         Dim ntTitle As String = fa.Attributes.Last.Trim
 
@@ -153,7 +154,7 @@ Partial Module CLI
                 Continue For
             End If
 
-            Dim seq As SegmentObject = parser.TryParse(hit.MappingLocation)
+            Dim seq As SimpleSegment = parser.CutSequenceLinear(hit.MappingLocation)
             Dim tag As String = $"{hit.ORF}:{hit.distance}"
             seqs += New Bac_sRNA.org.Sequence(tag, ntTitle, Strings.Split(hit.data("Query"), " ").First, seq.SequenceData, hit.MappingLocation)
         Next

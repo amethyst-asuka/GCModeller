@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::930a2837730ef461de6ed5d12a4af2da, ..\GCModeller\visualize\visualizeTools\ExpressionMatrix\Matrix.vb"
+﻿#Region "Microsoft.VisualBasic::b32e816670550d2787118a0baf52da32, ..\visualize\visualizeTools\ExpressionMatrix\Matrix.vb"
 
     ' Author:
     ' 
@@ -27,7 +27,7 @@
 #End Region
 
 Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.ComponentModel.DataStructures
+Imports Microsoft.VisualBasic.ComponentModel.Algorithm.base
 Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Imaging
 Imports SMRUCC.genomics.InteractionModel
@@ -38,7 +38,7 @@ Namespace ExpressionMatrix
 
         Dim Margin As Integer = 50
 
-        Public Function InvokeDrawing(Data As SerialsData(), Conf As Configuration) As Image
+        Public Function InvokeDrawing(Data As SerialsData()) As Image
             Data = Data.Skip(1).ToArray   '第一个元素为时间
             Dim RenderingColor = New GeneticClock.ColorRender(Data).GetColorRenderingProfiles
             Dim TagFont As Font = New Font("Ubuntu", 4)
@@ -76,11 +76,11 @@ Namespace ExpressionMatrix
         ''' <param name="MAT"></param>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Public Function NormalMatrix(MAT As DocumentStream.File) As Image
-            Dim Tags As String() = {(From row In MAT.Skip(1) Select row.First).ToArray, MAT.First.Skip(1).ToArray}.MatrixToList.Distinct.ToArray
+        Public Function NormalMatrix(MAT As IO.File) As Image
+            Dim Tags As String() = {(From row In MAT.Skip(1) Select row.First).ToArray, MAT.First.Skip(1).ToArray}.Unlist.Distinct.ToArray
             Dim TagDict = CreateAlphabetTagSerials(Tags)
             Dim DrawingFont As Font = New Font(FontFace.Ubuntu, 12)
-            Dim MatrixValueString = (From s As String In (From row In MAT.Skip(1) Select row.Skip(1).ToArray).MatrixToList Select s Order By Len(s) Descending).ToArray
+            Dim MatrixValueString = (From s As String In (From row In MAT.Skip(1) Select row.Skip(1).ToArray).Unlist Select s Order By Len(s) Descending).ToArray
             Dim size = MatrixValueString.First.MeasureString(DrawingFont)
             Dim MatrixValues As Double() = (From s As String In MatrixValueString Select Val(s)).ToArray
             Dim ColorValues = GeneticClock.ColorRender.GetDesityRule(MatrixValues, 100)
@@ -131,11 +131,11 @@ Namespace ExpressionMatrix
         ''' <param name="MAT"></param>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Public Function NormalMatrixTriangular(MAT As DocumentStream.File) As Image
-            Dim Tags As String() = {(From row In MAT.Skip(1) Select row.First).ToArray, MAT.First.Skip(1).ToArray}.MatrixToList.Distinct.ToArray
+        Public Function NormalMatrixTriangular(MAT As IO.File) As Image
+            Dim Tags As String() = {(From row In MAT.Skip(1) Select row.First).ToArray, MAT.First.Skip(1).ToArray}.Unlist.Distinct.ToArray
             Dim TagDict As Dictionary(Of String, String) = CreateAlphabetTagSerials(Tags)
             Dim DrawingFont As Font = New Font(FontFace.Ubuntu, 12)
-            Dim MatrixValueString = (From s As String In (From row In MAT.Skip(1) Select row.Skip(1)).MatrixToList Select s Order By Len(s) Descending).ToArray
+            Dim MatrixValueString = (From s As String In (From row In MAT.Skip(1) Select row.Skip(1)).Unlist Select s Order By Len(s) Descending).ToArray
             Dim size = MatrixValueString.First.MeasureString(DrawingFont)
             Dim MatrixValues As Double() = (From s As String In MatrixValueString Select Val(s)).ToArray
             Dim ColorValues = GeneticClock.ColorRender.GetDesityRule(MatrixValues, 100)
@@ -203,7 +203,7 @@ Namespace ExpressionMatrix
                 Dim prefix As String = ""
 
                 For i As Integer = 0 To ChunkBuffer.Count - 1
-                    dat = ChunkBuffer(i).Elements
+                    dat = ChunkBuffer(i).Items
                     Call list.AddRange((From j As Integer In dat.Sequence Let s As String = dat(j) Select New KeyValuePair(Of String, String)(s, prefix & ALPHABET(j).ToString)).ToArray)
                     prefix &= ALPHABET(i)
                 Next

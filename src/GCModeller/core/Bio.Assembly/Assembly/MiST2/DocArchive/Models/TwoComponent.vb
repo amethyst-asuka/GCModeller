@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::d04b5337628fe62329addf573a9dcc0f, ..\GCModeller\core\Bio.Assembly\Assembly\MiST2\DocArchive\Models\TwoComponent.vb"
+﻿#Region "Microsoft.VisualBasic::45de4dcca5fda42ece971e3a721b4490, ..\core\Bio.Assembly\Assembly\MiST2\DocArchive\Models\TwoComponent.vb"
 
     ' Author:
     ' 
@@ -71,7 +71,7 @@ Namespace Assembly.MiST2
         ''' <returns></returns>
         Public Function GetRR() As String()
             Dim LQuery = (From transducin As Transducin
-                          In {RR, HRR}.MatrixToVector
+                          In {RR, HRR}.ToVector
                           Select transducin.Identifier
                           Distinct).ToArray
             Return LQuery
@@ -82,7 +82,7 @@ Namespace Assembly.MiST2
         ''' </summary>
         ''' <returns></returns>
         Public Function get_HisKinase() As String()
-            Dim LQuery = (From item In {HisK, HHK}.MatrixToVector Select item.Identifier Distinct).ToArray
+            Dim LQuery = (From item In {HisK, HHK}.ToVector Select item.Identifier Distinct).ToArray
             Return LQuery
         End Function
 

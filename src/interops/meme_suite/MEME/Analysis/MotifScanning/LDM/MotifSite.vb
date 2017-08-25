@@ -44,7 +44,7 @@ Namespace Analysis.MotifScans
     ''' 通过MAST程序扫描RegPrecise数据库里面的Motif Fasta所得到的结果
     ''' </summary>
     Public Class MotifSiteHit
-        Implements I_PolymerSequenceModel
+        Implements IPolymerSequenceModel
 
         ''' <summary>
         ''' 这个属性是记录了这个motif位点的来源信息，这个是用于Csv文档的，Xml文档会被忽略掉
@@ -63,7 +63,7 @@ Namespace Analysis.MotifScans
         ''' <returns></returns>
         <XmlAttribute> Public Property RegPrecise As String
         <XmlAttribute> Public Property Regulators As String()
-        <XmlAttribute> Public Property SequenceData As String Implements I_PolymerSequenceModel.SequenceData
+        <XmlAttribute> Public Property SequenceData As String Implements IPolymerSequenceModel.SequenceData
 
         Sub New()
         End Sub
@@ -78,24 +78,24 @@ Namespace Analysis.MotifScans
     End Class
 
     Public Class MatchResult : Inherits ClassObject
-        Implements sIdEnumerable
+        Implements INamedValue
 
         ''' <summary>
         ''' 来源的文件名
         ''' </summary>
         ''' <returns></returns>
-        <XmlAttribute> Public Property MEME As String Implements sIdEnumerable.Identifier
+        <XmlAttribute> Public Property MEME As String Implements INamedValue.Key
         <XmlElement> Public Property Matches As MotifHits()
 
         Public Function ToFootprints() As IEnumerable(Of GenomeMotifFootPrints.PredictedRegulationFootprint)
-            Return Matches.ToArray(Function(x) x.GetFootprints).MatrixAsIterator
+            Return Matches.ToArray(Function(x) x.GetFootprints).IteratesALL
         End Function
     End Class
 
     ''' <summary>
     ''' MEME结果之中的某一个Motif
     ''' </summary>
-    Public Class MotifHits : Implements sIdEnumerable
+    Public Class MotifHits : Implements INamedValue
         ''' <summary>
         ''' 当前的这个MEME Motif的来源位点的集合
         ''' </summary>
@@ -105,7 +105,7 @@ Namespace Analysis.MotifScans
         ''' File::MotifId
         ''' </summary>
         ''' <returns></returns>
-        <XmlAttribute> Public Property Trace As String Implements sIdEnumerable.Identifier
+        <XmlAttribute> Public Property Trace As String Implements INamedValue.Key
         <XmlAttribute> Public Property Evalue As Double
         Public Property MAST As MotifSiteHit()
 
@@ -114,7 +114,7 @@ Namespace Analysis.MotifScans
                           Let footprints = (From site As MotifSiteHit
                                             In MAST
                                             Select __toFootprints(x, site))
-                          Select footprints).MatrixAsIterator.MatrixToVector
+                          Select footprints).IteratesALL.ToVector
             Return LQuery
         End Function
 
@@ -141,8 +141,8 @@ Namespace Analysis.MotifScans
             Dim LQuery = (From x As MatchResult In Footprints.AsParallel
                           Select (From site As GenomeMotifFootPrints.PredictedRegulationFootprint
                                   In x.ToFootprints
-                                  Select site.FillSites(DOOR, mapsHash))).MatrixToVector
-            Return LQuery.MatrixAsIterator
+                                  Select site.FillSites(DOOR, mapsHash))).ToVector
+            Return LQuery.IteratesALL
         End Function
     End Class
 End Namespace

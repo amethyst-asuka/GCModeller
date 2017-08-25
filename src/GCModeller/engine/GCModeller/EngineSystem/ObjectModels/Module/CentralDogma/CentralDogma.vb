@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::4beaad90e8c6b2d143047751de925d7a, ..\GCModeller\engine\GCModeller\EngineSystem\ObjectModels\Module\CentralDogma\CentralDogma.vb"
+﻿#Region "Microsoft.VisualBasic::9ba45c4d53a21bc64b2d83f18e886552, ..\GCModeller\engine\GCModeller\EngineSystem\ObjectModels\Module\CentralDogma\CentralDogma.vb"
 
     ' Author:
     ' 
@@ -42,7 +42,7 @@ Namespace EngineSystem.ObjectModels.Module.CentralDogmaInstance
     ''' </summary>
     ''' <remarks></remarks>
     Public Class CentralDogma : Inherits ModellingEngine.EngineSystem.ObjectModels.Module.FluxObject
-        Implements Microsoft.VisualBasic.ComponentModel.IAddressHandle
+        Implements Microsoft.VisualBasic.ComponentModel.IAddressOf
 
 #Region "Object Property"
 
@@ -105,7 +105,7 @@ Namespace EngineSystem.ObjectModels.Module.CentralDogmaInstance
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Function get_Regulators() As SMRUCC.genomics.GCModeller.ModellingEngine.EngineSystem.ObjectModels.Entity.Regulator(Of Transcription)()
-            Return (From item In MotifSites Select item.Regulators).ToArray.MatrixToVector
+            Return (From item In MotifSites Select item.Regulators).ToArray.ToVector
         End Function
 
         ''' <summary>
@@ -206,36 +206,5 @@ Namespace EngineSystem.ObjectModels.Module.CentralDogmaInstance
         Public Overrides Function ToString() As String
             Return TransUnit.ToString
         End Function
-
-#Region "IDisposable Support"
-        Private disposedValue As Boolean ' 检测冗余的调用
-
-        ' IDisposable
-        Protected Overrides Sub Dispose(disposing As Boolean)
-            If Not Me.disposedValue Then
-                If disposing Then
-                    ' TODO:  释放托管状态(托管对象)。
-                End If
-
-                ' TODO:  释放非托管资源(非托管对象)并重写下面的 Finalize()。
-                ' TODO:  将大型字段设置为 null。
-            End If
-            Me.disposedValue = True
-        End Sub
-
-        ' TODO:  仅当上面的 Dispose( disposing As Boolean)具有释放非托管资源的代码时重写 Finalize()。
-        'Protected Overrides Sub Finalize()
-        '    ' 不要更改此代码。    请将清理代码放入上面的 Dispose( disposing As Boolean)中。
-        '    Dispose(False)
-        '    MyBase.Finalize()
-        'End Sub
-
-        ' Visual Basic 添加此代码是为了正确实现可处置模式。
-        Public Overloads Sub Dispose()
-            ' 不要更改此代码。    请将清理代码放入上面的 Dispose (disposing As Boolean)中。
-            Dispose(True)
-            GC.SuppressFinalize(Me)
-        End Sub
-#End Region
     End Class
 End Namespace

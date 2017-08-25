@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::b299e8366174edda8c9e64da4b6a4597, ..\GCModeller\analysis\ProteinTools\Interactions.BioGRID\API.vb"
+﻿#Region "Microsoft.VisualBasic::c7085e5780ba9321735a9ef03f6ad687, ..\GCModeller\analysis\ProteinTools\Interactions.BioGRID\API.vb"
 
     ' Author:
     ' 
@@ -28,7 +28,7 @@
 
 Imports System.Runtime.CompilerServices
 Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Serialization.JSON
 
@@ -74,7 +74,7 @@ Public Module API
                                Function(o) o.x))
         Dim ToHash As Dictionary(Of String, ALLmitab()) = (
             From x As ALLmitab
-            In FromHash.Values.MatrixAsIterator
+            In FromHash.Values.IteratesALL
             Select x,
                 sid = x.B.Split(":"c).Last
             Group By sid Into Group) _
@@ -83,7 +83,7 @@ Public Module API
                                Function(o) o.x))
 
         For Each x As EntityObject In source
-            Dim key As String = x.Identifier
+            Dim key As String = x.ID
             Dim a = False, b = False
 
             If FromHash.ContainsKey(key) Then

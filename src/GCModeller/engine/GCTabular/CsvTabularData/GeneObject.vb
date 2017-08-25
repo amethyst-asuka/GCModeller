@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::675a37b7229dc233254f0adb1e6c4deb, ..\GCModeller\engine\GCTabular\CsvTabularData\GeneObject.vb"
+﻿#Region "Microsoft.VisualBasic::537fec9e83e633eeb1ec799dfc5536e2, ..\GCModeller\engine\GCTabular\CsvTabularData\GeneObject.vb"
 
     ' Author:
     ' 
@@ -37,7 +37,7 @@ Namespace FileStream
     ''' Gene Annotiation
     ''' </summary>
     ''' <remarks></remarks>
-    Public Class GeneObject : Implements sIdEnumerable
+    Public Class GeneObject : Implements INamedValue
 
         ''' <summary>
         ''' NCBI gene accession id
@@ -45,7 +45,7 @@ Namespace FileStream
         ''' <value></value>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Public Property Identifier As String Implements sIdEnumerable.Identifier
+        Public Property Identifier As String Implements INamedValue.Key
         Public Property GeneName As String
         Public Property COG As String
 

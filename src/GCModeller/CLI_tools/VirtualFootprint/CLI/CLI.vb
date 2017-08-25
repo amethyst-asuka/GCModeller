@@ -1,50 +1,46 @@
-﻿#Region "Microsoft.VisualBasic::bdc9b5f3ee8f944405c817c0755be4a5, ..\GCModeller\CLI_tools\VirtualFootprint\CLI\CLI.vb"
+﻿#Region "Microsoft.VisualBasic::5f0508872dd04fff667a77041aaa986e, ..\GCModeller\CLI_tools\VirtualFootprint\CLI\CLI.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
-Imports Microsoft.VisualBasic.Data.visualize.Network.FileStream
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Scripting.MetaData
+Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
+Imports Microsoft.VisualBasic.Scripting.MetaData
+Imports Microsoft.VisualBasic.Text
 Imports SMRUCC.genomics.Analysis.RNA_Seq
-Imports SMRUCC.genomics.Analysis.SequenceTools
-Imports SMRUCC.genomics.Analysis.SequenceTools.SequencePatterns
+Imports SMRUCC.genomics.Analysis.SequenceTools.DNA_Comparative
 Imports SMRUCC.genomics.Analysis.SequenceTools.SequencePatterns.Motif
-Imports SMRUCC.genomics.Data.Regprecise
 Imports SMRUCC.genomics.Model.Network.VirtualFootprint
 Imports SMRUCC.genomics.SequenceModel
-Imports SMRUCC.genomics.Analysis.SequenceTools.DNA_Comparative
 Imports SMRUCC.genomics.SequenceModel.FASTA
-Imports Microsoft.VisualBasic.Text
 
-<PackageNamespace("VirtualFootprint.CLI", Category:=APICategories.CLI_MAN)>
+<Package("VirtualFootprint.CLI", Category:=APICategories.CLI_MAN)>
 Module CLI
 
     ''' <summary>
@@ -86,8 +82,10 @@ Module CLI
                          Select sId).ToArray
         Next
 
-        source = (From x In source Where Not StringHelpers.IsNullOrEmpty(x.Members) Select x).ToList
-
+        source = LinqAPI.MakeList(Of RegPreciseRegulon) <= From x As RegPreciseRegulon
+                                                           In source
+                                                           Where Not StringHelpers.IsNullOrEmpty(x.Members)
+                                                           Select x
         Return source.SaveTo(out).CLICode
     End Function
 
@@ -124,8 +122,8 @@ Module CLI
         Dim out As String = args.GetValue("/out",
             mal.TrimSuffix & $".win_size={win},steps={steps},slides={slides},m={method};quantiles={q.Select(Function(n) n.ToString).JoinBy(",")}.csv")
         Dim result = GCOutlier.OutlierAnalysis(New FastaFile(mal), q, win, steps, slides, GCOutlier.GetMethod(method)).ToArray
-        Return New DocumentStream.File(
-            DocumentStream.File.Distinct(result.ToCsvDoc)) _
+        Return New IO.File(
+            IO.File.Distinct(result.ToCsvDoc)) _
             .Save(out, Encodings.ASCII).CLICode
     End Function
 End Module

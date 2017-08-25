@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::263f3ef88f536c79baed5e39ca1efcde, ..\GCModeller\engine\GCModeller.Framework.Kernel_Driver\GridPBS\MetaboliteCompound.vb"
+﻿#Region "Microsoft.VisualBasic::52c5da4de414112b50d08b424783e465, ..\GCModeller\engine\GCModeller.Framework.Kernel_Driver\GridPBS\MetaboliteCompound.vb"
 
     ' Author:
     ' 
@@ -36,15 +36,12 @@ Namespace GridPBS
     ''' </summary>
     ''' <remarks></remarks>
     Public Structure MetaboliteCompound
-        Implements IAddressHandle
-        Implements sIdEnumerable
+        Implements IAddressOf
+        Implements INamedValue
 
-        Public Property Handle As Integer Implements IAddressHandle.Address
-        Public Property Identifier As String Implements sIdEnumerable.Identifier
+        Public Property Handle As Integer Implements IAddressOf.Address
+        Public Property Identifier As String Implements INamedValue.Key
         Public Property Quantity As Double
 
-        Public Sub Dispose() Implements IDisposable.Dispose
-            Return 'DO NOTHING
-        End Sub
     End Structure
 End Namespace

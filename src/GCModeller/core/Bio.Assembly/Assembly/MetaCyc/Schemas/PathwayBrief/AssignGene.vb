@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::66cd302f64eaa5125c53891361d190ef, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\Schemas\PathwayBrief\AssignGene.vb"
+﻿#Region "Microsoft.VisualBasic::0c9bc795d3cfd51c0384d52888940a9c, ..\core\Bio.Assembly\Assembly\MetaCyc\Schemas\PathwayBrief\AssignGene.vb"
 
     ' Author:
     ' 
@@ -83,7 +83,7 @@ Namespace Assembly.MetaCyc.Schema.PathwayBrief
         Private Shared Function Query(EnzUniqueIdCollection As List(Of String), EnzAssignedGenes As KeyValuePair(Of String, String())()) As String()
             Dim LQuery = (From link In EnzAssignedGenes
                           Where EnzUniqueIdCollection.IndexOf(link.Key) > -1
-                          Select link.Value).MatrixToVector
+                          Select link.Value).ToVector
             Return LQuery
         End Function
 

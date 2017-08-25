@@ -29,14 +29,14 @@
 Imports System.Runtime.CompilerServices
 Imports System.Text
 Imports Microsoft.VisualBasic.CommandLine.Reflection
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Scripting.MetaData
 
 ''' <summary>
 ''' 可能会出现中文字符，所以html文档必须要以Utf8编码进行保存
 ''' </summary>
 ''' 
-<PackageNamespace("GCModeller.HTML.ReportBuiulder", Publisher:="amethyst.asuka@gcmodeller.org")>
+<Package("GCModeller.HTML.ReportBuiulder", Publisher:="amethyst.asuka@gcmodeller.org")>
 Public Module HTML
 
     Public Const BR As String = "<br />"

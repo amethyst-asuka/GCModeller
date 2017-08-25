@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::bccf60045d50a6ee3eccdd77df2df7de, ..\GCModeller\models\SBML\SBML\Level2\Elements\speciesReference.vb"
+﻿#Region "Microsoft.VisualBasic::03bf4edfc5d6c124b7893312d5e1d017, ..\GCModeller\models\SBML\SBML\Level2\Elements\speciesReference.vb"
 
     ' Author:
     ' 
@@ -46,7 +46,7 @@ Namespace Level2.Elements
         ''' </summary>
         ''' <remarks></remarks>
         <Escaped> <XmlAttribute()>
-        Public Property species As String Implements sIdEnumerable.Identifier
+        Public Property species As String Implements INamedValue.Key
         ''' <summary>
         ''' (化学计量数)
         ''' </summary>
@@ -58,7 +58,7 @@ Namespace Level2.Elements
         End Sub
 
         Sub New(x As ICompoundSpecies)
-            species = x.Identifier
+            species = x.Key
             stoichiometry = x.StoiChiometry
         End Sub
 

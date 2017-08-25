@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::1d88ac70177adac81eae924d2bc9af48, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\Schemas\PathwayBrief\Models.vb"
+﻿#Region "Microsoft.VisualBasic::0c0b049b890cbee1d14188d825df785c, ..\core\Bio.Assembly\Assembly\MetaCyc\Schemas\PathwayBrief\Models.vb"
 
     ' Author:
     ' 
@@ -36,7 +36,7 @@ Imports Microsoft.VisualBasic
 
 Namespace Assembly.MetaCyc.Schema.PathwayBrief
 
-    <XmlType("pwy")> Public Class Pathway : Implements sIdEnumerable
+    <XmlType("pwy")> Public Class Pathway : Implements INamedValue
         Public Property MetaCycBaseType As Slots.Pathway
         ''' <summary> 
         ''' 本代谢途径是否为一个超途径
@@ -77,7 +77,7 @@ Namespace Assembly.MetaCyc.Schema.PathwayBrief
             End If
         End Function
 
-        Public Property Identifier As String Implements sIdEnumerable.Identifier
+        Public Property Identifier As String Implements INamedValue.Key
     End Class
 
     Public Class PathwayBrief : Inherits ComponentModel.PathwayBrief
@@ -102,7 +102,7 @@ Namespace Assembly.MetaCyc.Schema.PathwayBrief
             Return PathwayGenes
         End Function
 
-        Public Overrides Property EntryId As String Implements IKeyValuePairObject(Of String, String()).Identifier
+        Public Overrides Property EntryId As String Implements IKeyValuePairObject(Of String, String()).Key
             Get
                 Return MyBase.EntryId
             End Get

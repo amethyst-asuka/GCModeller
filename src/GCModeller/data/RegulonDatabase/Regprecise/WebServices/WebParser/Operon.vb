@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::ad3a962d131b70fc68f608515775a3d7, ..\GCModeller\data\RegulonDatabase\Regprecise\WebServices\WebParser\Operon.vb"
+﻿#Region "Microsoft.VisualBasic::3aa9f8c3d331fed300090d637567bffc, ..\GCModeller\data\RegulonDatabase\Regprecise\WebServices\WebParser\Operon.vb"
 
     ' Author:
     ' 
@@ -31,6 +31,7 @@ Imports System.Xml.Serialization
 Imports Microsoft.VisualBasic.Linq.Extensions
 Imports Microsoft.VisualBasic.Serialization
 Imports Microsoft.VisualBasic.Serialization.JSON
+Imports Microsoft.VisualBasic.Text.HtmlParser
 
 Namespace Regprecise
 
@@ -81,7 +82,7 @@ Namespace Regprecise
         Private Shared Function __geneParser(value As String, locus As Dictionary(Of String, String)) As RegulatedGene
             value = Mid(value, 8)
             value = Mid(value, 1, Len(value) - 8)
-            value = value.TrimVBCrLf
+            value = value.TrimNewLine("")
             value = value.Replace(vbTab, "").Trim
 
             Dim Tokens As String() = Regex.Split(value, "<\s*br\s*/>", RegexOptions.IgnoreCase)

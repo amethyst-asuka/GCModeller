@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::302da97a5e9421261b7d0bbc8a700c54, ..\GCModeller\core\Bio.Assembly\ComponentModel\ValuePair.vb"
+﻿#Region "Microsoft.VisualBasic::302da97a5e9421261b7d0bbc8a700c54, ..\core\Bio.Assembly\ComponentModel\ValuePair.vb"
 
     ' Author:
     ' 
@@ -77,7 +77,7 @@ Namespace ComponentModel
             Dim lst = (From obj As KeyValuePair
                        In Collection
                        Select obj
-                       Order By obj.Key Ascending).ToList
+                       Order By obj.Key Ascending).AsList
             For i As Integer = 0 To lst.Count - 1
                 If i >= lst.Count Then
                     Exit For

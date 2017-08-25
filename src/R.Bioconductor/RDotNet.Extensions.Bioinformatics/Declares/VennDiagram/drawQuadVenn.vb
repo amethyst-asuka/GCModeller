@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::c61c7fceafbb7bb377dfc289928f2e44, ..\R.Bioconductor\RDotNet.Extensions.Bioinformatics\Declares\VennDiagram\drawQuadVenn.vb"
+﻿#Region "Microsoft.VisualBasic::15e706821c3fb58a76b84127c0ed2df5, ..\R.Bioconductor\RDotNet.Extensions.Bioinformatics\Declares\VennDiagram\drawQuadVenn.vb"
 
     ' Author:
     ' 
@@ -212,7 +212,7 @@ Namespace VennDiagram
         ''' List of 4 vectors of length 2 indicating horizontal and vertical justification of each category name
         ''' </summary>
         ''' <returns></returns>
-        <Parameter("cat.just")> Public Property catJust As RExpression = rep(list(c(0.5, 0.5)), 4)
+        <Parameter("cat.just")> Public Property catJust As RExpression = rep(RScripts.list(c(0.5, 0.5)), 4)
         ''' <summary>
         ''' Number of degrees to rotate the entire diagram
         ''' </summary>

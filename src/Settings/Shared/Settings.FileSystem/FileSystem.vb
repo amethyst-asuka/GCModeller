@@ -36,7 +36,7 @@ Namespace GCModeller.FileSystem
     ''' <remarks>由于可能会修改参数然后在调用的这种情况出现，所以这里的数据可能需要实时更新，所以不再使用属性的简写形式了</remarks>
     ''' 
 #If ENABLE_API_EXPORT Then
-    <PackageNamespace("GCModeller.Repository.FileSystem", Publisher:="amethyst.asuka@gcmodeller.org")>
+    <Package("GCModeller.Repository.FileSystem", Publisher:="amethyst.asuka@gcmodeller.org")>
     Module FileSystem
 #Else
     Module FileSystem
@@ -62,13 +62,24 @@ Namespace GCModeller.FileSystem
             End If
         End Sub
 
+        Const RepositoryNotInitialized$ = "The repository root directory path variable in the settings file is not initialized yet, using command ""Settings set RepositoryRoot <DIR>"" for initialize the repository location."
+        Const RepositoryHandleInvalid$ = "The configured repository path ""{0}"" is not exists on your file system!"
+
         ''' <summary>
         ''' The root directory for stores the GCModeller database such as fasta sequence for annotation.
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property RepositoryRoot As String
             Get
-                Return Settings.Session.SettingsFile.RepositoryRoot
+                Dim DIR$ = Settings.Session.SettingsFile.RepositoryRoot
+
+                If DIR.StringEmpty Then
+                    Call RepositoryNotInitialized.Warning
+                ElseIf Not DIR.DirectoryExists Then
+                    Call String.Format(RepositoryHandleInvalid, DIR).Warning
+                End If
+
+                Return DIR$
             End Get
         End Property
 
@@ -153,6 +164,26 @@ Namespace GCModeller.FileSystem
         Public ReadOnly Property CDD As String
             Get
                 Return RepositoryRoot & "/CDD/"
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' GO数据库的文件夹位置
+        ''' </summary>
+        ''' <returns></returns>
+        Public ReadOnly Property GO As String
+            Get
+                Return RepositoryRoot & "/GO/"
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' COG数据库文件夹
+        ''' </summary>
+        ''' <returns></returns>
+        Public ReadOnly Property COGs As String
+            Get
+                Return RepositoryRoot & "/COGs/"
             End Get
         End Property
 
@@ -256,25 +287,33 @@ Namespace GCModeller.FileSystem
 #If Not DISABLE_BUG_UNKNOWN Then
 
         ''' <summary>
-        ''' 会自动搜索注册表，配置文件和文件系统之上的目录，实在找不到会返回空字符串并且记录下错误
+        ''' This function will search for the blast+ bin directory automatically based on the 
+        ''' registry, config data and system directories.
+        ''' (会自动搜索注册表，配置文件和文件系统之上的目录，实在找不到会返回空字符串并且记录下错误)
         ''' </summary>
         ''' <returns></returns>
         ''' 
         <ExportAPI("GetLocalBlast")>
-        Public Function GetLocalBlast() As String
+        Public Function GetLocalblast() As String
             Dim blast As String = Settings.Session.SettingsFile.BlastBin
+
             If blast.DirectoryExists Then
                 Return blast
             End If
-            Dim lstPath As String() = Global.System.Environment.GetEnvironmentVariable("PATH").Split(";"c)
-            blast = (From path As String In lstPath
-                     Where InStr(path, "blast", CompareMethod.Text) > 0
-                     Select path).FirstOrDefault
+
+            Dim lstPath As String() = Environment.GetEnvironmentVariable("PATH").Split(";"c)
+
+            blast = lstPath _
+                .Where(Function(path$) InStr(path, "blast", CompareMethod.Text) > 0) _
+                .FirstOrDefault
+
             If blast.DirectoryExists Then
                 Return blast
             End If
-            Dim GetlstPath = ProgramPathSearchTool.SearchDirectory("blast", "")
-            If GetlstPath.IsNullOrEmpty Then
+
+            Dim getlstPath = ProgramPathSearchTool.SearchDirectory("blast", "")
+
+            If getlstPath.IsNullOrEmpty Then
 NO_DIR:
                 Dim exMsg As String =
                     "Unable retrive the blast program directory path!" & vbCrLf &
@@ -285,7 +324,7 @@ NO_DIR:
                 Return ""
             End If
 
-            For Each path As String In GetlstPath
+            For Each path As String In getlstPath
                 If Not FileIO.FileSystem.GetFiles(path, FileIO.SearchOption.SearchAllSubDirectories, "blastp.exe").IsNullOrEmpty Then
                     Return path & "/bin/"
                 End If

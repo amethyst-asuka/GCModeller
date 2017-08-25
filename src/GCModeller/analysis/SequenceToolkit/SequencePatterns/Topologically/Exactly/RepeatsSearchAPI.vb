@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::9e6aa8de1588b6801d877a4952f12a6a, ..\GCModeller\analysis\SequenceToolkit\SequencePatterns\Topologically\Exactly\RepeatsSearchAPI.vb"
+﻿#Region "Microsoft.VisualBasic::63d04383d28186b5756ac47e02302783, ..\GCModeller\analysis\SequenceToolkit\SequencePatterns\Topologically\Exactly\RepeatsSearchAPI.vb"
 
     ' Author:
     ' 
@@ -37,7 +37,7 @@ Imports SMRUCC.genomics.SequenceModel.FASTA
 
 Namespace Topologically
 
-    <[PackageNamespace]("GCModeller.SeqTools.Repeats.SearchAPI",
+    <Package("GCModeller.SeqTools.Repeats.SearchAPI",
                         Category:=APICategories.ResearchTools,
                         Description:="Repeats sites search tools.",
                         Publisher:="xie.guigang@gcmodeller.org")>
@@ -63,13 +63,13 @@ Namespace Topologically
         ''' <returns></returns>
         ''' <remarks></remarks>
         <ExportAPI("Invoke.Search")>
-        Public Function SearchRepeats(SequenceData As I_PolymerSequenceModel,
+        Public Function SearchRepeats(SequenceData As IPolymerSequenceModel,
                                       <Parameter("Min.Len", "The minimum length of the repeat sequence loci.")> Min As Integer,
                                       <Parameter("Max.Len", "The maximum length of the repeat sequence loci.")> Max As Integer,
                                       Optional MinAppeared As Integer = 2) As Repeats()
 
-            Dim Search As New RepeatsSearchs(SequenceData, Min, Max, MinAppeared)
-            Call Search.InvokeSearch()
+            Dim Search As New RepeatsSearcher(SequenceData, Min, Max, MinAppeared)
+            Call Search.DoSearch()
             Call Search.CountStatics.Save("./Random.Sequence.Matches.Counts.csv", False)
 
             Return Search.ResultSet.ToArray
@@ -133,13 +133,12 @@ RETURN_VALUE:
         End Function
 
         <ExportAPI("Invoke.Search.Reversed")>
-        Public Function SearchReversedRepeats(SequenceData As I_PolymerSequenceModel,
+        Public Function SearchReversedRepeats(SequenceData As IPolymerSequenceModel,
                                               Min As Integer,
                                               Max As Integer,
                                               Optional MinAppeared As Integer = 2) As RevRepeats()
-            Dim revSearchs As New SearchReversedRepeats(SequenceData, Min, Max, MinAppeared)
-            Call revSearchs.InvokeSearch()
-            Call revSearchs.CountStatics.Save("./Reversed.Random.Sequence.Matches.Counts.csv", False)
+            Dim revSearchs As New ReversedRepeatSeacher(SequenceData, Min, Max, MinAppeared)
+            Call revSearchs.DoSearch()
             Return revSearchs.ResultSet.ToArray
         End Function
 
@@ -202,7 +201,7 @@ RETURN_VALUE:
         Public Function Density(Of TView As RepeatsView)(DIR As String, size As Integer, ref As String, cutoff As Double) As Double()
             Dim files = FileIO.FileSystem.GetFiles(DIR, FileIO.SearchOption.SearchTopLevelOnly, "*.csv") _
                 .ToArray(Function(file) New With {
-                    .ID = IO.Path.GetFileNameWithoutExtension(file),
+                    .ID = basename(file),
                     .context = file.LoadCsv(Of TView)})
 
             VBDebugger.Mute = True

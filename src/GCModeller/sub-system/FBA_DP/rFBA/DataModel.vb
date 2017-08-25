@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::60e5f1d68098f1e8d5d9654f183cf7af, ..\GCModeller\sub-system\FBA_DP\rFBA\DataModel.vb"
+﻿#Region "Microsoft.VisualBasic::2e882eb0775119f2b20d1f9df416d7aa, ..\GCModeller\sub-system\FBA_DP\rFBA\DataModel.vb"
 
     ' Author:
     ' 
@@ -31,7 +31,7 @@ Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports SMRUCC.genomics.GCModeller.Framework.Kernel_Driver.LDM
 
@@ -43,7 +43,7 @@ Namespace rFBA
         ''' 一个代谢反应对象或者转录调控过程
         ''' </summary>
         ''' <remarks></remarks>
-        Public Class FluxObject : Implements IAddressHandle, sIdEnumerable
+        Public Class FluxObject : Implements IAddressOf, INamedValue
 
             Public Property Left As KeyValuePair(Of Double, String)()
             Public Property Right As KeyValuePair(Of Double, String)()
@@ -51,7 +51,7 @@ Namespace rFBA
             Public Property Lower_Bound As Double
             Public Property Upper_Bound As Double
 
-            Public Property Handle As Integer Implements IAddressHandle.Address
+            Public Property Handle As Integer Implements IAddressOf.Address
 
             ''' <summary>
             ''' 催化本反应过程的基因或者调控因子(列)，请注意，由于在前半部分为代谢流对象，故而Key的值不是从零开始的
@@ -91,38 +91,7 @@ Namespace rFBA
                 End Get
             End Property
 
-#Region "IDisposable Support"
-            Private disposedValue As Boolean ' 检测冗余的调用
-
-            ' IDisposable
-            Protected Overridable Sub Dispose(disposing As Boolean)
-                If Not Me.disposedValue Then
-                    If disposing Then
-                        ' TODO:  释放托管状态(托管对象)。
-                    End If
-
-                    ' TODO:  释放非托管资源(非托管对象)并重写下面的 Finalize()。
-                    ' TODO:  将大型字段设置为 null。
-                End If
-                Me.disposedValue = True
-            End Sub
-
-            ' TODO:  仅当上面的 Dispose( disposing As Boolean)具有释放非托管资源的代码时重写 Finalize()。
-            'Protected Overrides Sub Finalize()
-            '    ' 不要更改此代码。    请将清理代码放入上面的 Dispose( disposing As Boolean)中。
-            '    Dispose(False)
-            '    MyBase.Finalize()
-            'End Sub
-
-            ' Visual Basic 添加此代码是为了正确实现可处置模式。
-            Public Sub Dispose() Implements IDisposable.Dispose
-                ' 不要更改此代码。    请将清理代码放入上面的 Dispose (disposing As Boolean)中。
-                Dispose(True)
-                GC.SuppressFinalize(Me)
-            End Sub
-#End Region
-
-            Public Property Identifier As String Implements sIdEnumerable.Identifier
+            Public Property Identifier As String Implements INamedValue.Key
         End Class
 
         Public Class ObjectiveFunction
@@ -130,10 +99,10 @@ Namespace rFBA
             <CollectionAttribute("Factors")> Public Property Factors As String()
         End Class
 
-        Public Class AssociatedGene : Implements IAddressHandle, sIdEnumerable
+        Public Class AssociatedGene : Implements IAddressOf, INamedValue
             Public Property RPKM As Double
-            Public Property Identifier As String Implements sIdEnumerable.Identifier
-            Public Property Handle As Integer Implements IAddressHandle.Address
+            Public Property Identifier As String Implements INamedValue.Key
+            Public Property Handle As Integer Implements IAddressOf.Address
 
             ''' <summary>
             ''' 仅适用于调控过程，酶促反应过程不会使用到本属性{Handle, Id}
@@ -146,37 +115,6 @@ Namespace rFBA
             Public Overrides Function ToString() As String
                 Return Identifier
             End Function
-
-#Region "IDisposable Support"
-            Private disposedValue As Boolean ' 检测冗余的调用
-
-            ' IDisposable
-            Protected Overridable Sub Dispose(disposing As Boolean)
-                If Not Me.disposedValue Then
-                    If disposing Then
-                        ' TODO:  释放托管状态(托管对象)。
-                    End If
-
-                    ' TODO:  释放非托管资源(非托管对象)并重写下面的 Finalize()。
-                    ' TODO:  将大型字段设置为 null。
-                End If
-                Me.disposedValue = True
-            End Sub
-
-            ' TODO:  仅当上面的 Dispose( disposing As Boolean)具有释放非托管资源的代码时重写 Finalize()。
-            'Protected Overrides Sub Finalize()
-            '    ' 不要更改此代码。    请将清理代码放入上面的 Dispose( disposing As Boolean)中。
-            '    Dispose(False)
-            '    MyBase.Finalize()
-            'End Sub
-
-            ' Visual Basic 添加此代码是为了正确实现可处置模式。
-            Public Sub Dispose() Implements IDisposable.Dispose
-                ' 不要更改此代码。    请将清理代码放入上面的 Dispose (disposing As Boolean)中。
-                Dispose(True)
-                GC.SuppressFinalize(Me)
-            End Sub
-#End Region
         End Class
 
         ''' <summary>

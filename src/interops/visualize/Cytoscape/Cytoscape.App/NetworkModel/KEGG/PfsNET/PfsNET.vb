@@ -72,7 +72,7 @@ Namespace NetworkModel.PfsNET
         End Function
     End Class
 
-    <[PackageNamespace]("Cytoscape.PfsNET", Publisher:="xie.guigang@live.com")>
+    <Package("Cytoscape.PfsNET", Publisher:="xie.guigang@live.com")>
     Public Module NetworkGenerator
 
         <ExportAPI("Creates.Network.Basaical")>
@@ -84,19 +84,19 @@ Namespace NetworkModel.PfsNET
                 edgesBuffer += From strId As String
                                In SubNET.SignificantGeneObjects
                                Select New NetworkEdge With {
-                                   .Confidence = 1,
+                                   .value = 1,
                                    .FromNode = strId,
                                    .ToNode = SubNET.UniqueId,
-                                   .InteractionType = SubNET.PhenotypePair
+                                   .Interaction = SubNET.PhenotypePair
                                }
                 nodesBuffer += From strId As String
                                In SubNET.SignificantGeneObjects
                                Select New FileStream.Node With {
                                    .NodeType = "Significant Gene",
-                                   .Identifier = strId
+                                   .ID = strId
                                }
                 nodesBuffer += New FileStream.Node With {
-                    .Identifier = SubNET.UniqueId,
+                    .ID = SubNET.UniqueId,
                     .NodeType = "Significant Pathway"
                 }
             Next
@@ -142,7 +142,7 @@ Namespace NetworkModel.PfsNET
             For Each Pathway In Pathways
                 Call ReactionList.AddRange(Reactions.Takes(Pathway.ReactionList))
             Next
-            ReactionList = (From rxn In ReactionList Select rxn Distinct).ToList
+            ReactionList = (From rxn In ReactionList Select rxn Distinct).AsList
 
             Dim EdgeList As List(Of NetworkModel.Edge) = New List(Of NetworkModel.Edge)
             Dim NodeList As List(Of NetworkModel.Node) = New List(Of NetworkModel.Node)
@@ -164,14 +164,14 @@ Namespace NetworkModel.PfsNET
 
             For i As Integer = 0 To Reactions.Count - 1
                 Dim Reaction = Reactions(i)
-                Dim Pathways = (From pathway In PathwayList Where pathway.ReactionList.IndexOf(Reaction.Identifier) > -1 Select pathway.Identifier).ToArray
+                Dim Pathways = (From pathway In PathwayList Where pathway.ReactionList.IndexOf(Reaction.ID) > -1 Select pathway.Identifier).ToArray
                 Reaction.InPathways = Pathways
             Next
 
             Dim Genes = (From item In Nodes Where String.Equals(item.NodeType, "GeneObject") Select item).ToArray
             For i As Integer = 0 To Genes.Count - 1
                 Dim Gene = Genes(i)
-                Dim Pathways = (From item In pfsNET Where Array.IndexOf(item.SignificantGeneObjects, Gene.Identifier) > -1 Select item.UniqueId Distinct).ToArray
+                Dim Pathways = (From item In pfsNET Where Array.IndexOf(item.SignificantGeneObjects, Gene.ID) > -1 Select item.UniqueId Distinct).ToArray
                 Gene.InPathways = Pathways
             Next
 
@@ -185,9 +185,9 @@ Namespace NetworkModel.PfsNET
             For Each subNet In PfsNET
                 Call GeneList.AddRange(subNet.SignificantGeneObjects)
             Next
-            GeneList = (From strId As String In GeneList Select strId Distinct).ToList
+            GeneList = (From strId As String In GeneList Select strId Distinct).AsList
 
-            Call NodeList.AddRange((From GeneId As String In GeneList Select New NetworkModel.Node With {.NodeType = "GeneObject", .Identifier = GeneId}).ToArray)
+            Call NodeList.AddRange((From GeneId As String In GeneList Select New NetworkModel.Node With {.NodeType = "GeneObject", .ID = GeneId}).ToArray)
 
             Dim CatalystsList As Dictionary(Of String, String())
             Using op = New SMRUCC.genomics.Assembly.MetaCyc.Schema.PathwayBrief.AssignGene(MetaCyc)
@@ -201,7 +201,7 @@ Namespace NetworkModel.PfsNET
                 End If
 
                 Dim GeneIdlist = CatalystsList(Reaction.Identifier)
-                Call EdgeList.AddRange((From strId As String In GeneIdlist Select New NetworkModel.Edge With {.FromNode = strId, .ToNode = Reaction.Identifier, .InteractionType = "Enzyme_Catalyst"}).ToArray)
+                Call EdgeList.AddRange((From strId As String In GeneIdlist Select New NetworkModel.Edge With {.FromNode = strId, .ToNode = Reaction.Identifier, .Interaction = "Enzyme_Catalyst"}).ToArray)
             Next
 
             Return New KeyValuePair(Of NetworkModel.Edge(), NetworkModel.Node())(EdgeList.ToArray, NodeList.ToArray)
@@ -215,7 +215,7 @@ Namespace NetworkModel.PfsNET
                 From r As Slots.Reaction
                 In ReactionList
                 Select New NetworkModel.Node With {
-                    .Identifier = r.Identifier,
+                    .ID = r.Identifier,
                     .NodeType = "Reaction"
                 }
 
@@ -237,19 +237,19 @@ Namespace NetworkModel.PfsNET
                     For Each connected In LQuery
                         If connected.Coefficient > 0 Then  '在右端
                             If coefficient > 0 Then
-                                Call EdgeList.Add(New NetworkModel.Edge With {.FromNode = reaction.Identifier, .ToNode = Substrate, .InteractionType = "Confluence"})
-                                Call EdgeList.Add(New NetworkModel.Edge With {.FromNode = connected.Reaction, .ToNode = Substrate, .InteractionType = "Confluence"})
-                                Call NodeList.Add(New NetworkModel.Node With {.Identifier = Substrate, .NodeType = "Metabolite"})
+                                Call EdgeList.Add(New NetworkModel.Edge With {.FromNode = reaction.Identifier, .ToNode = Substrate, .Interaction = "Confluence"})
+                                Call EdgeList.Add(New NetworkModel.Edge With {.FromNode = connected.Reaction, .ToNode = Substrate, .Interaction = "Confluence"})
+                                Call NodeList.Add(New NetworkModel.Node With {.ID = Substrate, .NodeType = "Metabolite"})
                             Else
-                                Call EdgeList.Add(New NetworkModel.Edge With {.FromNode = connected.Reaction, .ToNode = reaction.Identifier, .InteractionType = "Metabolite_Flux_Flow"})
+                                Call EdgeList.Add(New NetworkModel.Edge With {.FromNode = connected.Reaction, .ToNode = reaction.Identifier, .Interaction = "Metabolite_Flux_Flow"})
                             End If
                         Else '在左端
                             If coefficient > 0 Then
-                                Call EdgeList.Add(New NetworkModel.Edge With {.FromNode = reaction.Identifier, .ToNode = connected.Reaction, .InteractionType = "Metabolite_Flux_Flow"})
+                                Call EdgeList.Add(New NetworkModel.Edge With {.FromNode = reaction.Identifier, .ToNode = connected.Reaction, .Interaction = "Metabolite_Flux_Flow"})
                             Else
-                                Call EdgeList.Add(New NetworkModel.Edge With {.FromNode = Substrate, .ToNode = connected.Reaction, .InteractionType = "Diffluence"})
-                                Call EdgeList.Add(New NetworkModel.Edge With {.FromNode = Substrate, .ToNode = reaction.Identifier, .InteractionType = "Diffluence"})
-                                Call NodeList.Add(New NetworkModel.Node With {.Identifier = Substrate, .NodeType = "Metabolite"})
+                                Call EdgeList.Add(New NetworkModel.Edge With {.FromNode = Substrate, .ToNode = connected.Reaction, .Interaction = "Diffluence"})
+                                Call EdgeList.Add(New NetworkModel.Edge With {.FromNode = Substrate, .ToNode = reaction.Identifier, .Interaction = "Diffluence"})
+                                Call NodeList.Add(New NetworkModel.Node With {.ID = Substrate, .NodeType = "Metabolite"})
                             End If
                         End If
                     Next

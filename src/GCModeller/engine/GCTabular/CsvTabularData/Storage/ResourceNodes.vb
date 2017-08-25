@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::7a2ea53c8f3ebc417f768e904f385006, ..\GCModeller\engine\GCTabular\CsvTabularData\Storage\ResourceNodes.vb"
+﻿#Region "Microsoft.VisualBasic::64da2093d47de8b1c65e5b4cceed913a, ..\GCModeller\engine\GCTabular\CsvTabularData\Storage\ResourceNodes.vb"
 
     ' Author:
     ' 
@@ -67,7 +67,7 @@ Namespace FileStream.XmlFormat
 
         Public Function LoadResource(Of T As Class)(ByRef List As List(Of T)) As T()
             Dim ChunkBuffer As T() = LoadResource(Of T)()
-            List = ChunkBuffer.ToList
+            List = ChunkBuffer.AsList
             Return ChunkBuffer
         End Function
 
@@ -172,7 +172,7 @@ Namespace FileStream.XmlFormat
         End Function
     End Class
 
-    Public Class ResourceNode : Implements sIdEnumerable
+    Public Class ResourceNode : Implements INamedValue
 
 #Region "GCML data storage location"
 
@@ -182,7 +182,7 @@ Namespace FileStream.XmlFormat
         ''' <value></value>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        <XmlAttribute> Public Property TYPE_ID As String Implements sIdEnumerable.Identifier
+        <XmlAttribute> Public Property TYPE_ID As String Implements INamedValue.Key
 
         ''' <summary>
         '''  The data storage directory name.(数据文件的存储目录)

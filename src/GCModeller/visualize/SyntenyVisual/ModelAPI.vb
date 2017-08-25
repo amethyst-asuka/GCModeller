@@ -1,37 +1,35 @@
-﻿#Region "Microsoft.VisualBasic::1b4fa556cd4230177235663e6af0cf68, ..\GCModeller\visualize\SyntenyVisual\ModelAPI.vb"
+﻿#Region "Microsoft.VisualBasic::b3c3c90c6d3594fc9a4ab5de5ed3b0e1, ..\visualize\SyntenyVisual\ModelAPI.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports System.Drawing
 Imports System.Runtime.CompilerServices
-Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.ComponentModel.DataStructures
+Imports Microsoft.VisualBasic.ComponentModel.Algorithm.base
 Imports Microsoft.VisualBasic.FileIO
-Imports Microsoft.VisualBasic.Imaging
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Serialization.JSON
@@ -40,7 +38,7 @@ Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
 Imports SMRUCC.genomics.Interops.NCBI.Extensions
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.Analysis
-Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH
+Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH.Abstract
 
 Public Module ModelAPI
 
@@ -59,7 +57,7 @@ Public Module ModelAPI
                           Select From hit As Hit
                                  In x.Hits
                                  Select hit.HitName,
-                                     x.QueryName).MatrixAsIterator
+                                     x.QueryName).IteratesALL
             __refMaps = (From x In LQuery
                          Select x
                          Group x By x.HitName Into Group) _
@@ -119,13 +117,13 @@ Public Module ModelAPI
 
         height /= PTT.Count
 
-        Dim maps As SlideWindowHandle(Of String)() = model.Orders.CreateSlideWindows(2)
+        Dim maps As SlideWindow(Of String)() = model.Orders.CreateSlideWindows(2)
         Dim bbhs As BBHIndex() =
             LinqAPI.Exec(Of BBHIndex) <= From hits As HitCollection
                                          In bbhMeta.hits
-                                         Select From tag As SlideWindowHandle(Of String)
+                                         Select From tag As SlideWindow(Of String)
                                                 In maps
-                                                Let o As BBHIndex = IsOrtholog(tag.Elements.First, tag.Elements.Last, hits, bbhMeta.sp)
+                                                Let o As BBHIndex = IsOrtholog(tag.Items.First, tag.Items.Last, hits, bbhMeta.sp)
                                                 Where Not o Is Nothing
                                                 Select o
         Dim spGroups = (From x As BBHIndex
@@ -138,7 +136,7 @@ Public Module ModelAPI
         Dim h2 As Integer = h1 + height
         Dim links As New List(Of Line)
         Dim genomes As New List(Of GenomeBrief)
-        Dim i As Integer
+        Dim i As int = Scan0
         Dim last As PTT = Nothing
         Dim titles As Dictionary(Of Title) = model.GetTitles(DIR).ToDictionary
         Dim lastsp As String = Nothing
@@ -154,7 +152,7 @@ Public Module ModelAPI
 
         For Each buf In spGroups
             Dim sp As String = buf.sp
-            Dim hit As String = maps(i.MoveNext).Elements.Last
+            Dim hit As String = maps(++i).Items.Last
             Dim query As PTT = PTT(sp)
             Dim hitBrief As PTT = PTT(hit)
 

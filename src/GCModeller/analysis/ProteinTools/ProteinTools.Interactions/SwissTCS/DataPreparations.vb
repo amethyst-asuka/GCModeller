@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::3228aac9ff401bc5a2d31c570fc50e5f, ..\GCModeller\analysis\ProteinTools\ProteinTools.Interactions\SwissTCS\DataPreparations.vb"
+﻿#Region "Microsoft.VisualBasic::82bf2e5298c0dae369c14adb08241942, ..\GCModeller\analysis\ProteinTools\ProteinTools.Interactions\SwissTCS\DataPreparations.vb"
 
     ' Author:
     ' 
@@ -70,14 +70,14 @@ Public Class DataPreparations
             Temp = My.Computer.FileSystem.SpecialDirectories.Temp & "/"
         End If
 
-        Call LocalBLAST.FormatDb(DipFsaSequence.FilePath, LocalBLAST.MolTypeProtein).Start(WaitForExit:=True)
+        Call LocalBLAST.FormatDb(DipFsaSequence.FilePath, LocalBLAST.MolTypeProtein).Start(waitForExit:=True)
         Call TryInit(rBin)
 
         Clustal = New Clustal(ClustalBin)
         Call Console.WriteLine("===============================Initialization job done!======================================" & vbCrLf & vbCrLf)
     End Sub
 
-    Public Function InferInteraction(GeneId As String) As DocumentStream.File
+    Public Function InferInteraction(GeneId As String) As IO.File
         Dim workDir As String = String.Format("{0}/{1}/", Me.WorkDir, GeneId)
         Dim TempFile As String = workDir & GeneId
 
@@ -85,7 +85,7 @@ Public Class DataPreparations
         Call GenomicsProteins.Select(Function(FsaObject As FASTA.FastaToken) String.Equals(FsaObject.Attributes.First, GeneId)).Save(TempFile)
         '2.blastp搜索dip数据库中的同源蛋白，作为原始计算数据
         Call Console.WriteLine("Searching the homologous protein in the dip database for object ""{0}""...", GeneId)
-        Call LocalBLAST.Blastp(TempFile, DipFsaSequence.FilePath, String.Format("{0}/blastp_{1}_vs._dip.txt", workDir, GeneId), "1e-3").Start(WaitForExit:=True)
+        Call LocalBLAST.Blastp(TempFile, DipFsaSequence.FilePath, String.Format("{0}/blastp_{1}_vs._dip.txt", workDir, GeneId), "1e-3").Start(waitForExit:=True)
         '3.导出所有的符合条件的besthit
         Dim Besthits = NCBI.Extensions.LocalBLAST.BLASTOutput.BlastPlus.TryParse(Me.LocalBLAST.LastBLASTOutputFilePath).ExportAllBestHist
         Dim Hits As BestHit() = Besthits
@@ -119,14 +119,14 @@ Public Class DataPreparations
                 Call InteractionPairs.Add(New KeyValuePair(Of String, String)(id, partnerid))
             Next
         Next
-        PartnersIdList = (From id As String In PartnersIdList Select id Distinct Order By id Ascending).ToList
+        PartnersIdList = (From id As String In PartnersIdList Select id Distinct Order By id Ascending).AsList
         Call Console.WriteLine("There are {0} partner records was found in the database!", PartnersIdList.Count)
 
         Dim TargetHomologousPartners = DipFsaSequence.Select(Function(FsaObject As FASTA.FastaToken) PartnersIdList.IndexOf(FsaObject.Attributes.First.Split.First) > -1)
         TempFile = workDir & GeneId & "_alignment_partners.fsa"
         Call TargetHomologousPartners.Save(TempFile)
-        Call LocalBLAST.FormatDb(TempFile, LocalBLAST.MolTypeProtein).Start(WaitForExit:=True)
-        Call LocalBLAST.Blastp(GenomicsProteins.FilePath, TargetHomologousPartners.FilePath, workDir & "/blastp_genomics_proteins_vs.dip_partner.txt", "1e-3").Start(WaitForExit:=True)
+        Call LocalBLAST.FormatDb(TempFile, LocalBLAST.MolTypeProtein).Start(waitForExit:=True)
+        Call LocalBLAST.Blastp(GenomicsProteins.FilePath, TargetHomologousPartners.FilePath, workDir & "/blastp_genomics_proteins_vs.dip_partner.txt", "1e-3").Start(waitForExit:=True)
 
         Besthits = NCBI.Extensions.LocalBLAST.BLASTOutput.BlastPlus.TryParse(Me.LocalBLAST.LastBLASTOutputFilePath).ExportAllBestHist
         Hits = Besthits
@@ -142,16 +142,16 @@ Public Class DataPreparations
 
         Console.WriteLine("Write dip interaction pairs data...")
 
-        Dim pairsFile As DocumentStream.File = New DocumentStream.File
+        Dim pairsFile As IO.File = New IO.File
         Call pairsFile.Add(New String() {"proteinId", "partnerId"})
         '生成具备实验事实的互作关系
-        Call pairsFile.AppendRange((From item In InteractionPairs Select New DocumentStream.RowObject From {item.Key, item.Value}).ToArray)
+        Call pairsFile.AppendRange((From item In InteractionPairs Select New IO.RowObject From {item.Key, item.Value}).ToArray)
         Call pairsFile.Save(String.Format("{0}/interaction_pairs_partners_for_{1}.csv", workDir, GeneId), False)
 
-        Dim pairsFilePretend As New DocumentStream.File
+        Dim pairsFilePretend As New IO.File
         Call pairsFilePretend.Add(New String() {"proteinId", "partnerId"})
         '生成假定具备互作关系的互作蛋白质对
-        Call pairsFilePretend.AppendRange((From item In MatchedIdCollection Select New DocumentStream.RowObject From {GeneId, item}).ToArray)
+        Call pairsFilePretend.AppendRange((From item In MatchedIdCollection Select New IO.RowObject From {GeneId, item}).ToArray)
         Call pairsFilePretend.Save(String.Format("{0}/interaction_pairs_partners_for_{1}_pretended.csv", workDir, GeneId), False)
 
         Call Console.WriteLine("Start multiple sequence alignment calling clustal...")
@@ -167,7 +167,7 @@ Public Class DataPreparations
         Call Console.WriteLine("Start to modelling the protein interaction Bayesian network...")
 
         '利用所建立的模型求解具体的蛋白质互作问题
-        Dim ResultInteractions As New DocumentStream.File
+        Dim ResultInteractions As New IO.File
 
         SyncLock R
             With R
@@ -197,7 +197,7 @@ Public Class DataPreparations
 
     Protected Friend Shared Function Trim(AlignedData As FASTA.FastaFile) As FASTA.FastaFile
         Dim p As Integer = 0
-        Dim Sequence As List(Of Char)() = (From fsa In AlignedData Select fsa.SequenceData.ToList).ToArray  '请注意，对象之间需要保持顺序
+        Dim Sequence As List(Of Char)() = (From fsa In AlignedData Select fsa.SequenceData.AsList).ToArray  '请注意，对象之间需要保持顺序
         Dim SequenceCountsCutOff = AlignedData.Count * 0.75
 
         Do While True
@@ -233,7 +233,7 @@ Public Class DataPreparations
     ''' <param name="InteractionPairs"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Private Shared Function SequenceAssemble(InteractorA As FASTA.FastaFile, InteractorB As FASTA.FastaFile, InteractionPairs As DocumentStream.File) As String()
+    Private Shared Function SequenceAssemble(InteractorA As FASTA.FastaFile, InteractorB As FASTA.FastaFile, InteractionPairs As IO.File) As String()
         Dim List As List(Of String) = New List(Of String)
         For Each pair In InteractionPairs.Skip(1)
             Dim itA = pair(0), itB = pair(1)

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::df7f361f96199ac19a899cd2136925ed, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\File\FileSystem\DatabaseLoadder.vb"
+﻿#Region "Microsoft.VisualBasic::df7f361f96199ac19a899cd2136925ed, ..\core\Bio.Assembly\Assembly\MetaCyc\File\FileSystem\DatabaseLoadder.vb"
 
     ' Author:
     ' 
@@ -72,7 +72,7 @@ Namespace Assembly.MetaCyc.File.FileSystem
                 Call Assembly.MetaCyc.File.DataFiles.Reflection.FileStream.Read(Of
                      MetaCyc.File.DataFiles.Slots.Compound,
                      MetaCyc.File.DataFiles.Compounds)(Path, Database.Compounds)
-                Database.Compounds.Values = (From cp In Database.Compounds.Values Select cp.Trim).ToList
+                Database.Compounds.Values = (From cp In Database.Compounds.Values Select cp.Trim).AsList
             End If
             Return Database.Compounds
         End Function
@@ -127,7 +127,7 @@ Namespace Assembly.MetaCyc.File.FileSystem
                 Call Assembly.MetaCyc.File.DataFiles.Reflection.FileStream.Read(Of
                      MetaCyc.File.DataFiles.Slots.Reaction,
                      MetaCyc.File.DataFiles.Reactions)(Path, Database.Reactions)
-                Database.Reactions.Values = (From item In Database.Reactions.Values Select DataFiles.Reactions.Trim(item)).ToList
+                Database.Reactions.Values = (From item In Database.Reactions.Values Select DataFiles.Reactions.Trim(item)).AsList
             End If
             Return Database.Reactions
         End Function

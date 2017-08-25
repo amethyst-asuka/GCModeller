@@ -1,44 +1,41 @@
-﻿#Region "Microsoft.VisualBasic::04c3c25342003b275d1da01a1254bcf3, ..\GCModeller\data\ExternalDBSource\SABIORK KineticLaws\Dumps\TabularDump.vb"
+﻿#Region "Microsoft.VisualBasic::c2d9b9b70ae2926b2539b69904aa03a0, ..\GCModeller\data\ExternalDBSource\SABIORK KineticLaws\Dumps\TabularDump.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
-Imports System.Text
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
-Imports Microsoft.VisualBasic.ComponentModel.KeyValuePair
 Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports SMRUCC.genomics.Assembly.MetaCyc.Schema
-Imports SMRUCC.genomics.SequenceModel
+Imports SMRUCC.genomics.ComponentModel.EquaionModel
 
 Namespace SabiorkKineticLaws.TabularDump
 
-    Public MustInherit Class SabiorkEntity : Implements sIdEnumerable
+    Public MustInherit Class SabiorkEntity : Implements INamedValue
 
-        Public Property SabiorkId As String Implements sIdEnumerable.Identifier
+        Public Property SabiorkId As String Implements INamedValue.Key
 
         Public Overrides Function ToString() As String
             Return SabiorkId
@@ -48,7 +45,7 @@ Namespace SabiorkKineticLaws.TabularDump
     Public Class CompoundSpecie : Inherits SabiorkEntity
         Implements ICompoundObject
 
-        <Column("kegg.compound")> Public Property KEGG_Compound As String Implements ICompoundObject.Identifier, ICompoundObject.locusId
+        <Column("kegg.compound")> Public Property KEGG_Compound As String Implements ICompoundObject.Key, ICompoundObject.KEGG_cpd
 
         Public Overrides Function ToString() As String
             Return CommonNames.First

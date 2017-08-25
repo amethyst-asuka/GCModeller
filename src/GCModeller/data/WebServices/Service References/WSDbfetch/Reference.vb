@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::3ade2957802d67903601616fe250c82b, ..\GCModeller\data\WebServices\Service References\WSDbfetch\Reference.vb"
+﻿#Region "Microsoft.VisualBasic::a631b96f91a399df1bda14c846694966, ..\GCModeller\data\WebServices\Service References\WSDbfetch\Reference.vb"
 
     ' Author:
     ' 
@@ -104,19 +104,19 @@ Namespace WSDbfetch
             MyBase.New
         End Sub
         
-        Public Sub New(ByVal endpointConfigurationName As String)
+        Public Sub New( endpointConfigurationName As String)
             MyBase.New(endpointConfigurationName)
         End Sub
         
-        Public Sub New(ByVal endpointConfigurationName As String, ByVal remoteAddress As String)
+        Public Sub New( endpointConfigurationName As String,  remoteAddress As String)
             MyBase.New(endpointConfigurationName, remoteAddress)
         End Sub
         
-        Public Sub New(ByVal endpointConfigurationName As String, ByVal remoteAddress As System.ServiceModel.EndpointAddress)
+        Public Sub New( endpointConfigurationName As String,  remoteAddress As System.ServiceModel.EndpointAddress)
             MyBase.New(endpointConfigurationName, remoteAddress)
         End Sub
         
-        Public Sub New(ByVal binding As System.ServiceModel.Channels.Binding, ByVal remoteAddress As System.ServiceModel.EndpointAddress)
+        Public Sub New( binding As System.ServiceModel.Channels.Binding,  remoteAddress As System.ServiceModel.EndpointAddress)
             MyBase.New(binding, remoteAddress)
         End Sub
         
@@ -177,4 +177,3 @@ Namespace WSDbfetch
         End Sub
     End Class
 End Namespace
-

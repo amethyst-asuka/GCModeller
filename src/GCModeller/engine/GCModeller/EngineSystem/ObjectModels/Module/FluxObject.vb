@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::aaf7b5d6095e34d99a9b96a4b735a6d5, ..\GCModeller\engine\GCModeller\EngineSystem\ObjectModels\Module\FluxObject.vb"
+﻿#Region "Microsoft.VisualBasic::c737d892001322cebc264b5a996d5c57, ..\GCModeller\engine\GCModeller\EngineSystem\ObjectModels\Module\FluxObject.vb"
 
     ' Author:
     ' 
@@ -117,7 +117,7 @@ Namespace EngineSystem.ObjectModels.Module
             End Get
         End Property
 
-        Public Overrides Property Identifier As String Implements Kernel_Driver.IDynamicsExpression(Of Double).Identifier
+        Public Overrides Property Identifier As String Implements Kernel_Driver.IDynamicsExpression(Of Double).Key
 
         Public Function CreateHandle() As SMRUCC.genomics.GCModeller.Framework.Kernel_Driver.DataStorage.FileModel.ObjectHandle Implements SMRUCC.genomics.GCModeller.Framework.Kernel_Driver.IDynamicsExpression(Of Double).get_ObjectHandle
             Return New SMRUCC.genomics.GCModeller.Framework.Kernel_Driver.DataStorage.FileModel.ObjectHandle With {

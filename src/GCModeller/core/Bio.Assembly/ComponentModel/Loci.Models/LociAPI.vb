@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::57d0abe2721225f39c7dd0ec6f2f346d, ..\GCModeller\core\Bio.Assembly\ComponentModel\Loci.Models\LociAPI.vb"
+﻿#Region "Microsoft.VisualBasic::6308665c903dbede8d0c7aafe7361d93, ..\core\Bio.Assembly\ComponentModel\Loci.Models\LociAPI.vb"
 
     ' Author:
     ' 
@@ -30,35 +30,49 @@ Imports System.Runtime.CompilerServices
 Imports System.Text.RegularExpressions
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Language
-Imports Microsoft.VisualBasic.Scripting
 Imports Microsoft.VisualBasic.Scripting.MetaData
+Imports Microsoft.VisualBasic.Scripting.Runtime
 
 Namespace ComponentModel.Loci
 
-    <PackageNamespace("Loci.API", Description:="Methods for some nucleotide utility.")>
+    <Package("Loci.API", Description:="Methods for some nucleotide utility.")>
     Public Module LociAPI
 
         ''' <summary>
         ''' 直接合并相邻的一个位点集合到一个新的更加长的位点
         ''' </summary>
         ''' <typeparam name="TLocation"></typeparam>
-        ''' <param name="groupedData"></param>
+        ''' <param name="grouped">
+        ''' 其实在这里是直接将最小的左端和最大的右端合并构成一个更大范围的location
+        ''' </param>
         ''' <returns></returns>
-        Public Function Merge(Of TLocation As Location)(groupedData As IEnumerable(Of TLocation)) As TLocation
-            Dim RightAligned As TLocation = (From objLoci As TLocation
-                                             In groupedData
-                                             Select objLoci
-                                             Order By objLoci.Right Descending).First
-            Dim clSite As TLocation = groupedData.First.Clone
-            clSite.Left = groupedData.First.Left
-            clSite.Right = RightAligned.Right
-            Return clSite
+        <Extension>
+        Public Function MergeJoins(Of TLocation As Location)(grouped As IEnumerable(Of TLocation)) As TLocation
+            Dim Ralign As TLocation() = LinqAPI.Exec(Of TLocation) <=
+                From l As TLocation
+                In grouped
+                Select l
+                Order By l.Right Descending
+            Dim Lalign As TLocation() = LinqAPI.Exec(Of TLocation) <=
+                From l As TLocation
+                In grouped
+                Select l
+                Order By l.Left Ascending
+
+            Dim clone As TLocation = grouped.First.Clone
+            clone.Left = Lalign.First.Left
+            clone.Right = Ralign.Last.Right
+            Return clone
         End Function
 
         ''' <summary>
-        ''' Gets the location relationship of two loci segments.(判断获取两个位点片段之间的位置关系，请注意，这个函数只依靠左右位置来判断关系，假若对核酸链的方向有要求在调用本函数之前请确保二者在同一条链之上)
+        ''' Gets the location relationship of two loci segments.
+        ''' (判断获取两个位点片段之间的位置关系，请注意，这个函数只依靠左右位置来判断关系，
+        ''' 假若对核酸链的方向有要求在调用本函数之前请确保二者在同一条链之上)
         ''' </summary>
-        ''' <param name="lcl">在计算之前请先调用<see cref="Location.Normalization()"/>方法来修正</param>
+        ''' <param name="lcl">
+        ''' 在计算之前请先调用<see cref="Location.Normalization()"/>方法来修正
+        ''' </param>
         ''' <returns></returns>
         ''' <remarks></remarks>
         '''
@@ -123,47 +137,61 @@ Namespace ComponentModel.Loci
         ''' <summary>
         ''' Try parse NCBI sequence dump location/<see cref="NucleotideLocation.ToString()"/> dump location.
         ''' </summary>
-        ''' <param name="sLoci"></param>
+        ''' <param name="loci"></param>
         ''' <returns></returns>
         ''' <remarks></remarks>
         '''
         <ExportAPI("Loci.Parser")>
-        Public Function TryParse(sLoci As String) As NucleotideLocation
-            If InStr(sLoci, " ==> ") > 0 Then
-                Return __tryParse(sLoci)
+        Public Function TryParse(loci As String) As NucleotideLocation
+            If InStr(loci, " ==> ") > 0 Then
+                Return __tryParse(loci)
             End If
 
-            Dim nuclLoci As New NucleotideLocation
+            Dim s As Strands = If(
+                Regex.Match(loci, "complement\([^)]+\)").Success,
+                Strands.Reverse,
+                Strands.Forward)
+            Dim pos%() = LinqAPI.Exec(Of Integer) <=
+ _
+                From match As Match
+                In Regex.Matches(loci, "\d+")
+                Let n As Integer = CInt(Val(match.Value))
+                Select n
+                Order By n Ascending
 
-            If Regex.Match(sLoci, "complement\([^)]+\)").Success Then
-                nuclLoci.Strand = Strands.Reverse
-            Else
-                nuclLoci.Strand = Strands.Forward
-            End If
-
-            Dim pos As Long() =
-                LinqAPI.Exec(Of Long) <= From match As Match
-                                         In Regex.Matches(sLoci, "\d+")
-                                         Let n As Long = CType(Val(match.Value), Long)
-                                         Select n
-                                         Order By n Ascending
-            nuclLoci.Left = pos(0)
-            nuclLoci.Right = pos(1)
+            Dim nuclLoci As New NucleotideLocation With {
+                .Left = pos(0),
+                .Right = pos(1),
+                .Strand = s,
+                .UserTag = loci
+            }
 
             Return nuclLoci
         End Function
 
+        <Extension> Public Function NCBIstyle(loci As NucleotideLocation) As String
+            Dim tag$ = $"{loci.Left}..{loci.Right}"
+
+            If loci.Strand = Strands.Reverse Then
+                tag = $"complement({tag})"
+            End If
+
+            Return tag
+        End Function
+
         ''' <summary>
+        ''' ```
         ''' 388739 ==> 389772 #Forward
+        ''' ```
         ''' </summary>
-        ''' <param name="s_Loci"></param>
+        ''' <param name="input"></param>
         ''' <returns></returns>
-        Private Function __tryParse(s_Loci As String) As NucleotideLocation
-            Dim Tokens As String() = s_Loci.Split
-            Dim Left As Integer = CInt(Val(Tokens(0)))
-            Dim Right As Integer = CInt(Val(Tokens(2)))
-            Dim Strand As Strands = GetStrand(Tokens(3))
-            Return New NucleotideLocation(Left, Right, Strand).Normalization.As(Of NucleotideLocation)
+        Private Function __tryParse(input As String) As NucleotideLocation
+            Dim t$() = input.Split
+            Dim left As Integer = CInt(Val(t(0)))
+            Dim right As Integer = CInt(Val(t(2)))
+            Dim strand As Strands = GetStrand(t(3))
+            Return New NucleotideLocation(left, right, strand).Normalization
         End Function
 
         <ExportAPI("Loci.Equals")>

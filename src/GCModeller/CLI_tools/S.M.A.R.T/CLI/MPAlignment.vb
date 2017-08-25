@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::5dde54b8c44fbad80d90d39cf25912d3, ..\GCModeller\CLI_tools\S.M.A.R.T\CLI\MPAlignment.vb"
+﻿#Region "Microsoft.VisualBasic::8b3e7a290cade335add47929f51f4d04, ..\GCModeller\CLI_tools\S.M.A.R.T\CLI\MPAlignment.vb"
 
     ' Author:
     ' 
@@ -27,11 +27,12 @@
 #End Region
 
 Imports System.Runtime.CompilerServices
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv.Extensions
+Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq.Extensions
+Imports Microsoft.VisualBasic.Text.Levenshtein
 Imports ProteinTools.SMART.Common.Extensions
 Imports SMRUCC.genomics.Data.Regprecise
 Imports SMRUCC.genomics.Data.Xfam
@@ -72,7 +73,7 @@ Partial Module CLI
         Dim out As String = args.GetValue("/out", App.CurrentDirectory)
         Dim resultSet As New List(Of LevAlign)
 
-        out = $"{out}/{IO.Path.GetFileNameWithoutExtension(args("/query"))}_vs.{IO.Path.GetFileNameWithoutExtension(args("/subject"))}"
+        out = $"{out}/{basename(args("/query"))}_vs.{basename(args("/subject"))}"
 
         Dim outHTML As String = out & "/HTML/"
 
@@ -84,7 +85,7 @@ Partial Module CLI
             resultSet += alignInvoke
 
             For Each paired In alignInvoke
-                Dim html As String = paired.Visualize
+                Dim html As String = paired.htmlVisualize
                 Dim path As String = outHTML & $"/{paired.QueryPfam.ProteinId.NormalizePathString}_vs.{paired.SubjectPfam.ProteinId.NormalizePathString}.html"
                 Call html.SaveTo(path)
             Next
@@ -109,7 +110,7 @@ Partial Module CLI
         out = $"{out}/{query.ProteinId.NormalizePathString}_vs.{subject.ProteinId.NormalizePathString}"
 
         Call result.GetXml.SaveTo($"{out}/MPAlignment.xml")
-        Call result.Visualize.SaveTo(out & "/MPAlignment.html")
+        Call result.htmlVisualize.SaveTo(out & "/MPAlignment.html")
 
         Dim outTxt As String = result.ToString
         Call Console.WriteLine(outTxt)
@@ -136,8 +137,8 @@ Partial Module CLI
         Dim out As String = args.GetValue("/out", input.ParentDirName & "/MPAlignment/")
         Dim inBBH = input.LoadCsv(Of BiDirectionalBesthit)
         Dim align = MotifParallelAlignment.AlignProteins(inBBH, query.LoadCsv(Of Pfam.PfamString.PfamString), subject.LoadCsv(Of Pfam.PfamString.PfamString))
-        Call align.ToArray.GetXml.SaveTo($"{out}/{IO.Path.GetFileNameWithoutExtension(input)}.xml")
-        Call align.ToArray(Function(x) x.ToRow).SaveTo($"{out}/{IO.Path.GetFileNameWithoutExtension(input)}.csv")
+        Call align.ToArray.GetXml.SaveTo($"{out}/{basename(input)}.xml")
+        Call align.ToArray(Function(x) x.ToRow).SaveTo($"{out}/{basename(input)}.csv")
 
         Dim Regprecise = GCModeller.FileSystem.KEGGFamilies.LoadCsv(Of FastaReaders.Regulator) _
                 .ToDictionary(Function(prot) prot.LocusTag) '.LoadXml(Of SMRUCC.genomics.DatabaseServices.Regprecise.WebServices.Regulations)
@@ -160,7 +161,7 @@ Partial Module CLI
                               Array.IndexOf(havMatches(match.QueryName), match.HitName) > -1
                           Select match).ToArray
 
-        Call matchesBBH.SaveTo($"{out}/{IO.Path.GetFileNameWithoutExtension(input)}.bbh_matches.csv")
+        Call matchesBBH.SaveTo($"{out}/{basename(input)}.bbh_matches.csv")
 
         Return 0
     End Function
@@ -169,7 +170,7 @@ Partial Module CLI
         Dim Tokens As String() = FamilyTokens(Family)
         Dim LQuery = (From domain
                       In prot.GetDomainData(True)
-                      Where Not (From fam As String In Tokens Where InStr(domain.Identifier, fam, CompareMethod.Text) > 0 Select 1).ToArray.IsNullOrEmpty
+                      Where Not (From fam As String In Tokens Where InStr(domain.Name, fam, CompareMethod.Text) > 0 Select 1).ToArray.IsNullOrEmpty
                       Select 1).ToArray
         Return Not LQuery.IsNullOrEmpty
     End Function
@@ -217,7 +218,7 @@ GET_ID:
         Dim pfSubSet As Pfam.PfamString.PfamString() =
             (From x In query Where Array.IndexOf(lstId, x.ProteinId) > -1 Select x).ToArray
         Call pfSubSet.Add((From x In subject Where Array.IndexOf(lstId, x.ProteinId) > -1 Select x).ToArray)
-        Dim alnResult = (From x In pfSubSet Select (From y In pfSubSet Select Pfam.ProteinDomainArchitecture.MPAlignment.PfamStringEquals(x, y, cut)).ToArray).MatrixToList
+        Dim alnResult = (From x In pfSubSet Select (From y In pfSubSet Select Pfam.ProteinDomainArchitecture.MPAlignment.PfamStringEquals(x, y, cut)).ToArray).Unlist
         Return Pfam.ProteinDomainArchitecture.MPAlignment.AlignmentOutput2Csv(alnResult).SaveTo(path)
     End Function
 End Module

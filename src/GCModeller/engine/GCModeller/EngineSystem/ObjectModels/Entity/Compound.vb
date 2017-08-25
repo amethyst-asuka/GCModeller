@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::91dbef936a7496187771d2a5399b83e6, ..\GCModeller\engine\GCModeller\EngineSystem\ObjectModels\Entity\Compound.vb"
+﻿#Region "Microsoft.VisualBasic::7f3b3d251405f9109a1c031ed6f7d460, ..\GCModeller\engine\GCModeller\EngineSystem\ObjectModels\Entity\Compound.vb"
 
     ' Author:
     ' 
@@ -42,8 +42,8 @@ Namespace EngineSystem.ObjectModels.Entity
     ''' </summary>
     ''' <remarks></remarks>
     Public Class Compound : Inherits ObjectModel
-        Implements IAddressHandle
-        Implements sIdEnumerable
+        Implements IAddressOf
+        Implements INamedValue
         Implements IDataSourceEntity
 
         <DumpNode>
@@ -176,38 +176,7 @@ Namespace EngineSystem.ObjectModels.Entity
             Return Compound.DataSource.value
         End Operator
 
-#Region "IDisposable Support"
-        Private disposedValue As Boolean ' 检测冗余的调用
-
-        ' IDisposable
-        Protected Overrides Sub Dispose(disposing As Boolean)
-            If Not Me.disposedValue Then
-                If disposing Then
-                    ' TODO:  释放托管状态(托管对象)。
-                End If
-
-                ' TODO:  释放非托管资源(非托管对象)并重写下面的 Finalize()。
-                ' TODO:  将大型字段设置为 null。
-            End If
-            Me.disposedValue = True
-        End Sub
-
-        ' TODO:  仅当上面的 Dispose( disposing As Boolean)具有释放非托管资源的代码时重写 Finalize()。
-        'Protected Overrides Sub Finalize()
-        '    ' 不要更改此代码。    请将清理代码放入上面的 Dispose( disposing As Boolean)中。
-        '    Dispose(False)
-        '    MyBase.Finalize()
-        'End Sub
-
-        ' Visual Basic 添加此代码是为了正确实现可处置模式。
-        Public Overloads Sub Dispose()
-            ' 不要更改此代码。    请将清理代码放入上面的 Dispose (disposing As Boolean)中。
-            Dispose(True)
-            GC.SuppressFinalize(Me)
-        End Sub
-#End Region
-
-        Public Overrides Property Identifier As String Implements sIdEnumerable.Identifier
+        Public Overrides Property Identifier As String Implements INamedValue.Key
 
         Public Overridable ReadOnly Property SerialsHandle As HandleF Implements IDataSourceEntity.SerialsHandle
             Get

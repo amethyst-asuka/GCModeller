@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::2ad23166c02488d1b9614be3bc6e339b, ..\GCModeller\analysis\RNA-Seq\Toolkits.RNA-Seq.RTools\PfsNET\SubnetObject.vb"
+﻿#Region "Microsoft.VisualBasic::06d8910f9ae3606bf18835949ae5eabc, ..\GCModeller\analysis\RNA-Seq\Toolkits.RNA-Seq.RTools\PfsNET\SubnetObject.vb"
 
     ' Author:
     ' 
@@ -39,9 +39,9 @@ Namespace PfsNET
     ''' 输出结果的XML文件
     ''' </summary>
     ''' <remarks></remarks>
-    Public Class PfsNET : Implements sIdEnumerable
+    Public Class PfsNET : Implements INamedValue
 
-        <XmlAttribute> Public Property Identifier As String Implements sIdEnumerable.Identifier
+        <XmlAttribute> Public Property Identifier As String Implements INamedValue.Key
 
         <XmlAttribute> Public Property n As Integer
         <XmlAttribute> Public Property Flag As Boolean
@@ -66,7 +66,7 @@ Namespace PfsNET
             uId = Regex.Split(uId, "=").First.Replace("`", "").Trim.Split.Last
 
             Dim n As Integer = Val(Regex.Match(strTemp, "\d+").Value)
-            Dim f As Boolean = Regex.Match(strTemp, "TRUE|FALSE", RegexOptions.IgnoreCase).Value.getBoolean
+            Dim f As Boolean = Regex.Match(strTemp, "TRUE|FALSE", RegexOptions.IgnoreCase).Value.ParseBoolean
             strData = strData.Replace(strTemp, "")
             strTemp = Regex.Match(strData, "c\(\d+(,\d+)*\)(,c\(\d+(,\d+)*\))*,").Value
             strData = strData.Replace(strTemp, "")

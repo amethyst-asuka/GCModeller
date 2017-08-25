@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::a4c91df5a384c2e27845a730a4f30877, ..\GCModeller\analysis\RNA-Seq\TSSsTools\ReadsCount.vb"
+﻿#Region "Microsoft.VisualBasic::0a98f660189fb6954d0bb43769541cd7, ..\GCModeller\analysis\RNA-Seq\TSSsTools\ReadsCount.vb"
 
     ' Author:
     ' 
@@ -103,7 +103,7 @@ Public Class ReadsCount : Inherits RawStream
     End Function
 
     Public Shared Function WriteDb(Db As Generic.IEnumerable(Of ReadsCount), saveDb As String) As Boolean
-        Dim LQuery = (From x As ReadsCount In Db.AsParallel Select x.Serialize).ToArray.MatrixToList
+        Dim LQuery = (From x As ReadsCount In Db.AsParallel Select x.Serialize).ToArray.Unlist
         Return LQuery.FlushStream(saveDb)
     End Function
 

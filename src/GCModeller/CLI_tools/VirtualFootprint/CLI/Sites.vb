@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::6a0fa89f2603d577b8f012b6454edab7, ..\GCModeller\CLI_tools\VirtualFootprint\CLI\Sites.vb"
+﻿#Region "Microsoft.VisualBasic::bf90476973d4a881e6454f0c183897ca, ..\GCModeller\CLI_tools\VirtualFootprint\CLI\Sites.vb"
 
     ' Author:
     ' 
@@ -32,6 +32,7 @@ Imports Microsoft.VisualBasic.Data.csv
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat
 Imports SMRUCC.genomics.Model.Network.VirtualFootprint
+Imports SMRUCC.genomics.SequenceModel
 Imports SMRUCC.genomics.SequenceModel.FASTA
 Imports SMRUCC.genomics.SequenceModel.NucleotideModels
 
@@ -68,10 +69,9 @@ Partial Module CLI
 
         If seq.FileExists Then
             Dim nt As FastaToken = FastaToken.LoadNucleotideData(seq)
-            Dim reader As New SegmentReader(nt)
 
             For Each site As SimpleSegment In sites
-                site.SequenceData = reader.TryParse(site.MappingLocation).SequenceData
+                site.SequenceData = nt.CutSequenceLinear(site.MappingLocation).SequenceData
             Next
         End If
 

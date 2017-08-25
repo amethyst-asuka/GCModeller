@@ -1,39 +1,36 @@
-﻿#Region "Microsoft.VisualBasic::a87998595eaed925ce6c75bdfce462ac, ..\GCModeller\core\Bio.Assembly\ComponentModel\Loci.Models\Location.vb"
+﻿#Region "Microsoft.VisualBasic::2f479c25914afcc5b24544f6c9028c6d, ..\core\Bio.Assembly\ComponentModel\Loci.Models\Location.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
-Imports System.Text.RegularExpressions
 Imports System.Xml.Serialization
-Imports SMRUCC.genomics.ComponentModel.Loci.Abstract
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Microsoft.VisualBasic.ComponentModel.Ranges
-Imports Microsoft.VisualBasic.Linq.Extensions
-Imports Microsoft.VisualBasic.Serialization
 Imports Microsoft.VisualBasic.Serialization.JSON
+Imports SMRUCC.genomics.ComponentModel.Loci.Abstract
 
 Namespace ComponentModel.Loci
 
@@ -69,7 +66,7 @@ Namespace ComponentModel.Loci
         ''' <value></value>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        <XmlAttribute> Public Property Left As Integer Implements ILocationComponent.Left, IKeyValuePairObject(Of Integer, Integer).Identifier
+        <XmlAttribute> Public Property Left As Integer Implements ILocationComponent.Left, IKeyValuePairObject(Of Integer, Integer).Key
             Get
                 Return MyBase.Min
             End Get
@@ -106,6 +103,10 @@ Namespace ComponentModel.Loci
             Call Me.New(loci.Left, loci.Right)
         End Sub
 
+        Sub New(base As IntRange)
+            Call Me.New(base.Min, base.Max)
+        End Sub
+
         ''' <summary>
         ''' 当前的这个位置数据是否为左边小于右边的正常状态
         ''' </summary>
@@ -129,18 +130,14 @@ Namespace ComponentModel.Loci
             Return Me
         End Function
 
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <param name="loci"></param>
+        ''' <param name="offsets">当这个大于零的时候会进行模糊匹配</param>
+        ''' <returns></returns>
         Public Overloads Function Equals(loci As Location, Optional offsets As Integer = 0) As Boolean
             Return LociAPI.Equals(loci, Me, offsets)
-        End Function
-
-        ''' <summary>
-        ''' 将这个位点对象转换为每一个残基位点的位置对象，可能有些无聊
-        ''' </summary>
-        ''' <returns></returns>
-        Public Function GetResiduesLoci() As Integer()
-            Dim LeftBase As Integer = Math.Min(Left, Right)
-            Dim LQuery As Integer() = (From i As Integer In Me.FragmentSize.Sequence Select i + LeftBase).ToArray
-            Return LQuery
         End Function
 
         Public Shared Operator <>(a As Location, b As Location) As Boolean
@@ -185,9 +182,15 @@ Namespace ComponentModel.Loci
                 ContainSite(loci.Right) Then
                 Return True
             Else
-                Return ContainSite(loci.Left + offSet) AndAlso
-                    ContainSite(loci.Right - offSet)
+                For i As Integer = 1 To offSet
+                    If ContainSite(loci.Left + i) AndAlso
+                        ContainSite(loci.Right - i) Then
+                        Return True
+                    End If
+                Next
             End If
+
+            Return False
         End Function
 
         ''' <summary>
@@ -197,10 +200,17 @@ Namespace ComponentModel.Loci
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Function InsideOrOverlapWith(b As Location, WithOffSet As Integer) As Boolean
-            If ContainSite(b.Left - WithOffSet) OrElse ContainSite(b.Right + WithOffSet) Then
-                Return True
+            If ContainSite(b.Left) OrElse ContainSite(b.Right) Then
+                Return True ' at least is overlaps
             End If
-            Return ContainSite(b.Left) OrElse ContainSite(b.Right)
+
+            For i As Integer = 1 To WithOffSet
+                If ContainSite(b.Left - i) OrElse ContainSite(b.Right + i) Then
+                    Return True
+                End If
+            Next
+
+            Return False
         End Function
 
         Public ReadOnly Property Center As Integer
@@ -232,6 +242,10 @@ Namespace ComponentModel.Loci
             End Get
         End Property
 
+        ''' <summary>
+        ''' ``|<see cref="Left"/> ==> <see cref="Right"/>|``
+        ''' </summary>
+        ''' <returns></returns>
         Public Overrides Function ToString() As String
             Return String.Format("|{0} ==> {1}|", Left, Right)
         End Function
@@ -251,18 +265,24 @@ Namespace ComponentModel.Loci
             Return New Location(Left:=CLng(Val(Tokens.First)), Right:=CLng(Val(Tokens.Last)))
         End Function
 
-        Public Shared Widening Operator CType(Loci As Integer()) As Location
-            If Loci.IsNullOrEmpty Then
+        Public Overloads Shared Widening Operator CType(loci As Integer()) As Location
+            If loci.IsNullOrEmpty Then
                 Return New Location
-            ElseIf Loci.Count = 1
-                Return New Location(1, Loci(Scan0))
+            ElseIf loci.Length = 1 Then
+                Return New Location(1, loci(Scan0))
             Else
-                Return New Location(Loci.Min, Loci.Max)
+                Return New Location(loci.Min, loci.Max)
             End If
         End Operator
 
+        ''' <summary>
+        ''' <see cref="Left"/>, <see cref="Right"/> offset a length value and 
+        ''' then construct a new <see cref="Location"/> value.
+        ''' </summary>
+        ''' <param name="value"></param>
+        ''' <returns></returns>
         Public Function OffSet(value As Integer) As Location
-            Return New Location(Me.Left + value, Me.Right + value)
+            Return New Location(Left + value, Right + value)
         End Function
     End Class
 End Namespace

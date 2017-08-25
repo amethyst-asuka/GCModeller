@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::a06d178ece4739dc15924f232496b5a6, ..\GCModeller\models\SBML\SBML\Components\Notes.vb"
+﻿#Region "Microsoft.VisualBasic::a97df32c335d9608e4af133838541003, ..\GCModeller\models\SBML\SBML\Components\Notes.vb"
 
     ' Author:
     ' 
@@ -74,10 +74,10 @@ Namespace Components
         End Function
     End Class
 
-    Public Class [Property] : Implements IReadOnlyId, sIdEnumerable
+    Public Class [Property] : Implements IReadOnlyId, INamedValue
         Implements IKeyValuePairObject(Of String, String)
 
-        Public Property Name As String Implements IKeyValuePairObject(Of String, String).Identifier, IReadOnlyId.Identity, sIdEnumerable.Identifier
+        Public Property Name As String Implements IKeyValuePairObject(Of String, String).Key, IReadOnlyId.Identity, INamedValue.Key
         Public Property value As String Implements IKeyValuePairObject(Of String, String).Value
 
         Public Overrides Function ToString() As String

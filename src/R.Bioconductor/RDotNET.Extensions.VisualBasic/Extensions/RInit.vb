@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::4be08ebcdac4af5138d23ff4ff42f925, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\Extensions\RInit.vb"
+﻿#Region "Microsoft.VisualBasic::4bac956d91db12c6e58dc83807adce39, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\Extensions\RInit.vb"
 
     ' Author:
     ' 
@@ -70,7 +70,7 @@ Module RInit
     ''' <param name="R_HOME"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function StartEngineServices(R_HOME As String) As ExtendedEngine
+    Public Function StartEngineServices(R_HOME$) As ExtendedEngine
         Dim oldPath As String = Environment.GetEnvironmentVariable("PATH")
         Dim rPath As String = If(Environment.Is64BitProcess,
                                  $"{R_HOME}/x64",

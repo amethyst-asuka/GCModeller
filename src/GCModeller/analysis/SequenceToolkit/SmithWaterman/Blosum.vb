@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::a846b79fb9db209fc7e852b00b5af7d8, ..\GCModeller\analysis\SequenceToolkit\SmithWaterman\Blosum.vb"
+﻿#Region "Microsoft.VisualBasic::deb2017e8ce81fa99b39a7b3363f3ed4, ..\GCModeller\analysis\SequenceToolkit\SmithWaterman\Blosum.vb"
 
     ' Author:
     ' 
@@ -113,7 +113,9 @@ Public Class Blosum
     '''N -2  0  6  1 -3  0  0  0  1 -3 -3  0 -2 [rest of string was truncated]&quot;;.
     '''</summary>
     Public Shared Function FromInnerBlosum62() As Blosum
-        Return LoadFromStream(My.Resources.BLOSUM62)
+        SyncLock My.Resources.BLOSUM62
+            Return LoadFromStream(My.Resources.BLOSUM62)
+        End SyncLock
     End Function
 
     ' quick and dirty equivalent of typesafe enum pattern, can also use HashMap

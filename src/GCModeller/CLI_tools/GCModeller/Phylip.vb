@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::8d06510db0f980285dbe89263de7d59d, ..\GCModeller\CLI_tools\GCModeller\Phylip.vb"
+﻿#Region "Microsoft.VisualBasic::a90933d888fb483544aa86d1e435e72a, ..\GCModeller\CLI_tools\GCModeller\Phylip.vb"
 
     ' Author:
     ' 
@@ -27,7 +27,7 @@
 #End Region
 
 Imports Microsoft.VisualBasic.Linq.Extensions
-Imports Microsoft.VisualBasic.Mathematical
+Imports Microsoft.VisualBasic.Math
 Imports SMRUCC.genomics.Data.Xfam.Pfam.ProteinDomainArchitecture.MPAlignment
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application

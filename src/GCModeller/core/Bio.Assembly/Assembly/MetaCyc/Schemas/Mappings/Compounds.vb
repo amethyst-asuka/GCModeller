@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::260f3c3250d252d4af514ced1947f29f, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\Schemas\Mappings\Compounds.vb"
+﻿#Region "Microsoft.VisualBasic::f3530db05837e8c743f5cc1875c8b4c3, ..\core\Bio.Assembly\Assembly\MetaCyc\Schemas\Mappings\Compounds.vb"
 
     ' Author:
     ' 
@@ -31,23 +31,17 @@ Imports System.Text
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports SMRUCC.genomics.Assembly.MetaCyc.File.FileSystem
 Imports SMRUCC.genomics.Assembly.MetaCyc.File.DataFiles
+Imports SMRUCC.genomics.ComponentModel.EquaionModel
 
 Namespace Assembly.MetaCyc.Schema
-
-    Public Interface ICompoundObject : Inherits sIdEnumerable
-        Property CommonNames As String()
-        Property PUBCHEM As String
-        Property CHEBI As String()
-        Property locusId As String
-    End Interface
 
     ''' <summary>
     ''' Regprecise Effector与MetaCyc Compounds Mapping
     ''' </summary>
     ''' <remarks></remarks>
-    Public Class EffectorMap : Implements sIdEnumerable, ICompoundObject
+    Public Class EffectorMap : Implements INamedValue, ICompoundObject
 
-        Public Property Effector As String Implements sIdEnumerable.Identifier
+        Public Property Effector As String Implements INamedValue.Key
         ''' <summary>
         ''' <see cref="ICompoundObject.CommonNames"></see>
         ''' </summary>
@@ -67,7 +61,7 @@ Namespace Assembly.MetaCyc.Schema
         End Function
 
         Public Property CHEBI As String() Implements ICompoundObject.CHEBI
-        Public Property KEGGCompound As String Implements ICompoundObject.locusId
+        Public Property KEGGCompound As String Implements ICompoundObject.KEGG_cpd
         Public Property PUBCHEM As String Implements ICompoundObject.PUBCHEM
 
         Public Shared Function GenerateMap(CompoundSpecies As ICompoundObject()) As EffectorMap()
@@ -77,10 +71,10 @@ Namespace Assembly.MetaCyc.Schema
 
         Private Shared Function __newMap(cps As ICompoundObject) As EffectorMap
             Return New EffectorMap With {
-                .Effector = cps.Identifier,
+                .Effector = cps.Key,
                 .EffectorAlias = cps.CommonNames,
                 ._CHEBI = cps.CHEBI,
-                .KEGGCompound = cps.Identifier,
+                .KEGGCompound = cps.Key,
                 ._PUBCHEM = cps.PUBCHEM
             }
         End Function

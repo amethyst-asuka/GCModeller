@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::1431300e678b7805cc96a1c8201ba051, ..\GCModeller\engine\GCMarkupLanguage\GCML_Documents\XmlElements\ComponentModels\Compartment.vb"
+﻿#Region "Microsoft.VisualBasic::4263774d2da0976489ca9f509696b5d6, ..\GCModeller\engine\GCMarkupLanguage\GCML_Documents\XmlElements\ComponentModels\Compartment.vb"
 
     ' Author:
     ' 
@@ -56,7 +56,7 @@ Namespace GCML_Documents.ComponentModels
         ''' <value></value>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        <XmlAttribute> Public Property Identifier As String Implements sIdEnumerable.Identifier
+        <XmlAttribute> Public Property Identifier As String Implements INamedValue.Key
             Get
                 Return _ObjectBaseType.species
             End Get

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::253bdf52e2311d00b4a972ed694958e3, ..\GCModeller\CLI_tools\MEME\Cli\MotifSimilarity\MotifDraws.vb"
+﻿#Region "Microsoft.VisualBasic::9f0ed8ff2898dbf754922cdb164f3121, ..\GCModeller\CLI_tools\MEME\Cli\MotifSimilarity\MotifDraws.vb"
 
     ' Author:
     ' 
@@ -28,15 +28,16 @@
 
 Imports System.Runtime.CompilerServices
 Imports System.Text
+Imports Microsoft.VisualBasic
+Imports Microsoft.VisualBasic.Data.csv
+Imports Microsoft.VisualBasic.Imaging
+Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Linq
+Imports SMRUCC.genomics.Assembly.KEGG.DBGET.BriteHEntry
+Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.MotifScans
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.Similarity.TOMQuery
-Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat
-Imports SMRUCC.genomics.Assembly.KEGG.DBGET.BriteHEntry
-Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Linq
-Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.Imaging
 
 Public Module MotifDraws
 
@@ -71,7 +72,7 @@ Public Module MotifDraws
                       Let subs = x.Value.ToArray(Function(name) FamilyMotifs(name))
                       Select model, subs, x).ToArray
         Dim Views = (From view In (From x In LQuery.AsParallel
-                                   Select x.model.CreateViews(x.subs.MatrixToVector, x.x.Key, pheno, EXPORT)).MatrixAsIterator
+                                   Select x.model.CreateViews(x.subs.ToVector, x.x.Key, pheno, EXPORT)).IteratesALL
                      Select view
                      Order By view.MotifId Ascending).ToArray
 

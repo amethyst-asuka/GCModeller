@@ -140,7 +140,7 @@ Namespace EngineSystem.ObjectModels.SubSystem
                          In _InternalCellList.Shuffles.AsParallel
                          Let Invoke As Integer = CellObject.Tick(KernelCycle)
                          Where CellObject.CellDeathDetection = True
-                         Select CellObject).ToList
+                         Select CellObject).AsList
 #End If
 
             For Each CellObject In DeathCell
@@ -244,7 +244,7 @@ Namespace EngineSystem.ObjectModels.SubSystem
                           In NewCellObject.DataModel.TransmembraneTransportation
                           Let TrRxnModel As ObjectModels.Module.PassiveTransportationFlux =
                               [Module].PassiveTransportationFlux.CreateObject(model, CellEnzymes, NewCellObject.Metabolism.EnzymeKinetics, Compartments, DefaultCompartment)
-                          Select TrRxnModel).ToList
+                          Select TrRxnModel).AsList
 
             Call LQuery.Add([Module].PassiveTransportationFlux.CreateObject(WATER_FREE_DIFFUSION, CellEnzymes, NewCellObject.Metabolism.EnzymeKinetics, Compartments, DefaultCompartment))
 
@@ -257,7 +257,7 @@ Namespace EngineSystem.ObjectModels.SubSystem
             Call _TransmembraneFluxes.AddRange(LQuery)
             NewCellObject.Metabolism.TransmembraneFluxs = LQuery.ToArray
             Call NewCellObject.Metabolism.Pathways.Initialize()
-            _DynamicsExprs = _TransmembraneFluxes.AddHandle.ToArray
+            _DynamicsExprs = _TransmembraneFluxes.WriteAddress.ToArray
 
             If IRuntimeContainer.ConfigurationData.ATP_Compensate Then
                 Call _SystemLogging.WriteLine("[DEBUG!!!!!] Setup ATP compensation...")

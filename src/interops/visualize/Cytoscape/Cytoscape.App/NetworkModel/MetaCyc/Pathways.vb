@@ -88,7 +88,7 @@ Namespace NetworkModel
                                In Pwy.InPathway
                                Select New FileStream.NetworkEdge With {
                                    .FromNode = Id.ToUpper,
-                                   .InteractionType = "Contains",
+                                   .Interaction = "Contains",
                                    .ToNode = Pwy.Identifier
                                }
                 End If
@@ -115,9 +115,9 @@ Namespace NetworkModel
             Nodes = NodeList.ToArray
         End Sub
 
-        Public Class Pathway : Implements sIdEnumerable
+        Public Class Pathway : Implements INamedValue
 
-            Public Property Identifier As String Implements sIdEnumerable.Identifier
+            Public Property Identifier As String Implements INamedValue.Key
             Public Property ReactionCounts As Integer
             Public Property EnzymeCounts As Integer
             Public Property CommonName As String
@@ -140,7 +140,7 @@ Namespace NetworkModel
                                   item.LinkType.ToString)
                             Select New FileStream.NetworkEdge With {
                                 .FromNode = UniqueId,
-                                .InteractionType = iter,
+                                .Interaction = iter,
                                 .ToNode = item.Id.Replace("|", "").ToUpper
                             }
             Next

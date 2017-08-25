@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::92099cb78c395c06b4362b3fd279222d, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\API\utils\install.vb"
+﻿#Region "Microsoft.VisualBasic::83078a8df8c56b6eb1b7a8899f351f59, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\API\utils\install.vb"
 
     ' Author:
     ' 
@@ -47,7 +47,7 @@ Namespace API.utils
                                  Optional priority As String = NULL,
                                  Optional noCache As Boolean = False,
                                  Optional fields As String = NULL,
-                                 Optional subarch As String = ".Platform$r_arch") As DocumentStream.DataFrame
+                                 Optional subarch As String = ".Platform$r_arch") As IO.DataFrame
             Dim out As SymbolicExpression =
                 $"installed.packages(lib.loc = {libloc}, priority = {priority},
                                      noCache = {noCache.λ}, fields = {fields},

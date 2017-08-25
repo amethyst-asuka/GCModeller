@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::436bdf16f86051e09415d9d8faee4303, ..\GCModeller\models\Networks\Network.BLAST\API.vb"
+﻿#Region "Microsoft.VisualBasic::bbf62ea791053f5bd62b4458ae4c6cd8, ..\GCModeller\models\Networks\Network.BLAST\API.vb"
 
     ' Author:
     ' 
@@ -27,7 +27,6 @@
 #End Region
 
 Imports System.Runtime.CompilerServices
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Linq.Extensions
@@ -35,13 +34,14 @@ Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports Microsoft.VisualBasic.Text
 Imports SMRUCC.genomics.Interops.NCBI.Extensions
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH
+Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH.Abstract
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.BLASTOutput
 
 ''' <summary>
 ''' 这个多用于宏基因组的研究
 ''' </summary>
 ''' 
-<PackageNamespace("BiologicalNetwork.BLAST",
+<Package("BiologicalNetwork.BLAST",
                   Category:=APICategories.ResearchTools,
                   Description:="Metagenome blast network builder",
                   Publisher:="xie.guigang@gcmodeller.org",

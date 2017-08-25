@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::65ad32a581b5796fd2f71f1c81874533, ..\R.Bioconductor\Bioconductor\Bioconductor\biocPkgs\WGCNA\App\1. WGCNA_Samples.vb"
+﻿#Region "Microsoft.VisualBasic::84a8d91652de6da059092a6bb72a8549, ..\R.Bioconductor\Bioconductor\Bioconductor\biocPkgs\WGCNA\App\1. WGCNA_Samples.vb"
 
     ' Author:
     ' 
@@ -26,8 +26,6 @@
 
 #End Region
 
-Imports System.Text
-Imports RDotNET.Extensions.VisualBasic
 Imports RDotNET.Extensions.VisualBasic.SymbolBuilder
 Imports RDotNET.Extensions.VisualBasic.SymbolBuilder.packages.base
 Imports RDotNET.Extensions.VisualBasic.SymbolBuilder.packages.dynamicTreeCut

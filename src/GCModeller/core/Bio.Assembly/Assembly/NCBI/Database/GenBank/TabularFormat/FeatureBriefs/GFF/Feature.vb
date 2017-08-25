@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::692e488608e53b45664a46accd92734e, ..\GCModeller\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\TabularFormat\FeatureBriefs\GFF\Feature.vb"
+﻿#Region "Microsoft.VisualBasic::1cac065d863e0d4e84b28edd18371d8a, ..\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\TabularFormat\FeatureBriefs\GFF\Feature.vb"
 
     ' Author:
     ' 
@@ -27,14 +27,13 @@
 #End Region
 
 Imports System.Text.RegularExpressions
-Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
+Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports SMRUCC.genomics.ComponentModel
 Imports SMRUCC.genomics.ComponentModel.Loci
 Imports SMRUCC.genomics.ComponentModel.Loci.Abstract
 Imports SMRUCC.genomics.SequenceModel.NucleotideModels
-Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 
-Namespace Assembly.NCBI.GenBank.TabularFormat
+Namespace Assembly.NCBI.GenBank.TabularFormat.GFF
 
     ''' <summary>
     ''' A feature is here an interval (i.e., a range of positions) on a chromosome or a union of such intervals.
@@ -46,7 +45,7 @@ Namespace Assembly.NCBI.GenBank.TabularFormat
     ''' For comparative ChIP-Seq, the features might be binding region from a pre-determined list.
     ''' </summary>
     Public Class Feature : Inherits Contig
-        Implements sIdEnumerable
+        Implements INamedValue
         Implements IGeneBrief
         Implements ILocationComponent
 
@@ -197,7 +196,7 @@ Namespace Assembly.NCBI.GenBank.TabularFormat
         ''' 请注意，这个属性不是基因号
         ''' </summary>
         ''' <returns></returns>
-        Public Property ID As String Implements sIdEnumerable.Identifier
+        Public Property ID As String Implements INamedValue.Key
             Get
                 Return attributes.TryGetValue("id")
             End Get

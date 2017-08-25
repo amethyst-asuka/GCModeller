@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::5eb4340e19b5221318a7d0cadae36ba9, ..\GCModeller\engine\GCTabular\DataVisualization\DynamicMap.vb"
+﻿#Region "Microsoft.VisualBasic::97efdee7db553694a33c7164f4dee13d, ..\GCModeller\engine\GCTabular\DataVisualization\DynamicMap.vb"
 
     ' Author:
     ' 
@@ -29,7 +29,7 @@
 Imports System.Text
 Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 
 Namespace DataVisualization
 
@@ -118,7 +118,7 @@ Namespace DataVisualization
             Interactions = (From item In Me._FullCellSystemMap Let FluxValue = GetItemValue(SystemMapData, item.UniqueId) Where FluxValue > 1 Select item).ToArray
 
             '由于在NodeAttributes表之中也包含有Flux对象，故而查找NodesQuantity表的时候总是找不到，在这里使用小于-100的情况来表示目标对象为Flux对象
-            NodeAttributes = (From item In Me._SystemNodes Let Quantity = GetItemValue(NodesQuantity, item.Identifier) Where Quantity > 1 OrElse Quantity < -1000 Select item).ToArray
+            NodeAttributes = (From item In Me._SystemNodes Let Quantity = GetItemValue(NodesQuantity, item.ID) Where Quantity > 1 OrElse Quantity < -1000 Select item).ToArray
             Interactions = (From item In Interactions Let FromNode = GetItemValue(NodesQuantity, item.FromNode) Where FromNode > 1 OrElse FromNode < -1000 Select item).ToArray
             Interactions = (From item In Interactions Let ToNode = GetItemValue(NodesQuantity, item.ToNode) Where ToNode > 1 OrElse ToNode < -1000 Select item).ToArray
         End Sub

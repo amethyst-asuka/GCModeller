@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::3c921fed0694b6a9c6cfb9c17e308c6c, ..\GCModeller\visualize\visualizeTools\ComparativeGenomics\MultipleAlignment\LargeGenomeComparing.vb"
+﻿#Region "Microsoft.VisualBasic::dc1ffb9f371b3141268fc9db536e6b1d, ..\visualize\visualizeTools\ComparativeGenomics\MultipleAlignment\LargeGenomeComparing.vb"
 
     ' Author:
     ' 
@@ -29,11 +29,12 @@
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel.SchemaMaps
 Imports Microsoft.VisualBasic.Scripting.MetaData
-Imports Microsoft.VisualBasic
+Imports Microsoft.VisualBasic.ListExtensions
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
-Imports Microsoft.VisualBasic.ComponentModel
+Imports Microsoft.VisualBasic.ComponentModel.Algorithm.base
 Imports Microsoft.VisualBasic.Imaging
+Imports System.Drawing.Drawing2D
 
 Namespace ComparativeAlignment
 
@@ -59,7 +60,7 @@ Namespace ComparativeAlignment
         <DataFrameColumn("triangle.height")> Dim TrangleHeight As Integer = 100
 
         Private Function __drawing(models As ComparativeGenomics.GenomeModel,
-                                   gdi As GDIPlusDeviceHandle,
+                                   gdi As Graphics2D,
                                    len As Integer,
                                    maxLenTitleSize As Size,
                                    height As Integer,
@@ -107,7 +108,7 @@ Namespace ComparativeAlignment
 
                 If DispGeneID Then Call gdi.Graphics.DrawString(gene.locus_tag, locusFont, Brushes.DarkCyan, r.Location)
 
-                Dim TrModel As New Drawing2D.GraphicsPath
+                Dim TrModel As New GraphicsPath
                 Dim v1 As Point = New Point(RegionLeft, height - dth)
                 Dim v2 As Point = New Point(RegionLeft, height + dth)
                 Dim v3 As Point
@@ -176,7 +177,7 @@ Namespace ComparativeAlignment
 
             Dim maxLenTitleSize As Size = model.EnumerateTitles.OrderByDescending(Function(s) Len(s)).First.MeasureString(titleFont) '得到最长的标题字符串作为基本的绘制长度的标准
             Dim devSize As New Size(Margin * 10 + model.Query.Length * InternalConvertFactor + maxLenTitleSize.Width * 2, 5 * Margin + model.aligns.Count * (GenomeInterval + 400))
-            Dim Device As GDIPlusDeviceHandle = devSize.CreateGDIDevice '创建GDI设备
+            Dim Device As Graphics2D = devSize.CreateGDIDevice '创建GDI设备
             Dim Height As Integer = Margin
             Dim Length As Integer = Device.Width - 3 * Margin - maxLenTitleSize.Width + 20  '基因组的绘制区域的长度已经被固定下来了
 
@@ -208,8 +209,8 @@ Namespace ComparativeAlignment
                                                                             Select From lnk
                                                                                    In pairs
                                                                                    Select New ComparativeGenomics.GeneLink With {
-                                                                                       .genome1 = lnk.Key,
-                                                                                       .genome2 = lnk.Value
+                                                                                       .genome1 = lnk.Item1,
+                                                                                       .genome2 = lnk.Item2
                                                                                    }
             Links += model.links
 
@@ -290,7 +291,7 @@ Namespace ComparativeAlignment
             titleFont = New Font(FontFace.MicrosoftYaHei, 30, FontStyle.Bold)
 
             Dim __drawTrangle = Sub(color As Color, Direction As Integer)
-                                    Dim Tr As New Drawing2D.GraphicsPath
+                                    Dim Tr As New GraphicsPath
                                     Dim X1 As Integer = X + Direction * TrangleLength
 
                                     Call Tr.AddLine(New Point(X, Y), New Point(X1, Y - TrangleLength / 2))

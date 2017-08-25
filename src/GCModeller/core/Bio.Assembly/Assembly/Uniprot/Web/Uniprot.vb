@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::209fc3cc28288767b3e059dde8428507, ..\GCModeller\core\Bio.Assembly\Assembly\Uniprot\Web\Uniprot.vb"
+﻿#Region "Microsoft.VisualBasic::ef15d84e291a2ec6a4c1212a50f1b91a, ..\core\Bio.Assembly\Assembly\Uniprot\Web\Uniprot.vb"
 
     ' Author:
     ' 
@@ -35,7 +35,7 @@ Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 
 Namespace Assembly.Uniprot.Web
 
-    <PackageNamespace("Uniprot.WebServices")>
+    <Package("Uniprot.WebServices")>
     Public Module WebServices
 
         Const UNIPROT_QUERY As String = "http://www.uniprot.org/uniprot/?query=name%3A{0}+AND+taxonomy%3A{1}&sort=score"
@@ -56,7 +56,8 @@ Namespace Assembly.Uniprot.Web
         Const UNIPROT_FASTA_DOWNLOAD_URL As String = "http://www.uniprot.org/uniprot/{0}.fasta"
 
         ''' <summary>
-        ''' Download a protein sequence fasta data from http://www.uniprot.org/ using a specific <paramref name="UniprotId"></paramref>. （从http://www.uniprot.org/网站之上下载一条蛋白质序列）
+        ''' Download a protein sequence fasta data from http://www.uniprot.org/ using a specific <paramref name="UniprotId"></paramref>. 
+        ''' （从http://www.uniprot.org/网站之上下载一条蛋白质序列）
         ''' </summary>
         ''' <param name="UniprotId">The uniprot id of a protein sequence.(蛋白质在Uniprot数据库之中的编号)</param>
         ''' <returns></returns>

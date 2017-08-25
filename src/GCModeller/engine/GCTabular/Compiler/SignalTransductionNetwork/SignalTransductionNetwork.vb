@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::9a0b3a8da61deb5cc3855799250a0315, ..\GCModeller\engine\GCTabular\Compiler\SignalTransductionNetwork\SignalTransductionNetwork.vb"
+﻿#Region "Microsoft.VisualBasic::12f792c189834d17430134acc304a13c, ..\GCModeller\engine\GCTabular\Compiler\SignalTransductionNetwork\SignalTransductionNetwork.vb"
 
     ' Author:
     ' 
@@ -26,15 +26,15 @@
 
 #End Region
 
-Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Logging
 Imports SMRUCC.genomics.Assembly
 Imports SMRUCC.genomics.Data
-Imports SMRUCC.genomics.Data.StringDB.StrPNet.Pathway
+Imports SMRUCC.genomics.Data.STRING
 Imports SMRUCC.genomics.GCModeller.Assembly
 Imports SMRUCC.genomics.GCModeller.Assembly.GCMarkupLanguage.GCML_Documents.XmlElements.Metabolism.Metabolite
+Imports SMRUCC.genomics.Model.Network.STRING
+Imports SMRUCC.genomics.Model.Network.STRING.Models.Pathway
 
 Namespace Compiler.Components
 
@@ -63,7 +63,7 @@ Namespace Compiler.Components
         Const PFAM_CHER = "CheR"
         Const PFAM_CHEW = "CheW"
 
-        Dim StringNetwork As StringDB.SimpleCsv.Network
+        Dim StringNetwork As SimpleCsv.Network
         Dim _Logging As LogFile
         ''' <summary>
         ''' 以KEGG编号为主键的代谢物字典
@@ -71,7 +71,7 @@ Namespace Compiler.Components
         ''' <remarks></remarks>
         Dim KEGG_Compounds As Dictionary(Of String, FileStream.Metabolite)
 
-        Sub New(ModelIo As FileStream.IO.XmlresxLoader, StringNetwork As StringDB.SimpleCsv.Network, Logging As LogFile)
+        Sub New(ModelIo As FileStream.IO.XmlresxLoader, StringNetwork As SimpleCsv.Network, Logging As LogFile)
             Me.StringNetwork = StringNetwork
             Me.ModelIO = ModelIo
             Dim MisT2 As SMRUCC.genomics.Assembly.MiST2.MiST2 = ModelIo.MisT2
@@ -84,7 +84,7 @@ Namespace Compiler.Components
             KEGG_Compounds = (From item In ModelIo.MetabolitesModel.AsParallel Where Not String.IsNullOrEmpty(item.Value.KEGGCompound) Select item.Value).ToArray.ToDictionary(Function(item) item.KEGGCompound)
         End Sub
 
-        Public Sub Invoke(TranscriptRegulation As IEnumerable(Of FileStream.TranscriptUnit), Door As DOOR.DOOR, CrossTalks As DocumentStream.File)
+        Public Sub Invoke(TranscriptRegulation As IEnumerable(Of FileStream.TranscriptUnit), Door As DOOR.DOOR, CrossTalks As IO.File)
             Call _Logging.WriteLine("Start to compile the signal transduction network...")
 
             Call _Logging.WriteLine("Compiling CheBMethylesterase reactions...")
@@ -123,7 +123,7 @@ Namespace Compiler.Components
             For Each Line As String() In (From item In ModelIO.OCSSensing Select item.get_Metabolites).ToArray
                 Call SubstrateList.AddRange(Line)
             Next
-            SubstrateList = (From strValue As String In SubstrateList Select strValue Distinct Order By strValue Ascending).ToList
+            SubstrateList = (From strValue As String In SubstrateList Select strValue Distinct Order By strValue Ascending).AsList
 
             For Each strMetaboliteId As String In SubstrateList
 
@@ -190,7 +190,7 @@ Namespace Compiler.Components
                     Dim Regulations = (From item As FileStream.Regulator
                                        In ModelIO.Regulators
                                        Where String.Equals(TF_ID, item.ProteinId) AndAlso Array.IndexOf(motifs, item.RegulatesMotif) > -1
-                                       Select item).ToList
+                                       Select item).AsList
 
                     For Each regulator In Regulations
                         regulator.Effectors = (From item In Data Select item._Internal_compilerLeft(1).Value).ToArray
@@ -201,7 +201,7 @@ Namespace Compiler.Components
             Return ChunkList.ToArray
         End Function
 
-        Private Function _compile_CrossTalks(Door As DOOR.DOOR, CrossTalksProfile As DocumentStream.File) As FileStream.MetabolismFlux()
+        Private Function _compile_CrossTalks(Door As DOOR.DOOR, CrossTalksProfile As IO.File) As FileStream.MetabolismFlux()
 
             Const PI = "PI"
 
@@ -216,16 +216,16 @@ Namespace Compiler.Components
             Return ChunkTemp
         End Function
 
-        Private Function _compile_HkAutoPhosphorus() As List(Of StringDB.StrPNet.TCS.SensorInducers)
+        Private Function _compile_HkAutoPhosphorus() As List(Of TCS.SensorInducers)
             Dim HK As List(Of String) = New List(Of String)
 
             For Each STrP In ModelIO.STrPModel.Pathway
                 Call HK.AddRange((From item In STrP.TCSSystem Let Id As String = item.HK Select Id).ToArray)
             Next
 
-            HK = (From strValue As String In HK Select strValue Distinct Order By strValue Ascending).ToList
+            HK = (From strValue As String In HK Select strValue Distinct Order By strValue Ascending).AsList
 
-            Dim TempChunk As List(Of StringDB.StrPNet.TCS.SensorInducers) = New List(Of StringDB.StrPNet.TCS.SensorInducers)
+            Dim TempChunk As New List(Of TCS.SensorInducers)
             For Each HKId As String In HK
                 Dim LQuery = (From Mcp In Me.MCPs Let Confidence As Double = StringNetwork.GetConfidence(HKId, Mcp) + 0.05
                               Select String.Format("{0}={1}", Mcp, Confidence)).ToArray
@@ -233,19 +233,19 @@ Namespace Compiler.Components
                     Continue For
                 End If
 
-                Call TempChunk.Add(New StringDB.StrPNet.TCS.SensorInducers With {.SensorId = HKId, .Inducers = LQuery})
+                Call TempChunk.Add(New TCS.SensorInducers With {.SensorId = HKId, .Inducers = LQuery})
             Next
 
             Return TempChunk
         End Function
 
-        Private Function _compile_ChemotaxisSensing() As List(Of StringDB.StrPNet.TCS.SensorInducers)
+        Private Function _compile_ChemotaxisSensing() As List(Of TCS.SensorInducers)
             Dim LQuery = (From Item As SMRUCC.genomics.Assembly.MiST2.Transducin
                                  In ModelIO.MisT2.MajorModules.First.Chemotaxis
                           Where String.Equals(Item.Class, "MCP")
-                          Select New StringDB.StrPNet.TCS.SensorInducers With {
+                          Select New TCS.SensorInducers With {
                                      .SensorId = String.Format("[{0}][CH3]", Item.Identifier),
-                                     .Inducers = New String() {}}).ToList
+                                     .Inducers = New String() {}}).AsList
             Return LQuery
         End Function
 
@@ -257,13 +257,13 @@ Namespace Compiler.Components
 
                 Dim LQuery = (From HK In Me.ModelIO.MisT2.MajorModules.First.TwoComponent.HisK
                               Let Confidence As Double = StringNetwork.GetConfidence(CheB, HK.Identifier) + 0.05
-                              Select New With {.HK = HK.Identifier, .Conf = Confidence}).ToList
+                              Select New With {.HK = HK.Identifier, .Conf = Confidence}).AsList
                 Call LQuery.AddRange((From HK In Me.ModelIO.MisT2.MajorModules.First.TwoComponent.HHK
                                       Let Confidence As Double = StringNetwork.GetConfidence(CheB, HK.Identifier) + 0.05
-                                      Select New With {.HK = HK.Identifier, .Conf = Confidence}).ToList)
+                                      Select New With {.HK = HK.Identifier, .Conf = Confidence}).AsList)
                 Call LQuery.AddRange((From HK In Me.ModelIO.MisT2.MajorModules.First.TwoComponent.HRR
                                       Let Confidence As Double = StringNetwork.GetConfidence(CheB, HK.Identifier) + 0.05
-                                      Select New With {.HK = HK.Identifier, .Conf = Confidence}).ToList)
+                                      Select New With {.HK = HK.Identifier, .Conf = Confidence}).AsList)
                 If LQuery.IsNullOrEmpty Then
                     Continue For
                 End If

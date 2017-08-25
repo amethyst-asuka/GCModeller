@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::0ee0f46829de0eaa6fe148f49da1b781, ..\GCModeller\sub-system\CellPhenotype\TRN\NetEngine\LDMDoc.vb"
+﻿#Region "Microsoft.VisualBasic::2da5d4106b752c788205941e4a80d9c7, ..\GCModeller\sub-system\CellPhenotype\TRN\NetEngine\LDMDoc.vb"
 
     ' Author:
     ' 
@@ -47,9 +47,9 @@ Namespace TRN
     ''' <remarks></remarks>
     Public Class NetworkInput
         Implements IKeyValuePairObject(Of String, Boolean)
-        Implements sIdEnumerable
+        Implements INamedValue
 
-        Public Property locusId As String Implements IKeyValuePairObject(Of String, Boolean).Identifier, sIdEnumerable.Identifier
+        Public Property locusId As String Implements IKeyValuePairObject(Of String, Boolean).Key, INamedValue.Key
 
         ''' <summary>
         ''' The initialize expression level for the target <see cref="locusId">gene</see>.(初始的表达水平)

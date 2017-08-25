@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::d88a8425b07929738cde8e45dc389cbf, ..\GCModeller\CLI_tools\NCBI_tools\CLI\CLI.vb"
+﻿#Region "Microsoft.VisualBasic::5763e86c8cbfa6d6755a478221ce4660, ..\GCModeller\CLI_tools\NCBI_tools\CLI\CLI.vb"
 
 ' Author:
 ' 
@@ -27,14 +27,15 @@
 #End Region
 
 Imports System.IO
+Imports System.Text
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
+Imports Microsoft.VisualBasic.CommandLine.InteropService.SharedORM
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel.Collection
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream.Linq
+Imports Microsoft.VisualBasic.Data.csv.IO.Linq
 Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
@@ -43,15 +44,22 @@ Imports Microsoft.VisualBasic.Parallel.Linq
 Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports Microsoft.VisualBasic.Serialization.JSON
 Imports Microsoft.VisualBasic.Text
+Imports Microsoft.VisualBasic.Text.Levenshtein
 Imports SMRUCC.genomics.Assembly.NCBI
-Imports SMRUCC.genomics.Assembly.NCBI.Entrez
+Imports SMRUCC.genomics.Assembly.NCBI.Taxonomy
 Imports SMRUCC.genomics.SequenceModel.FASTA
 
-<PackageNamespace("NCBI_tools.CLI", Category:=APICategories.CLI_MAN, Publisher:="xie.guigang@gcmodeller.org")>
-Module CLI
+<Package("NCBI_tools.CLI",
+                  Category:=APICategories.CLI_MAN,
+                  Description:="Tools collection for handling NCBI data, includes: nt/nr database, NCBI taxonomy analysis, OTU taxonomy analysis, genbank database, and sequence query tools.",
+                  Publisher:="xie.guigang@gcmodeller.org")>
+<GroupingDefine(CLIGrouping.GITools, Description:=CLIGrouping.GIWasObsoleted)>
+<ExceptionHelp(Documentation:="http://docs.gcmodeller.org", Debugging:="https://github.com/SMRUCC/GCModeller/wiki", EMailLink:="xie.guigang@gcmodeller.org")>
+<CLI> Public Module CLI
 
     <ExportAPI("/Build_gi2taxi",
                Usage:="/Build_gi2taxi /in <gi2taxi.dmp> [/out <out.dat>]")>
+    <Group(CLIGrouping.GITools)>
     Public Function Build_gi2taxi(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim out As String = args.GetValue("/out", [in].TrimSuffix & ".bin")
@@ -59,6 +67,7 @@ Module CLI
     End Function
 
     <ExportAPI("/Export.GI", Usage:="/Export.GI /in <ncbi:nt.fasta> [/out <out.csv>]")>
+    <Group(CLIGrouping.GITools)>
     Public Function ExportGI(args As CommandLine) As Integer
         Dim [in] As String = args - "/in"
         Dim out As String = args.GetValue("/out", [in].TrimSuffix & ".gi.Csv")
@@ -85,6 +94,7 @@ Module CLI
 
     <ExportAPI("/Associate.Taxonomy",
            Usage:="/Associate.Taxonomy /in <in.DIR> /tax <ncbi_taxonomy:names,nodes> /gi2taxi <gi2taxi.bin> [/gi <nt.gi.csv> /out <out.DIR>]")>
+    <Group(CLIGrouping.GITools)>
     Public Function AssociateTaxonomy(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim tax As String = args("/tax")
@@ -98,7 +108,7 @@ Module CLI
             TaxiValue.BuildHash(ref.LoadCsv(Of TaxiValue)),
             New Dictionary(Of String, String))
 
-        For Each file As String In ls - l - r - wildcards("*.Csv") <= [in]
+        For Each file As String In ls - l - R - wildcards("*.Csv") <= [in]
             Dim data As IEnumerable(Of TaxiValue) = file.LoadCsv(Of TaxiValue)
             Dim out As String = EXPORT & "/" & file.BaseName & ".Csv"
             Dim LQuery = (From x As TaxiValue
@@ -132,6 +142,7 @@ Module CLI
 
     <ExportAPI("/Nt.Taxonomy",
                Usage:="/Nt.Taxonomy /in <nt.fasta> /gi2taxi <gi2taxi.bin> /tax <ncbi_taxonomy:names,nodes> [/out <out.fasta>]")>
+    <Group(CLIGrouping.GITools)>
     Public Function NtTaxonomy(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim gi2taxi As String = args("/gi2taxi")
@@ -200,6 +211,7 @@ Module CLI
 
     <ExportAPI("/Assign.Taxonomy",
                Usage:="/Assign.Taxonomy /in <in.DIR> /gi <regexp> /index <fieldName> /tax <NCBI nodes/names.dmp> /gi2taxi <gi2taxi.txt/bin> [/out <out.DIR>]")>
+    <Group(CLIGrouping.GITools)>
     Public Function AssignTaxonomy(args As CommandLine) As Integer
         Dim [in] As String = args.GetFullDIRPath("/in")
         Dim regexp As String = args("/gi")
@@ -212,7 +224,7 @@ Module CLI
             Taxonomy.AcquireAuto(gi2taxi)
         Dim getGI = Taxono.Parser_gi(regexp)
 
-        For Each file As String In ls - l - r - wildcards("*.Csv") <= [in]
+        For Each file As String In ls - l - R - wildcards("*.Csv") <= [in]
             Dim data = Taxono.Load(file, index)
             Dim out As String = EXPORT & "/" & file.BaseName & ".Csv"
 
@@ -260,7 +272,7 @@ Module CLI
                                .ToDictionary(Function(x) x.sid,
                                              Function(x) x.Group.First.Title.Replace(x.sid, "").Trim)
 
-        For Each file As String In ls - l - r - wildcards("*.Csv") <= [in]
+        For Each file As String In ls - l - R - wildcards("*.Csv") <= [in]
             Dim data = Taxono.Load(file, index)
             Dim out As String = EXPORT & "/" & file.BaseName & ".Csv"
 
@@ -318,7 +330,7 @@ Module CLI
             tax(uid) = title
         Next
 
-        For Each file As String In ls - l - r - wildcards("*.csv") <= [in]
+        For Each file As String In ls - l - R - wildcards("*.csv") <= [in]
             Dim data = Taxono.Load(file, index)
             Dim out As String = outDIR & "/" & file.BaseName & ".Csv"
 
@@ -348,7 +360,7 @@ Module CLI
             args.GetValue("/index", NameOf(NamedValue(Of Object).Name))
 
         Using output As StreamWriter = outDIR.OpenWriter(Encodings.ASCII)
-            For Each file As String In ls - l - r - wildcards("*.csv") <= [in]
+            For Each file As String In ls - l - R - wildcards("*.csv") <= [in]
                 Dim data = Taxono.Load(file, index)
                 Dim out As String = outDIR & "/" & file.BaseName & ".Csv"
 
@@ -461,6 +473,7 @@ Module CLI
 
     <ExportAPI("/gi.Match",
                Usage:="/gi.Match /in <nt.parts.fasta/list.txt> /gi2taxid <gi2taxid.dmp> [/out <gi_match.txt>]")>
+    <Group(CLIGrouping.GITools)>
     Public Function giMatch(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim gi2taxid As String = args("/gi2taxid")
@@ -501,8 +514,37 @@ Module CLI
         Return 0
     End Function
 
+    <ExportAPI("/accid2taxid.Match",
+               Usage:="/accid2taxid.Match /in <nt.parts.fasta/list.txt> /acc2taxid <acc2taxid.dmp/DIR> [/gb_priority /out <acc2taxid_match.txt>]")>
+    <Group(CLIGrouping.TaxonomyTools)>
+    Public Function accidMatch(args As CommandLine) As Integer
+        Dim [in] As String = args("/in")
+        Dim acc2taxid As String = args("/acc2taxid")
+        Dim out As String = args.GetValue("/out", [in].TrimSuffix & ".acc2taxid_match.txt")
+        Dim acclist As List(Of String)
+
+        If FastaFile.IsValidFastaFile([in]) Then
+            acclist = New List(Of String)
+
+            For Each seq As FastaToken In New StreamIterator([in]).ReadStream
+                acclist += seq.Title.Split.First
+            Next
+        Else
+            acclist = New List(Of String)([in].ReadAllLines)
+        End If
+
+        Dim gb_priority As Boolean = args.GetBoolean("/gb_priority")
+        Dim result = Accession2Taxid.Matchs(
+            acclist.Distinct,
+            acc2taxid,
+            debug:=True,
+            gb_priority:=gb_priority)
+        Return result.SaveTo(out, Encoding.ASCII)
+    End Function
+
     <ExportAPI("/gi.Matchs",
               Usage:="/gi.Matchs /in <nt.parts.fasta.DIR> /gi2taxid <gi2taxid.dmp> [/out <gi_match.txt.DIR> /num_threads <-1>]")>
+    <Group(CLIGrouping.GITools)>
     Public Function giMatchs(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim gi2taxid As String = args("/gi2taxid")
@@ -517,9 +559,8 @@ Module CLI
         End If
 
         Dim tasks$() =
-            (ls - l - r - wildcards("*.fasta") <= [in]).ToArray(CLI)
+            (ls - l - R - wildcards("*.fasta") <= [in]).ToArray(CLI)
 
         Return App.SelfFolks(tasks, LQuerySchedule.AutoConfig(n))
     End Function
 End Module
-

@@ -28,7 +28,7 @@
 
 Imports System.Text.RegularExpressions
 Imports System.Xml.Serialization
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Serialization
 Imports Microsoft.VisualBasic.Serialization.JSON
 
@@ -92,15 +92,18 @@ Namespace DocumentFormat.XmlOutput.MAST
 
         Public ReadOnly Property Directory As String
             Get
+                If source Is Nothing Then
+                    Return Nothing
+                End If
                 Dim DIR As String = FileIO.FileSystem.GetFileInfo(source).Directory.Name
-                Dim Name As String = IO.Path.GetFileNameWithoutExtension(DIR)
+                Dim Name As String = basename(DIR)
                 Return Name
             End Get
         End Property
 
         Public ReadOnly Property memePWM As String
             Get
-                Dim Name As String = IO.Path.GetFileNameWithoutExtension(source)
+                Dim Name As String = basename(source)
                 If String.Equals(Name, "meme", StringComparison.OrdinalIgnoreCase) Then
                     Return Me.Directory
                 Else
@@ -239,7 +242,7 @@ Namespace DocumentFormat.XmlOutput.MAST
         ''' <returns></returns>
         <XmlAttribute("start")> Public Property start As String
         ''' <summary>
-        ''' 里面是有回车符的，使用前请先使用<see cref="TrimVBCrLf"/>进行修剪
+        ''' 里面是有回车符的，使用前请先使用<see cref="TrimNewLine(String, String)"/>进行修剪
         ''' </summary>
         ''' <returns></returns>
         <XmlElement("data")> Public Property SegmentData As String
@@ -251,7 +254,7 @@ Namespace DocumentFormat.XmlOutput.MAST
 
         Public ReadOnly Property SequenceData As String
             Get
-                Return SegmentData.TrimVBCrLf.Trim
+                Return SegmentData.TrimNewLine("").Trim
             End Get
         End Property
 
@@ -264,6 +267,7 @@ Namespace DocumentFormat.XmlOutput.MAST
     ''' gap, while superfluous, makes creating motif diagrams for the text version much easier when using XSLT
     ''' </summary>
     <XmlType("hit")> Public Class HitResult
+
         <XmlAttribute("pos")> Public Property pos As Integer
         ''' <summary>
         ''' gap, while superfluous, makes creating motif diagrams for the text version much easier when using XSLT
@@ -274,6 +278,28 @@ Namespace DocumentFormat.XmlOutput.MAST
         <XmlAttribute("pvalue")> Public Property pvalue As String
         <XmlAttribute("strand")> Public Property strand As String
         <XmlAttribute("match")> Public Property match As String
+        <XmlAttribute> Public Property idx As Integer
+        <XmlAttribute> Public Property rc As String
+
+        Public Function GetStrand() As String
+            If strand Is Nothing Then
+                If rc Is Nothing Then
+                    Return "?"
+                Else
+                    Return If(rc = "n", "+", "-")
+                End If
+            Else
+                Return strand.GetBriefStrandCode
+            End If
+        End Function
+
+        Public Function GetId() As String
+            If motif Is Nothing Then
+                Return idx + 1
+            Else
+                Return motif
+            End If
+        End Function
 
         Public Overrides Function ToString() As String
             Return Me.GetJson

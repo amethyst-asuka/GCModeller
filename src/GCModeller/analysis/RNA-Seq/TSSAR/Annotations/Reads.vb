@@ -166,7 +166,7 @@ Public Module Reads
         Dim Csv = a.LoadCsv(Of ReadsGroupView)(False)
         Call Csv.AddRange(b.LoadCsv(Of ReadsGroupView)(False))
         Dim GroupLQuery = (From item In Csv Select item Group item By item.POS Into Group).ToArray      '进行Group操作
-        Csv = (From item In GroupLQuery Select Join(item.Group.ToArray)).ToList
+        Csv = (From item In GroupLQuery Select Join(item.Group.ToArray)).AsList
         Return Csv.ToArray
     End Function
 
@@ -194,12 +194,11 @@ Public Module Reads
     <ExportAPI("Contigs.Merge", Info:="If the distance of two TSS positions differed by less than 3 nt, they were treated as a single TSS And merged.")>
     Public Function MergeContigs(data As Generic.IEnumerable(Of ReadsGroupView), Optional offset As Integer = 3) As ReadsGroupView()
         '首先按照从小到大进行排序操作
-        Dim Order = (From item In data Select item Order By item.POS Ascending).ToList
-        Dim p As Integer
+        Dim Order = (From item In data Select item Order By item.POS Ascending).AsList
+        Dim p As int = Scan0
 
         Do While p < Order.Count - 1
-            Dim current = Order(p)
-            Call p.MoveNext
+            Dim current = Order(index:=++p)
 
             Dim Next_P As Integer = p
 

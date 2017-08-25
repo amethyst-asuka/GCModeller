@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::69bd228c99765067295e62da01a9e809, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Slots\ObjectBase\Citation.vb"
+﻿#Region "Microsoft.VisualBasic::69bd228c99765067295e62da01a9e809, ..\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Slots\ObjectBase\Citation.vb"
 
     ' Author:
     ' 
@@ -96,7 +96,7 @@ Namespace Assembly.MetaCyc.File.DataFiles.Slots
         End Operator
 
         Public Shared Widening Operator CType(Citation As String) As Citation
-            Dim Tokens As List(Of String) = Citation.Split(CChar(":")).ToList
+            Dim Tokens As List(Of String) = Citation.Split(CChar(":")).AsList
             Dim NewObj As New Citation
 
             Tokens.AddRange(EmptyFill)

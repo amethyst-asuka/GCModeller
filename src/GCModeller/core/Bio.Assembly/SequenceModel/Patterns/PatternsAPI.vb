@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::c835171fa0396adc67215b8fda1dc8c7, ..\GCModeller\core\Bio.Assembly\SequenceModel\Patterns\PatternsAPI.vb"
+﻿#Region "Microsoft.VisualBasic::da5803a5bcd9781b042728c9bfa1d102, ..\core\Bio.Assembly\SequenceModel\Patterns\PatternsAPI.vb"
 
     ' Author:
     ' 
@@ -93,15 +93,19 @@ Namespace SequenceModel.Patterns
             Dim Model As IEnumerable(Of SimpleSite) =
                 From x
                 In LQuery.SeqIterator
-                Let freq As Dictionary(Of Char, Double) =
-                    x.obj.row.ToDictionary(Function(o0) o0.c, Function(o0) o0.f)
+                Let freq As Dictionary(Of Char, Double) = (+x) _
+                    .row _
+                    .ToDictionary(Function(o0) o0.c,
+                                  Function(o0) o0.f)
                 Select New SimpleSite(freq, x.i)
 
             Return New PatternModel(Model)
         End Function
 
         ''' <summary>
-        ''' The conservation percentage (%) Is defined as the number of genomes with the same letter on amultiple sequence alignment normalized to range from 0 to 100% for each site along the chromosome of a specific index genome.
+        ''' The conservation percentage (%) Is defined as the number of genomes with the same letter on 
+        ''' amultiple sequence alignment normalized to range from 0 to 100% for each site along the 
+        ''' chromosome of a specific index genome.
         ''' </summary>
         ''' <returns></returns>
         ''' <param name="index">参考序列在所输入的fasta序列之中的位置，默认使用第一条序列作为参考序列</param>

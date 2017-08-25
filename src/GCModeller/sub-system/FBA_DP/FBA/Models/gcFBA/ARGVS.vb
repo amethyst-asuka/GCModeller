@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::10e480b7c9bb03b5ff5a44a46395d914, ..\GCModeller\sub-system\FBA_DP\FBA\Models\gcFBA\ARGVS.vb"
+﻿#Region "Microsoft.VisualBasic::dde3adcf1d8f220cf3787fa149e0e51d, ..\GCModeller\sub-system\FBA_DP\FBA\Models\gcFBA\ARGVS.vb"
 
     ' Author:
     ' 
@@ -58,9 +58,9 @@ Namespace Models.rFBA
     ''' <summary>
     ''' 基因突变的设置参数
     ''' </summary>
-    Public Class Modifier : Implements sIdEnumerable
+    Public Class Modifier : Implements INamedValue
 
-        Public Property locus As String Implements sIdEnumerable.Identifier
+        Public Property locus As String Implements INamedValue.Key
         ''' <summary>
         ''' 突变修饰
         ''' </summary>

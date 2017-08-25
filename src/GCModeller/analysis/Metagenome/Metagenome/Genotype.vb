@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::8c1b9454e952c7607fc62f7c5ae86514, ..\GCModeller\analysis\Metagenome\Metagenome\Genotype.vb"
+﻿#Region "Microsoft.VisualBasic::78d7119c354bff652c344787a5ac07e1, ..\GCModeller\analysis\Metagenome\Metagenome\Genotype.vb"
 
     ' Author:
     ' 
@@ -29,28 +29,29 @@
 Imports System.Runtime.CompilerServices
 Imports System.Text.RegularExpressions
 Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.ComponentModel
+Imports Microsoft.VisualBasic.ComponentModel.Algorithm.base
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Serialization.JSON
+Imports Microsoft.VisualBasic.Text
 
 Public Module Genotype
 
-    ReadOnly __all As KeyValuePair(Of Char, Char)() =
+    ReadOnly __all As Tuple(Of Char, Char)() =
         Comb(Of Char).CreateCompleteObjectPairs({"A"c, "T"c, "G"c, "C"c}) _
-                     .MatrixAsIterator _
+                     .IteratesALL _
                      .ToArray
 
     <Extension>
-    Public Function ExpandLocis(source As IEnumerable(Of GenotypeDetails)) As DocumentStream.File
-        Dim file As New DocumentStream.File
+    Public Function ExpandLocis(source As IEnumerable(Of GenotypeDetails)) As IO.File
+        Dim file As New IO.File
         Dim head As New RowObject From {"", "Genomes"}
 
-        For Each pp As KeyValuePair(Of Char, Char) In __all
-            Call head.Add($"locus.{pp.Key}{pp.Value}")
+        For Each pp As Tuple(Of Char, Char) In __all
+            Call head.Add($"locus.{pp.Item1}{pp.Item2}")
         Next
 
         Call file.AppendLine(head)
@@ -63,9 +64,9 @@ Public Module Genotype
             End If
 
             row += CStr(x.Frequency.Sum(Function(f) f.Count))
-            row += From pp As KeyValuePair(Of Char, Char)
+            row += From pp As Tuple(Of Char, Char)
                    In __all
-                   Select CStr(x(pp.Key, pp.Value).Frequency)
+                   Select CStr(x(pp.Item1, pp.Item2).Frequency)
             file += row
         Next
 
@@ -100,8 +101,8 @@ Public Module Genotype
     End Function
 
     <Extension>
-    Public Function Statics(source As DocumentStream.File) As DocumentStream.File
-        Dim out As New DocumentStream.File
+    Public Function Statics(source As IO.File) As IO.File
+        Dim out As New IO.File
         out.AppendRange(source.Select(Function(x) New RowObject(x.ToArray)))
         out.AppendLine()
 
@@ -114,7 +115,7 @@ Public Module Genotype
             Dim ns As Integer() = line.Skip(1).ToArray(Function(s) CInt(Val(s)))
 
             For Each x In ns.SeqIterator
-                total(x.i) += x.obj
+                total(x.i) += x.value
             Next
 
             row = New RowObject From {line.First}
@@ -135,7 +136,7 @@ Public Module Genotype
             Dim ns As Integer() = line.Skip(1).ToArray(Function(s) CInt(Val(s)))
 
             row = New RowObject From {"no-" & line.First}
-            ns = ns.SeqIterator.ToArray(Function(x) total(x.i) - x.obj)
+            ns = ns.SeqIterator.ToArray(Function(x) total(x.i) - x.value)
             row.AddRange(ns.ToArray(Function(x) x.ToString))
             out.AppendLine(row)
             nn += ns
@@ -144,13 +145,13 @@ Public Module Genotype
         out.AppendLine()
 
         For Each line In source.Skip(1).SeqIterator
-            Dim ns As Integer() = line.obj.Skip(1).ToArray(Function(s) CInt(Val(s))) 'A/A
+            Dim ns As Integer() = line.value.Skip(1).ToArray(Function(s) CInt(Val(s))) 'A/A
             Dim no As Integer() = nn(line.i)  ' no-A/A
 
-            row = New RowObject From {line.obj.First}
+            row = New RowObject From {line.value.First}
             row.AddRange(ns.ToArray(Function(x) x.ToString))
             out.AppendLine(row)
-            row = New RowObject From {"no-" & line.obj.First}
+            row = New RowObject From {"no-" & line.value.First}
             row.AddRange(no.ToArray(Function(x) x.ToString))
             out.AppendLine(row)
             out.AppendLine()
@@ -165,11 +166,11 @@ Public Module Genotype
     ''' <param name="source"></param>
     ''' <returns></returns>
     <Extension>
-    Public Function TransViews(source As IEnumerable(Of GenotypeDetails)) As DocumentStream.File
-        Dim out As New DocumentStream.File
+    Public Function TransViews(source As IEnumerable(Of GenotypeDetails)) As IO.File
+        Dim out As New IO.File
         Dim array As GenotypeDetails() = source.ToArray()
         Dim allTag As String() = array.ToArray(Function(x) x.Population.Split(":"c).Last)
-        Dim all = Comb(Of Char).CreateCompleteObjectPairs({"A"c, "T"c, "G"c, "C"c}).MatrixAsIterator
+        Dim all = Comb(Of Char).CreateCompleteObjectPairs({"A"c, "T"c, "G"c, "C"c}).IteratesALL
         Dim head As New RowObject From {"types"}
 
         For Each tag As String In allTag
@@ -178,11 +179,11 @@ Public Module Genotype
 
         out += head
 
-        For Each tag As KeyValuePair(Of Char, Char) In all
-            Dim row As New RowObject({$"{tag.Key}/{tag.Value}"})
+        For Each tag As Tuple(Of Char, Char) In all
+            Dim row As New RowObject({$"{tag.Item1}/{tag.Item2}"})
 
             For Each sample In array
-                Dim genotype = sample(tag.Key, tag.Value)
+                Dim genotype = sample(tag.Item1, tag.Item2)
 
                 row += $"{genotype.Count} ({genotype.Frequency * 100})"
             Next
@@ -297,7 +298,7 @@ Public Class Frequency
     Public Property Count As Integer
 
     Public Overrides Function ToString() As String
-        If type = Nothing OrElse type = NIL Then
+        If type = Nothing OrElse type = ASCII.NUL Then
             Return $"{base}: {Frequency} ({Count})"
         Else
             Return $"{type}|{base}: {Frequency} ({Count})"

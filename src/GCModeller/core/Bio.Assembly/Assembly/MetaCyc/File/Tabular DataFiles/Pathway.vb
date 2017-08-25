@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::2e7b12813c2042415872044555bf4f84, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\File\Tabular DataFiles\Pathway.vb"
+﻿#Region "Microsoft.VisualBasic::c35f9fb0f9232731994fc36b6e9db80b, ..\core\Bio.Assembly\Assembly\MetaCyc\File\Tabular DataFiles\Pathway.vb"
 
     ' Author:
     ' 
@@ -28,8 +28,9 @@
 
 Imports System.Text
 Imports System.Xml.Serialization
-Imports SMRUCC.genomics.Assembly.MetaCyc.File.DataFiles.DataTabular
 Imports Microsoft.VisualBasic
+Imports Microsoft.VisualBasic.Language
+Imports SMRUCC.genomics.Assembly.MetaCyc.File.DataFiles.DataTabular
 
 Namespace Assembly.MetaCyc.File.TabularDataFiles
 

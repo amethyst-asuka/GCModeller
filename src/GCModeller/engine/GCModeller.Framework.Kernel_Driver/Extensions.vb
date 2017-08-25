@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::f2b7caa247130f641256824fb6fc63a1, ..\GCModeller\engine\GCModeller.Framework.Kernel_Driver\Extensions.vb"
+﻿#Region "Microsoft.VisualBasic::ddb63bef17e5e379d118ea0a1e5ecf6e, ..\GCModeller\engine\GCModeller.Framework.Kernel_Driver\Extensions.vb"
 
     ' Author:
     ' 
@@ -32,7 +32,7 @@ Public Module Extensions
 
     <Extension> Public Function GetHandle(Of T)(DynamicsExpression As Framework.Kernel_Driver.IDynamicsExpression(Of T)) As Framework.Kernel_Driver.DataStorage.FileModel.ObjectHandle
         Return New Framework.Kernel_Driver.DataStorage.FileModel.ObjectHandle With {
-            .Identifier = DynamicsExpression.Identifier,
+            .Identifier = DynamicsExpression.Key,
             .Handle = DynamicsExpression.Address
         }
     End Function

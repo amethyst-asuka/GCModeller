@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::6d18beb6ab4989b334bcd7d18cda04ac, ..\GCModeller\visualize\visualizeTools\ComparativeGenomics\MultipleAlignment\DrawingModel.vb"
+﻿#Region "Microsoft.VisualBasic::36c6ea754306ff4db8c4599e6d12ac08, ..\visualize\visualizeTools\ComparativeGenomics\MultipleAlignment\DrawingModel.vb"
 
     ' Author:
     ' 
@@ -33,7 +33,7 @@ Imports Microsoft.VisualBasic.Serialization.JSON
 
 Namespace ComparativeAlignment
 
-    Public Structure ColorLegend : Implements sIdEnumerable
+    Public Structure ColorLegend : Implements INamedValue
 
         Public Property color As Color
 
@@ -42,7 +42,7 @@ Namespace ComparativeAlignment
             Me.color = color
         End Sub
 
-        Public Property type As String Implements sIdEnumerable.Identifier
+        Public Property type As String Implements INamedValue.Key
 
         Public Overrides Function ToString() As String
             Return Me.GetJson

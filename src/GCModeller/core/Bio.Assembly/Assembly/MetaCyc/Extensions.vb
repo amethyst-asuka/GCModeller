@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::af38e8949c18a89aaa84ab99eecef359, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\Extensions.vb"
+﻿#Region "Microsoft.VisualBasic::1bdbba134a5b40937ca3c44a63b10253, ..\core\Bio.Assembly\Assembly\MetaCyc\Extensions.vb"
 
     ' Author:
     ' 
@@ -46,7 +46,7 @@ Namespace Assembly.MetaCyc
         <Extension> Public Function GetAttributeList(Of T As Slots.Object)(data As DataFile(Of T)) As String()
             Return (From s As String
                     In data.AttributeList
-                    Where Not s.IsBlank
+                    Where Not s.StringEmpty
                     Select s
                     Distinct
                     Order By s.Length Descending).ToArray

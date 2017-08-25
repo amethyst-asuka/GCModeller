@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::1c4ca6d0d738c624aa2d5721ab608ce1, ..\R.Bioconductor\RDotNet.Extensions.Bioinformatics\Declares\VennDiagram\VennDiagram\Partition.vb"
+﻿#Region "Microsoft.VisualBasic::2f3fe446b081b25aad40c8ec696d33d2, ..\R.Bioconductor\RDotNet.Extensions.Bioinformatics\Declares\VennDiagram\VennDiagram\Partition.vb"
 
     ' Author:
     ' 
@@ -36,13 +36,13 @@ Namespace VennDiagram.ModelAPI
     ''' A partition in the venn diagram.
     ''' </summary>
     Public Class Partition : Inherits ClassObject
-        Implements sIdEnumerable
+        Implements INamedValue
 
         ''' <summary>
         ''' The name of this partition
         ''' </summary>
         ''' <returns></returns>
-        <XmlAttribute> Public Property Name As String Implements sIdEnumerable.Identifier
+        <XmlAttribute> Public Property Name As String Implements INamedValue.Key
         ''' <summary>
         ''' The color string of the partition
         ''' </summary>

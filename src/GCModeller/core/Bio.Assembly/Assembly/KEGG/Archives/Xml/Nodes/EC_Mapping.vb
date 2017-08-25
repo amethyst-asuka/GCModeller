@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::b848cd8404670ca536e2812792b728a0, ..\GCModeller\core\Bio.Assembly\Assembly\KEGG\Archives\Xml\Nodes\EC_Mapping.vb"
+﻿#Region "Microsoft.VisualBasic::0d20785637ecf6ae3c73028646f2c3cf, ..\core\Bio.Assembly\Assembly\KEGG\Archives\Xml\Nodes\EC_Mapping.vb"
 
     ' Author:
     ' 
@@ -38,9 +38,9 @@ Imports Microsoft.VisualBasic.Linq
 
 Namespace Assembly.KEGG.Archives.Xml.Nodes
 
-    Public Class ReactionMaps : Implements sIdEnumerable
+    Public Class ReactionMaps : Implements INamedValue
 
-        <XmlAttribute> Public Property EC As String Implements sIdEnumerable.Identifier
+        <XmlAttribute> Public Property EC As String Implements INamedValue.Key
 
         Public Property Reactions As String()
 
@@ -50,7 +50,7 @@ Namespace Assembly.KEGG.Archives.Xml.Nodes
     End Class
 
     <XmlType("EC_Mapping", Namespace:="http://code.google.com/p/genome-in-code/component-models/ec_mapping")>
-    Public Class EC_Mapping : Implements sIdEnumerable
+    Public Class EC_Mapping : Implements INamedValue
 
         <XmlElement("EC_ID", Namespace:="http://code.google.com/p/genome-in-code/component-models/ec_mapping_id-string")>
         Public Property ECMaps As ReactionMaps()
@@ -60,7 +60,7 @@ Namespace Assembly.KEGG.Archives.Xml.Nodes
         ''' </summary>
         ''' <returns></returns>
         <XmlAttribute("locus_tag")>
-        Public Property locusId As String Implements sIdEnumerable.Identifier
+        Public Property locusId As String Implements INamedValue.Key
 
         ''' <summary>
         ''' 这个映射之中是否包含有某一个代谢过程
@@ -97,11 +97,11 @@ Namespace Assembly.KEGG.Archives.Xml.Nodes
                                 Select (From gene As KeyValuePair In Pathway.Genes
                                         Let EC As String() = gene.Value.EcParser
                                         Select locusId = gene.Key,
-                                            EC).ToArray).ToArray).MatrixToVector.MatrixAsIterator
+                                            EC).ToArray).ToArray).ToVector.IteratesALL
             Dim gLst = (From GG In (From GO In gECs
                                     Select GO
                                     Group GO By GO.locusId Into Group)
-                        Let EC As String() = (From s In GG.Group Select s.EC).MatrixAsIterator.Distinct.ToArray
+                        Let EC As String() = (From s In GG.Group Select s.EC).IteratesALL.Distinct.ToArray
                         Where Not StringHelpers.IsNullOrEmpty(EC)
                         Select GG.locusId,
                             EC).ToArray

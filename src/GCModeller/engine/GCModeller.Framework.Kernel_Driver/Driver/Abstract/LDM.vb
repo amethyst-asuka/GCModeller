@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::a04df6d33e8e3a2299ad83f430b05f30, ..\GCModeller\engine\GCModeller.Framework.Kernel_Driver\Driver\Abstract\LDM.vb"
+﻿#Region "Microsoft.VisualBasic::9ab2e9b4e95b23cd4f9994ad9e1af882, ..\GCModeller\engine\GCModeller.Framework.Kernel_Driver\Driver\Abstract\LDM.vb"
 
     ' Author:
     ' 
@@ -35,7 +35,7 @@ Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 ''' </summary>
 ''' <remarks></remarks>
 Public MustInherit Class Expression
-    Implements IAddressHandle, IDynamicsExpression(Of Double)
+    Implements IAddressOf, IDynamicsExpression(Of Double)
 
     Protected _value As Double
 
@@ -56,47 +56,16 @@ Public MustInherit Class Expression
         End Get
     End Property
 
-    Public Property Identifier As String Implements sIdEnumerable.Identifier
-    Public Property Handle As Integer Implements IAddressHandle.Address
-
-#Region "IDisposable Support"
-    Private disposedValue As Boolean ' To detect redundant calls
-
-    ' IDisposable
-    Protected Overridable Sub Dispose(disposing As Boolean)
-        If Not Me.disposedValue Then
-            If disposing Then
-                ' TODO: dispose managed state (managed objects).
-            End If
-
-            ' TODO: free unmanaged resources (unmanaged objects) and override Finalize() below.
-            ' TODO: set large fields to null.
-        End If
-        Me.disposedValue = True
-    End Sub
-
-    ' TODO: override Finalize() only if Dispose( disposing As Boolean) above has code to free unmanaged resources.
-    'Protected Overrides Sub Finalize()
-    '    ' Do not change this code.  Put cleanup code in Dispose( disposing As Boolean) above.
-    '    Dispose(False)
-    '    MyBase.Finalize()
-    'End Sub
-
-    ' This code added by Visual Basic to correctly implement the disposable pattern.
-    Public Sub Dispose() Implements IDisposable.Dispose
-        ' Do not change this code.  Put cleanup code in Dispose(disposing As Boolean) above.
-        Dispose(True)
-        GC.SuppressFinalize(Me)
-    End Sub
-#End Region
+    Public Property Identifier As String Implements INamedValue.Key
+    Public Property Handle As Integer Implements IAddressOf.Address
 End Class
 
 ''' <summary>
 ''' The variable represents a node instance in the network system.(变量对象代表了网络对象之中的一个实体节点)
 ''' </summary>
 ''' <remarks></remarks>
-Public MustInherit Class Variable : Implements IAddressHandle
-    Implements sIdEnumerable
+Public MustInherit Class Variable : Implements IAddressOf
+    Implements INamedValue
 
     ''' <summary>
     ''' The location pointer of this variable node in the network system.
@@ -104,7 +73,7 @@ Public MustInherit Class Variable : Implements IAddressHandle
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    <XmlAttribute> Public Property Handle As Integer Implements IAddressHandle.Address
+    <XmlAttribute> Public Property Handle As Integer Implements IAddressOf.Address
     ''' <summary>
     ''' The node states in the current network state.
     ''' </summary>
@@ -120,36 +89,5 @@ Public MustInherit Class Variable : Implements IAddressHandle
     ''' <value></value>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    <XmlAttribute> Public Property UniqueId As String Implements sIdEnumerable.Identifier
-
-#Region "IDisposable Support"
-    Private disposedValue As Boolean ' To detect redundant calls
-
-    ' IDisposable
-    Protected Overridable Sub Dispose(disposing As Boolean)
-        If Not Me.disposedValue Then
-            If disposing Then
-                ' TODO: dispose managed state (managed objects).
-            End If
-
-            ' TODO: free unmanaged resources (unmanaged objects) and override Finalize() below.
-            ' TODO: set large fields to null.
-        End If
-        Me.disposedValue = True
-    End Sub
-
-    ' TODO: override Finalize() only if Dispose( disposing As Boolean) above has code to free unmanaged resources.
-    'Protected Overrides Sub Finalize()
-    '    ' Do not change this code.  Put cleanup code in Dispose( disposing As Boolean) above.
-    '    Dispose(False)
-    '    MyBase.Finalize()
-    'End Sub
-
-    ' This code added by Visual Basic to correctly implement the disposable pattern.
-    Public Sub Dispose() Implements IDisposable.Dispose
-        ' Do not change this code.  Put cleanup code in Dispose(disposing As Boolean) above.
-        Dispose(True)
-        GC.SuppressFinalize(Me)
-    End Sub
-#End Region
+    <XmlAttribute> Public Property UniqueId As String Implements INamedValue.Key
 End Class

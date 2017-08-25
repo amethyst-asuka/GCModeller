@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::630fcd29e5148e89ec6d8dc9c4a1480f, ..\GCModeller\sub-system\PLAS.NET\SSystem\System\Elements\Function.vb"
+﻿#Region "Microsoft.VisualBasic::35dd620611872da44adb783a7316bcfa, ..\GCModeller\sub-system\PLAS.NET\SSystem\System\Elements\Function.vb"
 
     ' Author:
     ' 
@@ -34,12 +34,12 @@ Namespace Kernel.ObjectModels
     ''' <summary>
     ''' User define function
     ''' </summary>
-    Public Structure [Function] : Implements sIdEnumerable
+    Public Structure [Function] : Implements INamedValue
 
         ''' <summary>
         ''' The function name
         ''' </summary>
-        <XmlAttribute> Public Property Name As String Implements sIdEnumerable.Identifier
+        <XmlAttribute> Public Property Name As String Implements INamedValue.Key
 
         ''' <summary>
         ''' [function name](args) expression

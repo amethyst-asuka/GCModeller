@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::cea50b3d5fe3dea82883a4f2256cef24, ..\GCModeller\core\Bio.Assembly\SequenceModel\FASTA\IO\FastaToken.vb"
+﻿#Region "Microsoft.VisualBasic::4c08e256c4b9358f78369bee8545f550, ..\core\Bio.Assembly\SequenceModel\FASTA\IO\FastaToken.vb"
 
 ' Author:
 ' 
@@ -46,12 +46,17 @@ Namespace SequenceModel.FASTA
     ''' </summary>
     ''' <remarks></remarks>
     ''' 
-    <PackageNamespace("GCModeller.IO.FastaToken", Publisher:="amethyst.asuka@gcmodeller.org")>
+    <Package("GCModeller.IO.FastaToken", Publisher:="amethyst.asuka@gcmodeller.org")>
+    <ActiveViews(FastaToken.SampleView, type:="bash")>
     Public Class FastaToken : Inherits ISequenceModel
-        Implements I_PolymerSequenceModel
+        Implements IPolymerSequenceModel
         Implements IAbstractFastaToken
         Implements ISaveHandle
         Implements I_FastaProvider
+        Implements ICloneable
+
+        Friend Const SampleView = ">LexA
+AAGCGAACAAATGTTCTATA"
 
 #Region "Object Properties"
 
@@ -84,7 +89,7 @@ Namespace SequenceModel.FASTA
                 Return _InnerList.ToArray
             End Get
             Set(value As String())
-                _InnerList = value.ToList
+                _InnerList = value.AsList
             End Set
         End Property
 
@@ -155,6 +160,11 @@ Namespace SequenceModel.FASTA
         End Sub
 #End Region
 
+        ''' <summary>
+        ''' NCBI style header delimiter
+        ''' </summary>
+        Public Const DefaultHeaderDelimiter As String = "|"
+
         Sub New()
         End Sub
 
@@ -175,14 +185,18 @@ Namespace SequenceModel.FASTA
             Me.Attributes = LDM.Attributes
         End Sub
 
-        Sub New(attrs As String(), seq As String)
+        Sub New(attrs As IEnumerable(Of String), seq As String)
             Me.SequenceData = seq
-            Me.Attributes = attrs
+            Me.Attributes = attrs.ToArray
         End Sub
 
         Sub New(LDM As I_FastaProvider)
             Me.SequenceData = LDM.SequenceData
             Me.Attributes = LDM.Attributes
+        End Sub
+
+        Sub New(attrs$(), seq As IPolymerSequenceModel)
+            Call Me.New(attrs, seq.SequenceData)
         End Sub
 
         ''' <summary>
@@ -191,7 +205,7 @@ Namespace SequenceModel.FASTA
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Overrides Function ToString() As String
-            Return String.Join("|", Me.Attributes)
+            Return String.Join(DefaultHeaderDelimiter, Me.Attributes)
         End Function
 
         ''' <summary>
@@ -278,7 +292,7 @@ Namespace SequenceModel.FASTA
         ''' 
         <ExportAPI("Load")>
         Public Shared Function Load(File As String, Optional deli As Char() = Nothing) As FastaToken
-            Dim lines As String() = IO.File.ReadAllLines(File)
+            Dim lines As String() = IO.File.ReadAllLines(File.FixPath)
 
             If lines.IsNullOrEmpty Then
                 Call $" {File.ToFileURL} is null or empty!".__DEBUG_ECHO
@@ -297,14 +311,20 @@ Namespace SequenceModel.FASTA
         ''' 
         <ExportAPI("FastaToken.From.Stream")>
         Public Shared Function ParseFromStream(stream As IEnumerable(Of String), deli As Char()) As FastaToken
-            If stream.IsNullOrEmpty Then Return Nothing
+            If stream.IsNullOrEmpty Then
+                Return Nothing
+            End If
 
             Dim lines As String() = stream.ToArray
-            Dim fa As New FastaToken
+            Dim attrs$() = Mid(lines(Scan0), 2).Split(deli)
+            Dim removeInvalids = Function(s$) s.Replace(StreamIterator.SOH, "")
 
-            fa.Attributes = Mid(lines(Scan0), 2).Split(deli)
-            fa.Attributes = fa.Attributes.ToArray(Function(s) s.Replace(StreamIterator.SOH, ""))
-            fa.SequenceData = String.Join("", lines.Skip(1).ToArray)  ' Linux mono does not support <Extension> attribute!
+            attrs = attrs.ToArray(removeInvalids)
+
+            Dim fa As New FastaToken With {
+                .Attributes = attrs,
+                .SequenceData = String.Join("", lines.Skip(1).ToArray)  ' Linux mono does not support <Extension> attribute!
+            }
 
             Return fa
         End Function
@@ -312,16 +332,14 @@ Namespace SequenceModel.FASTA
         ''' <summary>
         ''' Try parsing a fasta sequence object from a string chunk value.(尝试从一个字符串之中解析出一个fasta序列数据)
         ''' </summary>
-        ''' <param name="strData">The string text value which is in the Fasta format.(FASTA格式的序列文本)</param>
+        ''' <param name="s">The string text value which is in the Fasta format.(FASTA格式的序列文本)</param>
         ''' <returns></returns>
         ''' <remarks></remarks>
         ''' 
         <ExportAPI("FastaToken.Parser")>
-        Public Shared Function TryParse(strData As String, Optional deli As Char = "|"c) As FastaToken
-            Dim LQuery = (From strLine As String
-                          In strData.Split(CChar(vbLf))
-                          Select strLine.Replace(vbCr, "")).ToArray
-            Return FastaToken.ParseFromStream(LQuery, {deli})
+        Public Shared Function TryParse(s As String, Optional deli As Char = DefaultHeaderDelimiter) As FastaToken
+            Dim lines$() = s.lTokens
+            Return FastaToken.ParseFromStream(lines, {deli})
         End Function
 
         ''' <summary>
@@ -338,25 +356,35 @@ Namespace SequenceModel.FASTA
             If [overrides] Then
                 Call sb.Append(Me.ToString)
             Else
-                Call sb.Append(String.Join("|", Attributes))
+                Call sb.Append(String.Join(DefaultHeaderDelimiter, Attributes))
             End If
 
             Call sb.AppendLine()
-
-            If lineBreak <= 0 Then
-                Call sb.AppendLine(SequenceData)
-            Else
-                For i As Integer = 1 To Len(SequenceData) Step lineBreak
-                    Dim sg As String = Mid(SequenceData, i, lineBreak)
-                    Call sb.AppendLine(sg)
-                Next
-            End If
+            Call SequenceLineBreak(sb, lineBreak, SequenceData)
 
             If removeCR Then
                 Call sb.Replace(vbCr, "")
             End If
 
             Return sb.ToString
+        End Function
+
+        Public Shared Sub SequenceLineBreak(ByRef sb As StringBuilder, lineBreak%, sequence$)
+            If lineBreak <= 0 Then
+                Call sb.AppendLine(sequence)
+            Else
+                For i As Integer = 1 To Len(sequence) Step lineBreak
+                    Dim sg As String = Mid(sequence, i, lineBreak)
+                    Call sb.AppendLine(sg)
+                Next
+            End If
+        End Sub
+
+        Public Shared Function SequenceLineBreak(lineBreak%, sequence$) As String
+            With New StringBuilder
+                FastaToken.SequenceLineBreak(.ref, lineBreak, sequence)
+                Return .ToString
+            End With
         End Function
 
         ''' <summary>
@@ -381,12 +409,10 @@ Namespace SequenceModel.FASTA
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Overloads Function Copy() As FastaToken
-            Dim FastaObject As New FastaToken With {
-                .Attributes = New String(Me.Attributes.Count - 1) {}
-            }
-            Call Me.Attributes.CopyTo(FastaObject.Attributes, index:=Scan0)
-            FastaObject.SequenceData = Me.SequenceData
-            Return FastaObject
+            Return New FastaToken With {
+                .Attributes = Me.Attributes.ToArray,
+                .SequenceData = New String(SequenceData)
+            } ' 在這裏完完全全的按值複製
         End Function
 
         ''' <summary>
@@ -423,7 +449,7 @@ Namespace SequenceModel.FASTA
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Function Reverse() As FastaToken
-            Dim attrs As List(Of String) = Attributes.ToList.Join("Reversed_sequence")
+            Dim attrs As List(Of String) = Attributes.AsList.Join("Reversed_sequence")
             Dim revSeq As String = New String(SequenceData.Reverse.ToArray)
             Dim fa As New FastaToken With {
                 .Attributes = attrs.ToArray,
@@ -540,7 +566,11 @@ Namespace SequenceModel.FASTA
         End Function
 
         Public Function Save(Optional Path$ = "", Optional encoding As Encodings = Encodings.UTF8) As Boolean Implements ISaveHandle.Save
-            Return SaveTo(Path, encoding.GetEncodings)
+            Return SaveTo(Path, encoding.CodePage)
+        End Function
+
+        Public Function Clone() As Object Implements ICloneable.Clone
+            Return Copy()
         End Function
     End Class
 End Namespace

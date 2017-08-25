@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::da48a1e2fc9075d6a32ac5bbe650e5b7, ..\GCModeller\engine\GCMarkupLanguage\GCML_Documents\XmlElements\Metabolism\Metabolism.vb"
+﻿#Region "Microsoft.VisualBasic::8c2c67c5240a195408e34994f86c9ef5, ..\GCModeller\engine\GCMarkupLanguage\GCML_Documents\XmlElements\Metabolism\Metabolism.vb"
 
     ' Author:
     ' 
@@ -27,6 +27,7 @@
 #End Region
 
 Imports Microsoft.VisualBasic
+Imports Microsoft.VisualBasic.Language
 Imports SMRUCC.genomics.Data.SabiorkKineticLaws.TabularDump
 Imports SMRUCC.genomics.GCModeller.Assembly.GCMarkupLanguage.GCML_Documents.ComponentModels
 Imports SMRUCC.genomics.GCModeller.Assembly.GCMarkupLanguage.GCML_Documents.XmlElements.Bacterial_GENOME

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::5ee0462b55d3835aaed265c7577ffaef, ..\GCModeller\CLI_tools\Spiderman\CreateNetwork\MetabolismNetwork.vb"
+﻿#Region "Microsoft.VisualBasic::da2ec2a92e119be1ec56925bcabd4a66, ..\GCModeller\CLI_tools\Spiderman\CreateNetwork\MetabolismNetwork.vb"
 
     ' Author:
     ' 
@@ -27,6 +27,7 @@
 #End Region
 
 Imports Microsoft.VisualBasic
+Imports Microsoft.VisualBasic.Language
 Imports SMRUCC.genomics.GCModeller.Assembly.GCMarkupLanguage.GCML_Documents.XmlElements
 
 Public Module MetabolismNetwork

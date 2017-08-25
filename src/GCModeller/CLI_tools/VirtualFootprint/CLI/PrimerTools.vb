@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::09f469f65eb2522dfe06406c1ed9b591, ..\GCModeller\CLI_tools\VirtualFootprint\CLI\PrimerTools.vb"
+﻿#Region "Microsoft.VisualBasic::1d52b693fb2bd80eb99a66ba0d52faa0, ..\GCModeller\CLI_tools\VirtualFootprint\CLI\PrimerTools.vb"
 
     ' Author:
     ' 
@@ -46,6 +46,7 @@ Partial Module CLI
                    Description:="Default using the data source from Wikipedia.")>
     <Argument("/out", True,
                    Description:="Enzyme database was writing to the GCModeller repository by default.")>
+    <Group(CLIGrouping.PrimerTools)>
     Public Function BuildEnzymeDb(args As CommandLine) As Integer
         Dim source As String = args("/source")
         Dim out As String = args.GetValue("/out", GCModeller.FileSystem.RepositoryRoot & "/restrict_enzyme.Xml")
@@ -61,6 +62,7 @@ Partial Module CLI
     <ExportAPI("/Export.Primer",
                Info:="[SSR name], [Forward primer], [Reverse primer]",
                Usage:="/Export.Primer /in <primer.csv/DIR> [/out <out.DIR> /batch]")>
+    <Group(CLIGrouping.PrimerTools)>
     Public Function ExportPrimer(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim batch As Boolean = args.GetBoolean("/batch")

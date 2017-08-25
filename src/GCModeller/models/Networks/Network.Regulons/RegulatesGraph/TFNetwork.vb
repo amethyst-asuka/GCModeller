@@ -44,7 +44,7 @@ Public Module NetAPI
     ''' 
     <ExportAPI("TF_NET.Build")>
     <Extension>
-    Public Function BuildNetwork(virtualFootprints As IEnumerable(Of PredictedRegulationFootprint), cut As Double) As FileStream.Network
+    Public Function BuildNetwork(virtualFootprints As IEnumerable(Of PredictedRegulationFootprint), cut As Double) As FileStream.NetworkTables
         Dim allTFs As String() = (From x In virtualFootprints
                                   Where Not String.IsNullOrEmpty(x.Regulator)
                                   Select x.Regulator
@@ -77,9 +77,9 @@ Public Module NetAPI
         Dim regulates As NetworkEdge() = (From x As PredictedRegulationFootprint
                                           In LQuery.AsParallel
                                           Let edge As NetworkEdge = x.__netEdge
-                                          Where edge.Confidence >= cut
+                                          Where edge.value >= cut
                                           Select edge).ToArray
-        Return New FileStream.Network(TF, regulates)
+        Return New FileStream.NetworkTables(TF, regulates)
     End Function
 
     <Extension>
@@ -93,8 +93,8 @@ Public Module NetAPI
         Return New NetworkEdge With {
             .FromNode = x.Regulator,
             .ToNode = x.ORF,
-            .Confidence = Math.Abs(0.5 * (x.Pcc + x.sPcc)),
-            .InteractionType = "Regulation",
+            .value = Math.Abs(0.5 * (x.Pcc + x.sPcc)),
+            .Interaction = "Regulation",
             .Properties = prop
         }
     End Function

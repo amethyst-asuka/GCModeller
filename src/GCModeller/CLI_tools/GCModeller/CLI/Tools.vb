@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::618cfb85212c63f9dacbb6db8d652f90, ..\GCModeller\CLI_tools\GCModeller\CLI\Tools.vb"
+﻿#Region "Microsoft.VisualBasic::38c667087ff831bd35fe4abc45557172, ..\GCModeller\CLI_tools\GCModeller\CLI\Tools.vb"
 
 ' Author:
 ' 
@@ -26,24 +26,33 @@
 
 #End Region
 
-Imports System.IO
 Imports System.Text
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports Microsoft.VisualBasic.Data.csv
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Data.IO.SearchEngine
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports Microsoft.VisualBasic.Scripting.MetaData
-Imports Microsoft.VisualBasic.Terminal.STDIO
 Imports Microsoft.VisualBasic.Text
 Imports SMRUCC.genomics.Data.Repository.NCBI
 Imports SMRUCC.genomics.SequenceModel.FASTA
 
 Partial Module CLI
 
+    <ExportAPI("/Strip.Null.Columns", Usage:="/Strip.Null.Columns /in <table.csv> [/out <out.csv>]")>
+    Public Function StripNullColumns(args As CommandLine) As Integer
+        Dim in$ = args <= "/in"
+        Dim out As String = args.GetValue("/out", [in])
+        Dim file As File = File.Load([in])
+        Dim columns = file.Columns.Where(Function(c As String()) Not c.Skip(1).All(AddressOf StringEmpty)).JoinColumns
+        Return file.Save(out).CLICode
+    End Function
+
     <ExportAPI("/Located.AppData")>
+    <Group(CLIGrouping.GCModellerAppTools)>
     Public Function LocatedAppData(args As CommandLine) As Integer
         Call System.Diagnostics.Process.Start(App.ProductSharedDIR.ParentPath)
         Return 0
@@ -55,40 +64,56 @@ Partial Module CLI
     ''' <param name="args"></param>
     ''' <returns></returns>
     <ExportAPI("--ls", Info:="Listing all of the available GCModeller CLI tools commands.")>
+    <Group(CLIGrouping.GCModellerAppTools)>
     Public Function List(args As CommandLine) As Integer
         Dim execs As IEnumerable(Of String) =
             ls - l - wildcards("*.exe") <= App.HOME
 
-        Dim types = LinqAPI.Exec(Of NamedValue(Of PackageNamespace)) <=
+        Dim types = LinqAPI.Exec(Of NamedValue(Of PackageAttribute)) <=
  _
             From exe As String
             In execs
             Let def As Type = GetCLIMod(exe)
             Where Not def Is Nothing
-            Select New NamedValue(Of PackageNamespace) With {
+            Select New NamedValue(Of PackageAttribute) With {
                 .Name = exe.BaseName,
-                .x = GetEntry(def)
+                .Value = GetEntry(def)
             }
 
         Dim exeMAX As Integer = (From x In types Select Len(x.Name)).Max + 5
 
         Call Console.WriteLine("All of the available GCModeller commands were listed below.")
+        Call Console.WriteLine()
         Call Console.WriteLine("For getting the available function in the GCModeller program, ")
         Call Console.WriteLine("try typing:    <command> ?")
         Call Console.WriteLine("For getting the manual document in the GCModeller program,")
         Call Console.WriteLine("try typing:    <command> man")
         Call Console.WriteLine(vbCrLf)
         Call Console.WriteLine("Listed {0} available GCModeller commands:", types.Length)
+        Call Console.WriteLine()
 
         For Each x In types
             Dim exePrint As String = " " & x.Name & New String(" "c, exeMAX - Len(x.Name))
-            printf("%s%s\n", exePrint, x.x.Description)
+            Dim lines$() = Paragraph _
+                .Split(x.Value.Description, 60) _
+                .ToArray
+
+            Console.WriteLine("{0}{1}", exePrint, lines.FirstOrDefault)
+
+            If lines.Length > 1 Then
+                Dim indent As New String(" "c, exeMAX + 1)
+
+                For Each line$ In lines.Skip(1)
+                    Console.WriteLine("{0}{1}", indent, line$)
+                Next
+            End If
         Next
 
         Return 0
     End Function
 
     <ExportAPI("/init.manuals", Usage:="/init.manuals")>
+    <Group(CLIGrouping.GCModellerAppTools)>
     Public Function InitManuals(args As CommandLine) As Integer
         Dim execs As IEnumerable(Of String) = ls - l - wildcards("*.exe") <= App.HOME
         Dim tools As String() =
@@ -149,7 +174,7 @@ date: {Now.ToString}
             .BatchSearch(arguments.Select(
                 Function(x) New NamedValue(Of String) With {
                     .Name = x.Name,
-                    .x = x.Expression
+                    .Value = x.Expression
                 }), out)
     End Function
 End Module

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::1f80c31183243f8f1605a872b49e7cac, ..\GCModeller\core\Bio.Assembly\Assembly\KEGG\DBGET\Objects\SSDB\Ortholog.vb"
+﻿#Region "Microsoft.VisualBasic::6ceb6b1fd44a2a752ccd60eb80a26316, ..\core\Bio.Assembly\Assembly\KEGG\DBGET\Objects\SSDB\Ortholog.vb"
 
     ' Author:
     ' 
@@ -35,7 +35,9 @@ Imports Microsoft.VisualBasic.Serialization.JSON
 Namespace Assembly.KEGG.DBGET.bGetObject.SSDB
 
     ''' <summary>
-    ''' http://www.kegg.jp/ssdb-bin/ssdb_best?org_gene=sp:locus_tag
+    ''' ``*.csv``
+    ''' 
+    ''' > http://www.kegg.jp/ssdb-bin/ssdb_best?org_gene=sp:locus_tag
     ''' </summary>
     Public Class Ortholog
 

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::9729f5f0ca37cc6dd34d55f9e958203a, ..\GCModeller\engine\GCMarkupLanguage\GCML_Documents\XmlElements\Metabolism\Reaction\Reaction.vb"
+﻿#Region "Microsoft.VisualBasic::20416ab1b0dcbcefe59d7aa2b81c087b, ..\GCModeller\engine\GCMarkupLanguage\GCML_Documents\XmlElements\Metabolism\Reaction\Reaction.vb"
 
     ' Author:
     ' 
@@ -30,6 +30,7 @@ Imports System.Text
 Imports System.Xml.Serialization
 Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.Extensions
+Imports Microsoft.VisualBasic.Language
 Imports SMRUCC.genomics.Assembly.MetaCyc
 Imports SMRUCC.genomics.Assembly.MetaCyc.File.DataFiles
 Imports SMRUCC.genomics.Assembly.MetaCyc.Schema.Metabolism
@@ -62,7 +63,7 @@ Namespace GCML_Documents.XmlElements.Metabolism
         ''' <returns></returns>
         ''' <remarks>为了实现IReaction接口的需要所进行的属性值的复写</remarks>
         <XmlAttribute("UniqueId")>
-        Public Overrides Property Identifier As String Implements FLuxBalanceModel.I_ReactionModel(Of CompoundSpeciesReference).Identifier
+        Public Overrides Property Identifier As String Implements FLuxBalanceModel.I_ReactionModel(Of CompoundSpeciesReference).Key
             Get
                 Return MyBase.Identifier
             End Get
@@ -290,7 +291,7 @@ Namespace GCML_Documents.XmlElements.Metabolism
 
         Public ReadOnly Property Substrates As String()
             Get
-                Return {(From Metabolite In Me.Reactants Select Metabolite.Identifier).ToArray, (From Metabolite In Me.Products Select Metabolite.Identifier).ToArray}.MatrixToVector
+                Return {(From Metabolite In Me.Reactants Select Metabolite.Identifier).ToArray, (From Metabolite In Me.Products Select Metabolite.Identifier).ToArray}.ToVector
             End Get
         End Property
 

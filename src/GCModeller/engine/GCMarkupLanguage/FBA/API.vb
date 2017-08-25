@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::a20f877214138db61f0fa828886901fd, ..\GCModeller\engine\GCMarkupLanguage\FBA\API.vb"
+﻿#Region "Microsoft.VisualBasic::3cf875a83fd3ae02952273f0d068f5c9, ..\GCModeller\engine\GCMarkupLanguage\FBA\API.vb"
 
     ' Author:
     ' 
@@ -33,7 +33,7 @@ Imports SMRUCC.genomics.Model.SBML
 
 Namespace FBACompatibility
 
-    <PackageNamespace("GCML.FBA.Compiler")>
+    <Package("GCML.FBA.Compiler")>
     Public Module API
 
         <ExportAPI("Compile")>
@@ -41,7 +41,7 @@ Namespace FBACompatibility
             Dim Model As Model = New Model
             Model.Reactions = (From flux In SBMl2.MetabolismNetwork
                                Select New MetabolismFlux With {
-                                   .Identifier = flux.Identifier,
+                                   .Identifier = flux.Key,
                                    .LOWER_BOUND = flux.LOWER_BOUND,
                                    .UPPER_BOUND = flux.UPPER_BOUND}).ToArray
             Model.MAT = (From metabolite As FLuxBalanceModel.IMetabolite

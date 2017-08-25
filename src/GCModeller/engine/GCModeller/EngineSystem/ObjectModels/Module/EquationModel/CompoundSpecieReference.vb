@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::7e18d14e7bfbfdfcedd835149da88c65, ..\GCModeller\engine\GCModeller\EngineSystem\ObjectModels\Module\EquationModel\CompoundSpecieReference.vb"
+﻿#Region "Microsoft.VisualBasic::3bcc7b823202ba961875f910add4f82a, ..\GCModeller\engine\GCModeller\EngineSystem\ObjectModels\Module\EquationModel\CompoundSpecieReference.vb"
 
     ' Author:
     ' 
@@ -40,7 +40,7 @@ Namespace EngineSystem.ObjectModels.Module.EquationModel
     ''' </summary>
     ''' <remarks></remarks>
     Public Class CompoundSpecieReference : Inherits RuntimeObject
-        Implements sIdEnumerable
+        Implements INamedValue
         Implements ICompoundSpecies
 
         Public Property EntityCompound As Entity.Compound
@@ -49,7 +49,7 @@ Namespace EngineSystem.ObjectModels.Module.EquationModel
         ''' Guid/MetaCyc UniqueId String.(Guid或者MetaCyc数据库里面的UniqueId字符串)
         ''' </summary>
         ''' <remarks></remarks>
-        <DumpNode> <XmlAttribute> Public Property Identifier As String Implements sIdEnumerable.Identifier
+        <DumpNode> <XmlAttribute> Public Property Identifier As String Implements INamedValue.Key
         ''' <summary>
         ''' 化学计量数
         ''' </summary>

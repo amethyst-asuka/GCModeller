@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::d8d5fb94f1dcf1d2abd377b12b00ac6c, ..\GCModeller\foundation\OBO_Foundry\ParserIO.vb"
+﻿#Region "Microsoft.VisualBasic::6aa4df9d463fae8bc389098c89cd129c, ..\GCModeller\foundation\OBO_Foundry\ParserIO.vb"
 
     ' Author:
     ' 
@@ -120,7 +120,7 @@ Public Module ParserIO
                      Group x By x.Name Into Group
 
         Return LQuery.ToDictionary(Function(x) x.Name,
-                                   Function(x) x.Group.ToArray(Function(value) value.x))
+                                   Function(x) x.Group.ToArray(Function(value) value.Value))
     End Function
 
     ''' <summary>
@@ -207,4 +207,3 @@ Public Module ParserIO
         Return target.ToLines(LoadClassSchema(Of T)())
     End Function
 End Module
-

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::87515d72ed9f3088f338b86e529bae90, ..\GCModeller\engine\GCTabular\Compiler\Compiler.vb"
+﻿#Region "Microsoft.VisualBasic::c99a75938d42c2d01857c7a4ccd6e539, ..\GCModeller\engine\GCTabular\Compiler\Compiler.vb"
 
     ' Author:
     ' 
@@ -26,15 +26,15 @@
 
 #End Region
 
-Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
 Imports Microsoft.VisualBasic.Data.csv.Extensions
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports Microsoft.VisualBasic.Extensions
+Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Logging
 Imports SMRUCC.genomics.Assembly.Expasy.AnnotationsTool
 Imports SMRUCC.genomics.Assembly.MetaCyc.File.DataFiles
@@ -42,13 +42,16 @@ Imports SMRUCC.genomics.Assembly.MetaCyc.File.FileSystem
 Imports SMRUCC.genomics.Data
 Imports SMRUCC.genomics.Data.Regprecise
 Imports SMRUCC.genomics.Data.SabiorkKineticLaws.TabularDump
+Imports SMRUCC.genomics.Data.STRING
 Imports SMRUCC.genomics.GCModeller.Assembly
 Imports SMRUCC.genomics.GCModeller.Assembly.GCMarkupLanguage
 Imports SMRUCC.genomics.GCModeller.Framework.Kernel_Driver
 Imports SMRUCC.genomics.GCModeller.ModellingEngine.Assembly.GCTabular.FileStream.XmlFormat
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.RpsBLAST
+Imports SMRUCC.genomics.Model.Network.STRING.Models
 Imports SMRUCC.genomics.Model.SBML
 Imports SMRUCC.genomics.Model.SBML.Level2
+Imports SMRUCC.genomics.SequenceModel.NucleotideModels
 
 Namespace Compiler
 
@@ -103,22 +106,22 @@ Namespace Compiler
                                             In Me._MetabolismNetwork.Model.listOfSpecies
                                             Let ModelData = FileStream.Metabolite.CreateObject(Metabolite, MetaCycCompounds)
                                             Select ModelData
-                                            Order By ModelData.Identifier Ascending).ToList.ToDictionary
+                                            Order By ModelData.Identifier Ascending).ToDictionary
             Me._ModelIO.MisT2 = argvs("-mist2").LoadXml(Of SMRUCC.genomics.Assembly.MiST2.MiST2)()
             Me._RegpreciseRegulators = Regprecise.TranscriptionFactors.Load(argvs("-regprecise_regulator"))
             Me._ModelIO.SetExportDirectory(argvs("-export"))
-            Me._ModelIO.STrPModel = argvs("-mist2_strp").LoadXml(Of StringDB.StrPNet.Network)()
+            Me._ModelIO.STrPModel = argvs("-mist2_strp").LoadXml(Of Network)()
 #If Not DEBUG Then
         Try
 #End If
             Me._TranscriptRegulations = argvs("-transcript_regulation").LoadCsv(Of TranscriptRegulation)(False).ToArray
-            Me._ModelIO.StringInteractions = argvs("-string-db").LoadXml(Of StringDB.SimpleCsv.Network)()
+            Me._ModelIO.StringInteractions = argvs("-string-db").LoadXml(Of SimpleCsv.Network)()
 
             Using MappingCreator = New Mapping(_MetaCyc, Me._ModelIO.MetabolitesModel.Values.ToArray)
                 Call _Logging.WriteLine("Start to create the effector mapping between the regprecise database and metacyc database...")
-                Me._ModelIO.EffectorMapping = MappingCreator.EffectorMapping(Me._RegpreciseRegulators).ToList
+                Me._ModelIO.EffectorMapping = MappingCreator.EffectorMapping(Me._RegpreciseRegulators)
                 Call _Logging.WriteLine(String.Format("Create {0} effectors in total!", Me._ModelIO.EffectorMapping.Count))
-                Me._ModelIO.EnzymeMapping = MappingCreator.CreateEnzrxnGeneMap.ToList
+                Me._ModelIO.EnzymeMapping = New List(Of Mapping.EnzymeGeneMap)(MappingCreator.CreateEnzrxnGeneMap)
                 Call _Logging.WriteLine(Me._ModelIO.EnzymeMapping.Count & " enzymatic reaction mapping was created!")
             End Using
 
@@ -145,7 +148,7 @@ Namespace Compiler
 
             Call _Logging.WriteLine("[DEBUG] Here is the compile arguments list that user input:" & vbCrLf)
             For Each item As NamedValue(Of String) In ModelProperty
-                Call _Logging.WriteLine(String.Format("{0} --> {1}", item.Name, item.x))
+                Call _Logging.WriteLine(String.Format("{0} --> {1}", item.Name, item.Value))
             Next
 
             '     MyBase.CompiledModel.ChipData = New Microsoft.VisualBasic.ComponentModel.Href With {.Value = ModelProperty("-chipdata")}
@@ -170,7 +173,7 @@ Namespace Compiler
                 Call New Components.MergeKEGGCompounds(_ModelIO, KEGGCOmpounds).InvokeMergeCompoundSpecies()
             End If
 
-            Dim Door = SMRUCC.genomics.Assembly.DOOR.Load(FilePath:=ModelProperty("-door"))
+            Dim Door = SMRUCC.genomics.Assembly.DOOR.Load(path:=ModelProperty("-door"))
             _ModelIO.DoorOperon = (From Operon In Door.DOOROperonView.Operons Select Operon.ConvertToCsvData).ToArray
             _ModelIO.CellSystemModel.OperonCounts = _ModelIO.DoorOperon.Count
             _Door = Door
@@ -179,8 +182,8 @@ Namespace Compiler
             Me._ModelIO.MetabolismModel = FileStream.MetabolismFlux.CreateObject(Me._MetabolismNetwork, MetabolismEnzymeLink:=Me._ModelIO.EnzymeMapping, MetaCycReactions:=_MetaCyc.GetReactions)
             Me._ModelIO.GenomeAnnotiation = FileStream.GeneObject.CreateObject(Me._MetaCyc.GetGenes, MyvaCog)
             Me._ModelIO.TranscriptionModel = FileStream.TranscriptUnit.CreateObject(Me._TranscriptRegulations, Door.DOOROperonView)
-            Me._ModelIO.CultivationMediums = CultivationMediums.MetaCycDefault.Uptake_Substrates.ToList
-            Me._CrossTalks = DocumentStream.File.Load(ModelProperty("-cross_talks"))
+            Me._ModelIO.CultivationMediums = New List(Of I_SubstrateRefx)(CultivationMediums.MetaCycDefault.Uptake_Substrates)
+            Me._CrossTalks = IO.File.Load(ModelProperty("-cross_talks"))
 
             'Sub New(Compiler As Compiler, KEGGReactionsCsv As String, KEGGCompoundsCsv As String, CARMENCsv As String)
             Dim KEGGReactions As String = ModelProperty("-kegg_reactions")
@@ -285,7 +288,7 @@ Namespace Compiler
                 End If
             Next
 
-            Dim RegulatorPC_IDs = (From Regulator In Regulators.AsParallel Where Not Regulator.Effectors.IsNullOrEmpty Select Regulator.get_PCs).ToArray.MatrixToVector.Distinct.ToArray    '添加调控因子蛋白质复合物
+            Dim RegulatorPC_IDs = (From Regulator In Regulators.AsParallel Where Not Regulator.Effectors.IsNullOrEmpty Select Regulator.get_PCs).ToArray.ToVector.Distinct.ToArray    '添加调控因子蛋白质复合物
 
             For Each PC In RegulatorPC_IDs
                 Dim PC_ID As String = PC.Key
@@ -317,16 +320,21 @@ Namespace Compiler
 
         Protected Sub __createProteinObjects(EcProfiles As IEnumerable(Of T_EnzymeClass_BLAST_OUT))
             Dim ProfileDicts = EcProfiles.ToDictionary(Function(matched) matched.ProteinId)
-            Me._ModelIO.Proteins = (From Transcript In Me._ModelIO.Transcripts
-                                    Where Not Transcript.PolypeptideCompositionVector.IsNullOrEmpty
-                                    Let ECValue = If(ProfileDicts.ContainsKey(Transcript.Template), ProfileDicts(Transcript.Template).Class, "")
-                                    Let Type = If(String.IsNullOrEmpty(ECValue), GCMarkupLanguage.GCML_Documents.XmlElements.Metabolism.Polypeptide.ProteinTypes.Polypeptide, GCMarkupLanguage.GCML_Documents.XmlElements.Metabolism.Polypeptide.ProteinTypes.Enzyme)
-                                    Select New FileStream.Protein With {
-                                               .Lambda = 0.85,
-                                               .PolypeptideCompositionVector = Transcript.PolypeptideCompositionVector,
-                                               .Identifier = Transcript.Template,
-                                               .ECNumber = ECValue,
-                                               .ProteinType = Type}).ToList
+            Me._ModelIO.Proteins = LinqAPI.MakeList(Of FileStream.Protein) <=
+                From Transcript
+                In Me._ModelIO.Transcripts
+                Where Not Transcript.PolypeptideCompositionVector.IsNullOrEmpty
+                Let ECValue = If(ProfileDicts.ContainsKey(Transcript.Template), ProfileDicts(Transcript.Template).Class, "")
+                Let Type = If(String.IsNullOrEmpty(ECValue),
+                    GCMarkupLanguage.GCML_Documents.XmlElements.Metabolism.Polypeptide.ProteinTypes.Polypeptide,
+                    GCMarkupLanguage.GCML_Documents.XmlElements.Metabolism.Polypeptide.ProteinTypes.Enzyme)
+                Select New FileStream.Protein With {
+                    .Lambda = 0.85,
+                    .PolypeptideCompositionVector = Transcript.PolypeptideCompositionVector,
+                    .Identifier = Transcript.Template,
+                    .ECNumber = ECValue,
+                    .ProteinType = Type
+                }
         End Sub
 
         Protected Sub _createEnzymeObjects()
@@ -334,17 +342,18 @@ Namespace Compiler
                                  In Me._ModelIO.MetabolismModel
                                  Where Not enz.Enzymes.IsNullOrEmpty
                                  Select ReactionId = enz.Identifier, Enzymes = enz.Enzymes, Metabolite = enz.get_Metabolites.First).ToArray
+            Dim rand As New Random
             Dim LQuery = (From item In EnzymeIdArray.AsParallel
                           Let enzCollection = (From EnzymeId As String
                                                In item.Enzymes
                                                Select New EnzymeCatalystKineticLaw With {
                                                           .Enzyme = EnzymeId, .KineticRecord = item.ReactionId,
                                                           .PH = 7, .Temperature = 28,
-                                                          .Km = System.Math.Max(RandomDouble, 0.5),
-                                                          .Kcat = System.Math.Max(5000, 10000 * RandomDouble()),
+                                                          .Km = Math.Max(rand.NextDouble, 0.5),
+                                                          .Kcat = Math.Max(5000, 10000 * rand.NextDouble),
                                                           .Metabolite = item.Metabolite}).ToArray
                           Select enzCollection).ToArray
-            Me._ModelIO.Enzymes = LQuery.MatrixToList
+            Me._ModelIO.Enzymes = LQuery.Unlist
 
             EnzymeIdArray = (From enz
                 In Me._ModelIO.TransmembraneTransportation
@@ -352,19 +361,29 @@ Namespace Compiler
                              Select ReactionId = enz.Identifier, Enzymes = enz.Enzymes, Metabolite = enz.get_Metabolites.First).ToArray
 
             For Each TrModel In EnzymeIdArray
-                Call _ModelIO.Enzymes.AddRange((From Id In TrModel.Enzymes Select New EnzymeCatalystKineticLaw With {
-                                                .Enzyme = Id, .KineticRecord = TrModel.ReactionId,
-                                                .PH = 7, .Temperature = 28,
-                                          .Km = System.Math.Max(RandomDouble, 0.5), .Kcat = System.Math.Max(5000, 10000 * RandomDouble()), .Metabolite = TrModel.Metabolite}))
+                _ModelIO.Enzymes += From Id
+                                    In TrModel.Enzymes
+                                    Select New EnzymeCatalystKineticLaw With {
+                                        .Enzyme = Id, .KineticRecord = TrModel.ReactionId,
+                                        .PH = 7,
+                                        .Temperature = 28,
+                                        .Km = Math.Max(rand.NextDouble, 0.5),
+                                        .Kcat = Math.Max(5000, 10000 * rand.NextDouble()),
+                                        .Metabolite = TrModel.Metabolite
+                                    }
             Next
 
             Dim EnzymeGenes = New List(Of String)
             For Each item In EnzymeIdArray
                 Call EnzymeGenes.AddRange(item.Enzymes)
             Next
-            EnzymeGenes = (From strId As String In EnzymeGenes Select strId Distinct Order By strId Ascending).ToList
+            EnzymeGenes = LinqAPI.MakeList(Of String) <= From strId As String
+                                                         In EnzymeGenes
+                                                         Select strId
+                                                         Distinct
+                                                         Order By strId Ascending
             For Each strId As String In EnzymeGenes
-                Dim ProteinPolypeptide = _ModelIO.Proteins.GetItem(uniqueId:=strId)
+                Dim ProteinPolypeptide = _ModelIO.Proteins.Take(uniqueId:=strId)
                 If ProteinPolypeptide Is Nothing Then '可能为蛋白质复合物
                     Call _Logging.WriteLine(String.Format("ASSIGN_PROTEIN_TYPES: {0} is not a polypeptide and it may be protein complex...", strId))
                     Continue For
@@ -388,12 +407,9 @@ Namespace Compiler
             Return New KeyValuePair(Of String, String)(UniqueId, FsaObject.SequenceData.ToUpper)
         End Function
 
-        Private Function GetProteinSequenceData(FsaObject As SMRUCC.genomics.Assembly.MetaCyc.File.FileSystem.FastaObjects.Proteins,
-                                                MetaCycGenes As SMRUCC.genomics.Assembly.MetaCyc.File.DataFiles.Genes) _
-            As KeyValuePair(Of String, String)
-
+        Private Function GetProteinSequenceData(FsaObject As FastaObjects.Proteins, MetaCycGenes As Genes) As KeyValuePair(Of String, String)
             Dim UniqueId As String = FsaObject.UniqueId
-            Dim LQuery = (From ItemGene As SMRUCC.genomics.Assembly.MetaCyc.File.DataFiles.Slots.Gene
+            Dim LQuery = (From ItemGene As Slots.Gene
                           In MetaCycGenes
                           Where ItemGene.Product.IndexOf(UniqueId) > -1
                           Select ItemGene.Accession1).ToArray
@@ -423,7 +439,7 @@ Namespace Compiler
                     Dim SequenceData = GeneSequence.First.Value
 
                     TranscriptObject.TranscriptCompositionVectors = SMRUCC.genomics.SequenceModel.NucleotideModels.GetCompositionVector(SequenceData)
-                    TranscriptObject.Lamda = 0.65 * (1 + SMRUCC.genomics.SequenceModel.NucleotideModels.SegmentReader.Get_GCContent(SequenceData)) / Global.System.Math.Log10(Len(SequenceData) + 10)
+                    TranscriptObject.Lamda = 0.65 * (1 + GCContent(SequenceData)) / Math.Log10(Len(SequenceData) + 10)
                 Else
                     Call Me._Logging.WriteLine(String.Format("{0}, Gene sequence not found!", AccessionId),
                                                "GenerateCompositionVectors(Transcripts As FileStream.Transcript())",
@@ -447,7 +463,7 @@ Namespace Compiler
         ''' </summary>
         ''' <param name="CrossTalks"></param>
         ''' <remarks></remarks>
-        Protected Sub LinkEffectors(CrossTalks As DocumentStream.File)
+        Protected Sub LinkEffectors(CrossTalks As IO.File)
             Dim FilteredList As New List(Of FileStream.Regulator)
             Dim EffectorMapping = Me._ModelIO.EffectorMapping
 
@@ -528,12 +544,14 @@ Namespace Compiler
 
         Private Sub CreatePathwayObjects()
             Dim Pathways = Me._MetaCyc.GetPathways
-            Me._ModelIO.Pathway = (From item In Pathways
-                                   Select New FileStream.Pathway With {
-                                       .Identifier = item.Identifier,
-                                       .Comment = item.Comment,
-                                       .MetabolismFlux = item.ReactionList.ToArray
-                                   }).ToList
+            Me._ModelIO.Pathway = LinqAPI.MakeList(Of FileStream.Pathway) <=
+                From item
+                In Pathways
+                Select New FileStream.Pathway With {
+                    .Identifier = item.Identifier,
+                    .Comment = item.Comment,
+                    .MetabolismFlux = item.ReactionList.ToArray
+                }
         End Sub
 
         ''' <summary>
@@ -579,7 +597,8 @@ Namespace Compiler
             Call _createRibosomeAssembly(_argvs_Compile("-ptt_dir"))
 
             Me._ModelIO.ProteinAssembly = _createProteinAssembly(Me._ModelIO.Regulators, Metabolites)
-            Me._ModelIO.ConstraintMetabolites = GCMarkupLanguage.GCML_Documents.ComponentModels.ConstraintMetaboliteMap.CreateObjectsWithMetaCyc.ToList
+            Me._ModelIO.ConstraintMetabolites = New List(Of GCML_Documents.ComponentModels.ConstraintMetaboliteMap)(
+                GCMarkupLanguage.GCML_Documents.ComponentModels.ConstraintMetaboliteMap.CreateObjectsWithMetaCyc)
             Me._ModelIO.TransmembraneTransportation = AnalysisTransmenbraneFlux()
 
             Call _createEnzymeObjects()
@@ -588,7 +607,7 @@ Namespace Compiler
 
             Dim Regulators = (From item In _ModelIO.Regulators Where item.Effectors.IsNullOrEmpty Select item.ProteinId Distinct).ToArray
             For Each strId As String In Regulators
-                Dim Regulator = _ModelIO.Proteins.GetItem(uniqueId:=strId)
+                Dim Regulator = _ModelIO.Proteins.Take(uniqueId:=strId)
                 Regulator.ProteinType = GCMarkupLanguage.GCML_Documents.XmlElements.Metabolism.Polypeptide.ProteinTypes.TranscriptFactor
             Next
 
@@ -604,7 +623,11 @@ Namespace Compiler
         ''' <param name="ProteinSequence"></param>
         ''' <remarks></remarks>
         Protected Sub _createTranscripts(GeneSequence As KeyValuePair(Of String, String)(), ProteinSequence As KeyValuePair(Of String, String)())
-            Me._ModelIO.Transcripts = (From GeneObject In Me._ModelIO.GenomeAnnotiation Select _____createTranscript(GeneObject)).ToList
+            Me._ModelIO.Transcripts = LinqAPI.MakeList(Of FileStream.Transcript) <=
+                From GeneObject
+                In Me._ModelIO.GenomeAnnotiation
+                Select _____createTranscript(GeneObject)
+
             Call GenerateCompositionVectors(Me._ModelIO.Transcripts, GeneSequence, ProteinSequence)
         End Sub
 
@@ -618,12 +641,12 @@ Namespace Compiler
 
             GeneObject.TranscriptProduct = UniqueId
 
-            Dim ProductMetabolite As FileStream.Metabolite =
-                New FileStream.Metabolite With
-                {
-                    .CommonNames = New String() {Transcript.Product}, .MetaboliteType = GCMarkupLanguage.GCML_Documents.XmlElements.Metabolism.Metabolite.MetaboliteTypes.Polypeptide,
-                    .Identifier = Transcript.Product,
-                    .InitialAmount = 1000} ',
+            Dim ProductMetabolite As New FileStream.Metabolite With {
+                .CommonNames = {Transcript.Product},
+                .MetaboliteType = GCMarkupLanguage.GCML_Documents.XmlElements.Metabolism.Metabolite.MetaboliteTypes.Polypeptide,
+                .Identifier = Transcript.Product,
+                .InitialAmount = 1000
+            } ',
             '    .DBLinks = New String() {New SMRUCC.genomics.Assembly.MetaCyc.Schema.DBLinkManager.DBLink() With {.DBName = "NCBI", .AccessionId = Transcript.Product}.GetFormatValue}}
 
             Call _ModelIO.MetabolitesModel.InsertOrUpdate(ProductMetabolite)
@@ -644,10 +667,11 @@ Namespace Compiler
         Protected Function AnalysisTransmenbraneFlux() As List(Of FileStream.MetabolismFlux)
             Call _Logging.WriteLine("Start to analysis the transportation flux object...")
 
-            Dim LQuery = (From item As SMRUCC.genomics.Assembly.MetaCyc.File.DataFiles.Slots.Reaction
-                          In Me._MetaCyc.GetReactions.AsParallel
-                          Where item.IsTransportReaction
-                          Select New SMRUCC.genomics.Assembly.MetaCyc.Schema.TransportReaction(item)).ToList  '查询出所有的跨膜转运过程
+            Dim LQuery = LinqAPI.MakeList(Of SMRUCC.genomics.Assembly.MetaCyc.Schema.TransportReaction) <=
+                From item As SMRUCC.genomics.Assembly.MetaCyc.File.DataFiles.Slots.Reaction
+                In Me._MetaCyc.GetReactions.AsParallel
+                Where item.IsTransportReaction
+                Select New SMRUCC.genomics.Assembly.MetaCyc.Schema.TransportReaction(item) '查询出所有的跨膜转运过程
 
             Dim EnzymeReactions = _MetaCyc.GetEnzrxns
             Dim TrModel As List(Of FileStream.MetabolismFlux) = New List(Of FileStream.MetabolismFlux)
@@ -666,9 +690,20 @@ Namespace Compiler
                 Call CultivationMetabolites.AddRange(SchemaModel.GetSubstrates)
             Next
 
-            CultivationMetabolites = (From item In CultivationMetabolites Where String.Equals(item.Compartment, "CCO-OUT", StringComparison.OrdinalIgnoreCase) Select item).ToList
-            _ModelIO.CultivationMediums = (From MetaboliteId In (From item In CultivationMetabolites Select item.Identifier Distinct).ToArray
-                                           Select New I_SubstrateRefx With {.Identifier = MetaboliteId.ToUpper, .InitialQuantity = 100}).ToList
+            CultivationMetabolites = New List(Of genomics.Assembly.MetaCyc.Schema.TransportReaction.CompoundSpecies)(
+                From item
+                In CultivationMetabolites
+                Where String.Equals(item.Compartment, "CCO-OUT", StringComparison.OrdinalIgnoreCase)
+                Select item)
+
+            _ModelIO.CultivationMediums = LinqAPI.MakeList(Of I_SubstrateRefx) <=
+                From MetaboliteId
+                In (From item In CultivationMetabolites Select item.Identifier Distinct)
+                Select New I_SubstrateRefx With {
+                    .Identifier = MetaboliteId.ToUpper,
+                    .InitialQuantity = 100
+                }
+
             For Each Substrate In _ModelIO.CultivationMediums
                 If Not _ModelIO.MetabolitesModel.ContainsKey(Substrate.Identifier) Then
                     Dim Metabolite As New FileStream.Metabolite With {

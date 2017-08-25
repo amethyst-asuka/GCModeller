@@ -1,37 +1,37 @@
-﻿#Region "Microsoft.VisualBasic::421a3b7fde7595736cc2f670740fb2da, ..\GCModeller\engine\GCTabular\Compiler\SignalTransductionNetwork\PartsAPI.vb"
+﻿#Region "Microsoft.VisualBasic::faa999d306f2b8a337abd58b757f96e8, ..\GCModeller\engine\GCTabular\Compiler\SignalTransductionNetwork\PartsAPI.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
-Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.ComponentModel
 Imports SMRUCC.genomics.Assembly
 Imports SMRUCC.genomics.Data
 Imports SMRUCC.genomics.GCModeller.Assembly
+Imports SMRUCC.genomics.Model.Network.STRING.TCS
+Imports STRING_NetGraph = SMRUCC.genomics.Model.Network.STRING.Models.Network
 
 Namespace Compiler.Components
 
@@ -69,7 +69,7 @@ Namespace Compiler.Components
             Return DataModel
         End Function
 
-        Public Function CreateFluxObject(STrpProfile As StringDB.StrPNet.Network, Inducers As StringDB.StrPNet.TCS.SensorInducers(), Optional Pi As String = "PI") _
+        Public Function CreateFluxObject(STrpProfile As STRING_NetGraph, Inducers As SMRUCC.genomics.Model.Network.[STRING].TCS.SensorInducers(), Optional Pi As String = "PI") _
       As GCMarkupLanguage.GCML_Documents.XmlElements.SignalTransductions.ProteinAssembly()
 
             Dim ChunkList As List(Of GCMarkupLanguage.GCML_Documents.XmlElements.SignalTransductions.ProteinAssembly) =
@@ -89,7 +89,7 @@ Namespace Compiler.Components
             Next
 
             Dim Index = (From item In ChunkList Select item.Identifier Distinct).ToArray
-            ChunkList = (From Id As String In Index Select ChunkList.GetItem(Id)).ToList
+            ChunkList = (From Id As String In Index Select ChunkList.GetItem(Id)).AsList
 
             Dim SelfLoop = (From item In ChunkList
                             Let Metabolite As String() = (From [sub] In item.Metabolites Select [sub].species Distinct Order By Len(species) Ascending).ToArray
@@ -103,7 +103,7 @@ Namespace Compiler.Components
         End Function
 
         Private Function CreateFluxObject(TF As String,
-                                                 TCS As StringDB.StrPNet.TCS.TCS,
+                                                 TCS As TCS,
                                                  Inducers As String(),
                                                  Pi As String) _
             As GCMarkupLanguage.GCML_Documents.XmlElements.SignalTransductions.ProteinAssembly()
@@ -111,7 +111,7 @@ Namespace Compiler.Components
             Dim ChunkBuffer As List(Of GCMarkupLanguage.GCML_Documents.XmlElements.SignalTransductions.ProteinAssembly) =
                 (From Inducer As String
                  In Inducers
-                 Select ChemotaxisInduction(TCS.Chemotaxis, Pi, Inducer)).ToList
+                 Select ChemotaxisInduction(TCS.Chemotaxis, Pi, Inducer)).AsList
 
             Call ChunkBuffer.Add(PhosphoTransfer(TCS.Chemotaxis, TCS.HK, TCS.ChemotaxisHKConfidence, Pi))
             Dim TCSCrossTalk = PhosphoTransfer(TCS.HK, TCS.RR, TCS.HKRRConfidence, Pi)
@@ -125,7 +125,7 @@ Namespace Compiler.Components
         Private Function CreateFluxObject(TF As String, OCS As KeyValuePair, Inducers As String(), Pi As String) _
             As GCMarkupLanguage.GCML_Documents.XmlElements.SignalTransductions.ProteinAssembly()
             Dim ChunkBuffer As List(Of GCMarkupLanguage.GCML_Documents.XmlElements.SignalTransductions.ProteinAssembly) =
-                (From Inducer As String In Inducers Select ChemotaxisInduction(OCS.Key, Pi, Inducer)).ToList
+                (From Inducer As String In Inducers Select ChemotaxisInduction(OCS.Key, Pi, Inducer)).AsList
 
             Return ChunkBuffer.ToArray
         End Function

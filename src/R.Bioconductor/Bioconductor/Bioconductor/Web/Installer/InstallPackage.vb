@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::d38f9a9af7211981f3f5cd897c9dd866, ..\R.Bioconductor\Bioconductor\Bioconductor\Web\Installer\InstallPackage.vb"
+﻿#Region "Microsoft.VisualBasic::ef28f0c785385d0824749efef13324a7, ..\R.Bioconductor\Bioconductor\Bioconductor\Web\Installer\InstallPackage.vb"
 
     ' Author:
     ' 
@@ -28,6 +28,8 @@
 
 Imports System.Windows.Forms
 Imports Microsoft.VisualBasic.Parallel.Tasks
+Imports Microsoft.VisualBasic.Text
+Imports Microsoft.VisualBasic.Windows.Forms
 Imports RDotNET.Extensions.VisualBasic
 Imports SMRUCC.R.CRAN.Bioconductor.Web
 Imports SMRUCC.R.CRAN.Bioconductor.Web.Packages
@@ -189,7 +191,7 @@ Public Class InstallPackage
 
             Try
                 Call host.Invoke(Sub() host.Text = $"""biocLite.R"" installing {package}...")
-                Call RServer.Evaluate(script)
+                Call RSystem.R.Evaluate(script)
                 Return True
             Catch ex As Exception
                 MsgBox(ex.Message, MsgBoxStyle.Critical, "biocLite.R")
@@ -285,7 +287,7 @@ Public Class InstallPackage
         End If
 
         Try
-            Call RServer.Evaluate(LinkLabel3.Text)
+            Call RSystem.R.Evaluate(LinkLabel3.Text)
         Catch ex As Exception
 
         End Try
@@ -298,13 +300,13 @@ Public Class InstallPackage
 
         Dim R As String = "??" & Current.Package
         Try
-            Call RServer.Evaluate(R)
+            Call RSystem.R.Evaluate(R)
         Catch ex As Exception
 
         End Try
     End Sub
 
     Private Sub InstallPackage_FormClosing(sender As Object, e As FormClosingEventArgs) Handles Me.FormClosing
-        tasks.Dispose()
+        Call tasks.Dispose()
     End Sub
 End Class

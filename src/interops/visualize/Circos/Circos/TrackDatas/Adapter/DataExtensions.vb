@@ -28,7 +28,7 @@
 
 Imports System.Runtime.CompilerServices
 Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.ComponentModel
+Imports Microsoft.VisualBasic.ComponentModel.Algorithm.base
 Imports Microsoft.VisualBasic.ComponentModel.DataStructures
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
@@ -39,8 +39,12 @@ Namespace TrackDatas
     Public Module DataExtensions
 
         <Extension>
-        Public Function Hits(source As IEnumerable(Of BlastnMapping), karyotype As Karyotype.SkeletonInfo, Optional steps As Integer = 2048) As ValueTrackData()
-            Dim chrs As Dictionary(Of String, Karyotype.Karyotype) = karyotype.GetchrLabels(Function(x) x.chrLabel)
+        Public Function Hits(source As IEnumerable(Of BlastnMapping),
+                             karyotype As Karyotype.SkeletonInfo,
+                             Optional steps% = 2048) As ValueTrackData()
+
+            Dim chrs As Dictionary(Of String, Karyotype.Karyotype) =
+                karyotype.GetchrLabels(Function(x) x.chrLabel)
             Dim LQuery = From x As BlastnMapping
                          In source
                          Select x.MappingLocation,
@@ -56,12 +60,12 @@ Namespace TrackDatas
                                                                        In chr.end.Sequence
                                                                        Select New SeqValue(Of Value(Of Integer)) With {
                                                                            .i = i,
-                                                                           .obj = New Value(Of Integer)
+                                                                           .value = New Value(Of Integer)
                                                                        }
 
                 For Each reads In ch.Group
                     For i As Integer = reads.MappingLocation.Left To reads.MappingLocation.Right
-                        idata(i).obj.Value += 1
+                        idata(i).value.value += 1
                     Next
                 Next
 
@@ -70,22 +74,22 @@ Namespace TrackDatas
 
                 For Each chunk In slides
                     Dim n As Integer =
-                        CInt(chunk.Elements.Select(Function(x) x.obj.Value).Average)
+                        CInt(chunk.Items.Select(Function(x) x.value.value).Average)
 
                     tmp += New SeqValue(Of Value(Of Integer)) With {
                         .i = chunk.Left,
-                        .obj = New Value(Of Integer)(n)
+                        .value = New Value(Of Integer)(n)
                     }
                 Next
 
                 list += From x As SeqValue(Of SeqValue(Of Value(Of Integer)))
                         In tmp.SeqIterator
-                        Let left As Integer = x.obj.i
+                        Let left As Integer = x.value.i
                         Select New ValueTrackData With {
                             .chr = chr.chrName,
                             .start = left,
                             .end = left + steps,
-                            .value = x.obj.obj.Value
+                            .value = x.value.value.value
                         }
 
                 Call Console.Write(".")
@@ -118,18 +122,18 @@ Namespace TrackDatas
                                                                      In chr.end.Sequence
                                                                      Select New SeqValue(Of List(Of Double)) With {
                                                                          .i = i,
-                                                                         .obj = New List(Of Double)
+                                                                         .value = New List(Of Double)
                                                                      }
 
                 For Each reads In ch.Group
                     For i As Integer = reads.MappingLocation.Left To reads.MappingLocation.Right
-                        idata(i).obj.Add(reads.Identity)
+                        idata(i).value.Add(reads.Identity)
                     Next
                 Next
 
                 For Each x In idata
-                    If x.obj.Count = 0 Then
-                        Call x.obj.Add(0R)
+                    If x.value.Count = 0 Then
+                        Call x.value.Add(0R)
                     End If
                 Next
 
@@ -139,22 +143,22 @@ Namespace TrackDatas
                 For Each chunk In slides
                     tmp += New SeqValue(Of List(Of Double)) With {
                         .i = chunk.Left,
-                        .obj = LinqAPI.MakeList(Of Double) <= From x As SeqValue(Of List(Of Double))
-                                                              In chunk.Elements
-                                                              Let bufs As IEnumerable(Of Double) = x.obj
-                                                              Select bufs.Average
+                        .value = LinqAPI.MakeList(Of Double) <= From x As SeqValue(Of List(Of Double))
+                                                                In chunk.Items
+                                                                Let bufs As IEnumerable(Of Double) = x.value
+                                                                Select bufs.Average
                     }
                 Next
 
                 list += From x As SeqValue(Of SeqValue(Of List(Of Double)))
                         In tmp.SeqIterator
-                        Where x.obj.obj.Count > 0
-                        Let left As Integer = x.obj.i
+                        Where x.value.value.Count > 0
+                        Let left As Integer = x.value.i
                         Select New ValueTrackData With {
                             .chr = chr.chrName,
                             .start = left,
                             .end = left + steps,
-                            .value = x.obj.obj.Average
+                            .value = x.value.value.Average
                         }
 
                 Call Console.Write(".")
@@ -194,13 +198,13 @@ Namespace TrackDatas
 
                 list += From x As SeqValue(Of List(Of Double))
                         In idata.SeqIterator
-                        Where x.obj.Count > 0
+                        Where x.value.Count > 0
                         Let left As Integer = x.i
                         Select New ValueTrackData With {
                             .chr = chr.chrName,
                             .start = left,
                             .end = left + 1,
-                            .value = x.obj.Average
+                            .value = x.value.Average
                         }
 
                 Call Console.Write(".")
@@ -210,7 +214,9 @@ Namespace TrackDatas
         End Function
 
         <Extension>
-        Public Function GetchrLabels(karyotype As Karyotype.SkeletonInfo, Optional getKey As Func(Of Karyotype.Karyotype, String) = Nothing) As Dictionary(Of String, Karyotype.Karyotype)
+        Public Function GetchrLabels(karyotype As Karyotype.SkeletonInfo,
+                                     Optional getKey As Func(Of Karyotype.Karyotype, String) = Nothing) As Dictionary(Of String, Karyotype.Karyotype)
+
             If getKey Is Nothing Then
                 getKey = Function(x) x.chrName
             End If

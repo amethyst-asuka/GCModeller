@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::9a9e2e626d228cbd46c5ae6cb9f471fe, ..\GCModeller\engine\GCModeller\EngineSystem\ObjectModels\ExperimentSystem\TriggerSystem\vbc\Prefix.vb"
+﻿#Region "Microsoft.VisualBasic::8b6a4a48146a49c05a6b0c8f8c85b6e4, ..\GCModeller\engine\GCModeller\EngineSystem\ObjectModels\ExperimentSystem\TriggerSystem\vbc\Prefix.vb"
 
     ' Author:
     ' 
@@ -94,7 +94,7 @@ Public Class Prefix
             Dim ActionsLQuery As Action() =
                 LinqAPI.Exec(Of Action) <= From token As NamedValue(Of String)
                                            In ARGV
-                                           Let Action As Action = PreifxActions(token.Name)(arg:=token.x)
+                                           Let Action As Action = PreifxActions(token.Name)(arg:=token.Value)
                                            Select Action
             Return ActionsLQuery
         End Function

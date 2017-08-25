@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::42c92aee180eb1b4462370f2b9f4f4ce, ..\GCModeller\analysis\RNA-Seq\Toolkits.RNA-Seq\Correlations\MatrixSerialization.vb"
+﻿#Region "Microsoft.VisualBasic::597345fdb46c09e5278b129e4ad29095, ..\GCModeller\analysis\RNA-Seq\Toolkits.RNA-Seq\Correlations\MatrixSerialization.vb"
 
     ' Author:
     ' 
@@ -39,7 +39,7 @@ Imports SMRUCC.genomics.Analysis.RNA_Seq.dataExprMAT
 ''' 对PCC矩阵进行快速的二进制序列化
 ''' </summary>
 ''' <remarks>由于是一个二维的矩阵，坐标之间有着一一对应的顺序关系，所以这里不可以使用并行化拓展</remarks>
-<PackageNamespace("PCC.Matrix.Serialization",
+<Package("PCC.Matrix.Serialization",
                   Description:="Tools for fast IO of the gene expression pcc matrix.",
                   Category:=APICategories.UtilityTools,
                   Publisher:="xie.guigang@gcmodeller.org")>
@@ -79,7 +79,7 @@ Public Module MatrixSerialization
     Public Function SaveBin(MAT As PccMatrix, SaveTo As String) As Boolean
         Dim LQuery As Byte() =
             MAT.ToArray(
-                Function(sample) MatrixSerialization.Serialize(sample), Parallel:=False).MatrixToVector
+                Function(sample) MatrixSerialization.Serialize(sample), Parallel:=False).ToVector
         Return LQuery.FlushStream(SaveTo)
     End Function
 

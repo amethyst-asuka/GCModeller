@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::940a938521d2cde6b6405ef3d4741908, ..\GCModeller\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\Extensions.vb"
+﻿#Region "Microsoft.VisualBasic::76bd08936ce0c3d35323b043d8d1c7fb, ..\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\Extensions.vb"
 
     ' Author:
     ' 
@@ -26,27 +26,27 @@
 
 #End Region
 
-Imports SMRUCC.genomics.Assembly.NCBI.GenBank.GBFF.Keywords
-Imports System.Text.RegularExpressions
-Imports System.Text
 Imports System.Runtime.CompilerServices
-Imports Microsoft.VisualBasic.Scripting.MetaData
-Imports Microsoft.VisualBasic.Linq.Extensions
 Imports Microsoft.VisualBasic.CommandLine.Reflection
+Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
+Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Linq.Extensions
+Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.GBFF.Keywords.FEATURES
-Imports SMRUCC.genomics.ComponentModel
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat
-Imports SMRUCC.genomics.ComponentModel.Loci
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
+Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.GFF
+Imports SMRUCC.genomics.ComponentModel
+Imports SMRUCC.genomics.ComponentModel.Loci
 Imports SMRUCC.genomics.SequenceModel
 
 Namespace Assembly.NCBI.GenBank
 
-    <PackageNamespace("NCBI.Genbank.Extensions", Publisher:="amethyst.asuka@gcmodeller.org")>
+    <Package("NCBI.Genbank.Extensions", Publisher:="amethyst.asuka@gcmodeller.org")>
     Public Module Extensions
 
         <Extension>
-        Public Function GPFF2Feature(gb As GBFF.File, gff As Dictionary(Of String, TabularFormat.Feature)) As GeneBrief
+        Public Function GPFF2Feature(gb As GBFF.File, gff As Dictionary(Of String, GFF.Feature)) As GeneBrief
             Dim prot As GBFF.Keywords.FEATURES.Feature =
                 gb.Features.ListFeatures("Protein").FirstOrDefault
             If prot Is Nothing Then
@@ -84,9 +84,14 @@ Namespace Assembly.NCBI.GenBank
             Return gene
         End Function
 
+        ''' <summary>
+        ''' 将NCBI genbank数据库文件转换为GFF3文件
+        ''' </summary>
+        ''' <param name="gb"></param>
+        ''' <returns></returns>
         <ExportAPI("ToGff"), Extension>
-        Public Function ToGff(gb As GBFF.File) As TabularFormat.GFF
-            Dim Gff As New TabularFormat.GFF With {
+        Public Function ToGff(gb As GBFF.File) As GFFTable
+            Dim Gff As New GFFTable With {
                 .Date = gb.Locus.UpdateTime,
                 .Features = gb.Features.ToArray(Function(x) x.ToGff),
                 .GffVersion = 3,
@@ -244,15 +249,19 @@ Namespace Assembly.NCBI.GenBank
         ''' <remarks></remarks>
         '''
         <ExportAPI("Export.GeneList")>
-        <Extension> Public Function GeneList(Gbk As NCBI.GenBank.GBFF.File) As KeyValuePair(Of String, String)()
+        <Extension> Public Function GeneList(Gbk As NCBI.GenBank.GBFF.File) As NamedValue(Of String)()
             Dim GQuery As IEnumerable(Of GBFF.Keywords.FEATURES.Feature) =
-                From feature In Gbk.Features
+                From feature
+                In Gbk.Features
                 Where String.Equals(feature.KeyName, "gene")
                 Select feature 'Gene list query
-            Dim AQuery = From locusTag
-                         In GQuery.ToArray
-                         Select New KeyValuePair(Of String, String)(locusTag.Query("locus_tag"), locusTag.Query("gene")) '
-            Return AQuery.ToArray
+            Dim AQuery = LinqAPI.Exec(Of NamedValue(Of String)) <=
+ _
+                From locusTag
+                In GQuery.ToArray
+                Select New NamedValue(Of String)(locusTag.Query("locus_tag"), locusTag.Query("gene")) '
+
+            Return AQuery
         End Function
 
         <ExportAPI("Export.16SrRNA")>

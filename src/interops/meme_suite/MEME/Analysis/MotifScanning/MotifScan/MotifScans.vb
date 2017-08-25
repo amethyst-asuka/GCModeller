@@ -1,39 +1,37 @@
 ﻿#Region "Microsoft.VisualBasic::57771a0c8cb9a203a1dafdafa1de2d93, ..\interops\meme_suite\MEME\Analysis\MotifScanning\MotifScan\MotifScans.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
-Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.ComponentModel.DataStructures
+Imports Microsoft.VisualBasic.ComponentModel.Algorithm.base
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Linq.Extensions
-Imports SMRUCC.genomics.Analysis.SequenceTools.DNA_Comparative
+Imports Microsoft.VisualBasic.ListExtensions
+Imports SMRUCC.genomics.Analysis.SequenceTools.DNA_Comparative.DeltaSimilarity1998
 Imports SMRUCC.genomics.Data.Regprecise.WebServices
-Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis
-Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.MotifScans
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MAST.HTML
 Imports SMRUCC.genomics.SequenceModel
@@ -79,13 +77,13 @@ Namespace Analysis.MotifScans
                 .CreateSlideWindows(MotifSite.PspMatrix.Length + OffSet * 2)
             Dim NtLen As Long = Nt.Length
             Dim Seeds = (From site In SlideWindows.AsParallel
-                         Let delta As Double = Similarity.Sigma(MotifSite.PspMatrix, Similarity.PWM(site.Elements))
+                         Let delta As Double = Similarity.Sigma(MotifSite.PspMatrix, Similarity.PWM(site.Items))
                          Where delta <= Me.Delta
-                         Select delta, site, complements = False).ToList
+                         Select delta, site, complements = False).AsList
             Dim revNT As New NucleotideModels.NucleicAcid(New String(NucleotideModels.NucleicAcid.Complement(Nt.SequenceData).Reverse.ToArray))
             SlideWindows = revNT.ToArray.CreateSlideWindows(MotifSite.PspMatrix.Length + OffSet * 2)
             Call Seeds.AddRange((From site In SlideWindows.AsParallel
-                                 Let delta As Double = Similarity.Sigma(MotifSite.PspMatrix, Similarity.PWM(site.Elements))
+                                 Let delta As Double = Similarity.Sigma(MotifSite.PspMatrix, Similarity.PWM(site.Items))
                                  Where delta <= Me.Delta
                                  Select delta, site, complements = True).ToArray)
             Dim LQuery = (From site In Seeds.AsParallel
@@ -106,11 +104,11 @@ Namespace Analysis.MotifScans
         ''' <param name="PWMDelta"></param>
         ''' <param name="complement"></param>
         ''' <returns></returns>
-        Private Function Match(sequence As SlideWindowHandle(Of DNA),
+        Private Function Match(sequence As SlideWindow(Of DNA),
                                PWMDelta As Double,
                                complement As Boolean,
                                NtLen As Long) As MatchedSite
-            Dim NT As List(Of DNA) = sequence.ToList
+            Dim NT As List(Of DNA) = sequence.AsList
 
             For i As Integer = 0 To OffSet - 1
                 Call NT.RemoveAt(Scan0)

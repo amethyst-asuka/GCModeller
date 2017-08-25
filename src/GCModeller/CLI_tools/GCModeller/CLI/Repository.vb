@@ -1,28 +1,28 @@
-﻿#Region "Microsoft.VisualBasic::beaca91d1e0dfc56c090dc6523cc3992, ..\GCModeller\CLI_tools\GCModeller\CLI\Repository.vb"
+﻿#Region "Microsoft.VisualBasic::b1d3dc0e07ee1c1608d2e7391e21420c, ..\GCModeller\CLI_tools\GCModeller\CLI\Repository.vb"
 
-' Author:
-' 
-'       asuka (amethyst.asuka@gcmodeller.org)
-'       xieguigang (xie.guigang@live.com)
-'       xie (genetics@smrucc.org)
-' 
-' Copyright (c) 2016 GPL3 Licensed
-' 
-' 
-' GNU GENERAL PUBLIC LICENSE (GPL3)
-' 
-' This program is free software: you can redistribute it and/or modify
-' it under the terms of the GNU General Public License as published by
-' the Free Software Foundation, either version 3 of the License, or
-' (at your option) any later version.
-' 
-' This program is distributed in the hope that it will be useful,
-' but WITHOUT ANY WARRANTY; without even the implied warranty of
-' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-' GNU General Public License for more details.
-' 
-' You should have received a copy of the GNU General Public License
-' along with this program. If not, see <http://www.gnu.org/licenses/>.
+    ' Author:
+    ' 
+    '       asuka (amethyst.asuka@gcmodeller.org)
+    '       xieguigang (xie.guigang@live.com)
+    '       xie (genetics@smrucc.org)
+    ' 
+    ' Copyright (c) 2016 GPL3 Licensed
+    ' 
+    ' 
+    ' GNU GENERAL PUBLIC LICENSE (GPL3)
+    ' 
+    ' This program is free software: you can redistribute it and/or modify
+    ' it under the terms of the GNU General Public License as published by
+    ' the Free Software Foundation, either version 3 of the License, or
+    ' (at your option) any later version.
+    ' 
+    ' This program is distributed in the hope that it will be useful,
+    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
+    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    ' GNU General Public License for more details.
+    ' 
+    ' You should have received a copy of the GNU General Public License
+    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -49,6 +49,7 @@ Imports SMRUCC.genomics.SequenceModel.FASTA
 Partial Module CLI
 
     <ExportAPI("/Install.genbank", Usage:="/Install.genbank /imports <all_genbanks.DIR> [/refresh]")>
+    <Group(CLIGrouping.RepositoryTools)>
     Public Function InstallGenbank(args As CommandLine) As Integer
         Dim [in] As String = args - "/imports"
         Return Installer.Install([in], args.GetBoolean("/refresh")).CLICode
@@ -62,6 +63,7 @@ Partial Module CLI
     <ExportAPI("--install-COGs",
                Info:="Install the COGs database into the GCModeller database.",
                Usage:="--install-COGs /COGs <Dir.COGs>")>
+    <Group(CLIGrouping.RepositoryTools)>
     Public Function InstallCOGs(args As CommandLine) As Integer
         Dim COGsDir As String = args("/COGs")
         Dim protFasta As String = FileIO.FileSystem.GetFiles(COGsDir,
@@ -84,6 +86,7 @@ Partial Module CLI
     End Function
 
     <ExportAPI("--install-CDD", Usage:="--install-CDD /cdd <cdd.DIR>")>
+    <Group(CLIGrouping.RepositoryTools)>
     Public Function InstallCDD(args As CommandLine) As Integer
         Dim Repository As String = GCModeller.FileSystem.RepositoryRoot
         Repository &= "/CDD/"
@@ -93,6 +96,7 @@ Partial Module CLI
     End Function
 
     <ExportAPI("--install.ncbi_nt", Usage:="--install.ncbi_nt /nt <nt.fasta/DIR> [/EXPORT <DATA_dir>]")>
+    <Group(CLIGrouping.RepositoryTools)>
     Public Function Install_NCBI_nt(args As CommandLine) As Integer
         Dim nt As String = args("/nt")
         Dim EXPORT$ = args.GetValue(
@@ -107,6 +111,7 @@ Partial Module CLI
 
     <ExportAPI("/nt.repository.query", Usage:="/nt.repository.query /query <arguments.csv> /DATA <DATA_dir> [/out <out_DIR>]")>
     <Argument("/query", AcceptTypes:={GetType(QueryArgument)})>
+    <Group(CLIGrouping.RepositoryTools)>
     Public Function ntRepositoryExports(args As CommandLine) As Integer
         Dim query As String = args("/query")
         Dim DATA As String = args("/DATA")
@@ -133,6 +138,7 @@ Partial Module CLI
 
     <ExportAPI("/nt.scan",
                Usage:="/nt.scan /query <expression.csv> /DATA <nt.DIR> [/break 60 /out <out_DIR>]")>
+    <Group(CLIGrouping.RepositoryTools)>
     Public Function NtScaner(args As CommandLine) As Integer
         Dim query As String = args("/query")
         Dim DATA As String = args("/DATA")
@@ -141,7 +147,7 @@ Partial Module CLI
         Dim exp = expressions _
             .Select(Function(x) New NamedValue(Of Expression) With {
                 .Name = x.Name,
-                .x = x.Expression.Build
+                .Value = x.Expression.Build
             }).ToDictionary
         Dim break% = args.GetValue("/break", 60)
 
@@ -155,11 +161,12 @@ Partial Module CLI
     End Function
 
     <ExportAPI("/Name.match.hits", Usage:="/Name.match.hits /in <list.csv> /titles <*.txt/DIR> [/out <out.csv>]")>
+    <Group(CLIGrouping.RepositoryTools)>
     Public Function MatchHits(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim titles As String = args("/titles")
         Dim out As String = args.GetValue("/out", [in].TrimSuffix & "-" & titles.BaseName & ".csv")
-        Dim file As DocumentStream.File = DocumentStream.File.Load([in])
+        Dim file As IO.File = IO.File.Load([in])
         Dim list As New List(Of String)
 
         If titles.FileExists Then
@@ -181,7 +188,32 @@ Partial Module CLI
         Return file.Save(out, Encodings.UTF8).CLICode
     End Function
 
+    <ExportAPI("/Data.Copy", Usage:="/Data.Copy /imports <DIR> [/ext <*.*> /copy2 <CopyTo> /overrides]")>
+    Public Function CopyFiles(args As CommandLine) As Integer
+        Dim importsData = args("/imports")
+        Dim ext As String = args.GetValue("/ext", "*.*")
+        Dim copy2 As String = args.GetValue("/copy2", importsData.TrimDIR & "-copy2/")
+        Dim [overrides] As Boolean = args.GetBoolean("/overrides")
+
+        For Each file$ In ls - l - r - ext <= importsData
+            Dim path$ = file$
+
+            If [overrides] Then
+                path = copy2 & $"/{path.ParentDirName}-{path.FileName}"
+            Else
+                path = copy2 & "/" & path.FileName
+            End If
+
+            If Not SafeCopyTo(file, path) Then
+                Call file.PrintException
+            End If
+        Next
+
+        Return 0
+    End Function
+
     <ExportAPI("/title.uniques", Usage:="/title.uniques /in <*.txt/DIR> [/simple /tokens 3 /n -1 /out <out.csv>]")>
+    <Group(CLIGrouping.RepositoryTools)>
     Public Function UniqueTitle(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim out As String =
@@ -191,12 +223,12 @@ Partial Module CLI
         Dim simple As Boolean = args.GetBoolean("/simple")
 
         If [in].FileExists Then
-            list += [in].ReadAllLines.Select(Function(s) s.GetTagValue(vbTab).x)
+            list += [in].ReadAllLines.Select(Function(s) s.GetTagValue(vbTab).Value)
         Else
             For Each file$ In ls - l - r - wildcards("*.txt") <= [in]
                 list += file$ _
                     .ReadAllLines _
-                    .Select(Function(s) s.GetTagValue(vbTab).x)
+                    .Select(Function(s) s.GetTagValue(vbTab).Value)
                 Call file.__DEBUG_ECHO
             Next
         End If
@@ -295,7 +327,7 @@ Partial Module CLI
         End If
 
         Dim n As Integer = args.GetValue("/n", data.Count * 0.1)
-        Dim cl = ClusterDataSet(n, data, )
+        Dim cl As ClusterCollection(Of Entity) = data.ClusterDataSet(n)
         Dim output As New List(Of NamedValue(Of String()))
 
         For Each cluster As KMeansCluster(Of Entity) In cl
@@ -305,7 +337,7 @@ Partial Module CLI
 
             output += New NamedValue(Of String()) With {
                 .Name = String.Join(" ", common),
-                .x = cluster.ToArray(Function(x) x.uid)
+                .Value = cluster.ToArray(Function(x) x.uid)
             }
         Next
 

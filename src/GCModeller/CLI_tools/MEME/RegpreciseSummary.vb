@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::b028ac5b99505431c35d9032fbc9efdd, ..\GCModeller\CLI_tools\MEME\RegpreciseSummary.vb"
+﻿#Region "Microsoft.VisualBasic::c5186e326a79ec411060819a5b562f41, ..\GCModeller\CLI_tools\MEME\RegpreciseSummary.vb"
 
     ' Author:
     ' 
@@ -45,7 +45,7 @@ Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.ComponentModel
 
 Namespace Analysis
 
-    <PackageNamespace("MEME.app.Genome_Footprints", Publisher:="xie.guigang@gcmodeller.org")>
+    <Package("MEME.app.Genome_Footprints", Publisher:="xie.guigang@gcmodeller.org")>
     Public Module RegpreciseSummary
 
         ''' <summary>
@@ -108,9 +108,9 @@ Namespace Analysis
             End If
 
 #If DEBUG Then
-            footprints = sites.ToArray(Function(site) __createSites(site, regulators, correlations, regDB)).MatrixToVector
+            footprints = sites.ToArray(Function(site) __createSites(site, regulators, correlations, regDB)).ToVector
 #Else
-            footprints = sites.ToArray(Function(site) __createSites(site, regulators, correlations, regDB), Parallel:=True).MatrixToVector
+            footprints = sites.ToArray(Function(site) __createSites(site, regulators, correlations, regDB), Parallel:=True).ToVector
 #End If
             Return footprints
         End Function
@@ -136,9 +136,9 @@ Namespace Analysis
             End If
 
 #If DEBUG Then
-            footprints = sites.ToArray(Function(site) __createSites(site, regulators, regDB, KEGG, correlations, cutoff)).MatrixToVector
+            footprints = sites.ToArray(Function(site) __createSites(site, regulators, regDB, KEGG, correlations, cutoff)).ToVector
 #Else
-            footprints = sites.ToArray(Function(site) __createSites(site, regulators, regDB, KEGG, correlations, cutoff), Parallel:=True).MatrixToVector
+            footprints = sites.ToArray(Function(site) __createSites(site, regulators, regDB, KEGG, correlations, cutoff), Parallel:=True).ToVector
 #End If
             Return footprints
         End Function

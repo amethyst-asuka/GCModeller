@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::bc65b3f02ca91881723eb9289731fd41, ..\GCModeller\sub-system\PLAS.NET\SSystem\Script\SBML.vb"
+﻿#Region "Microsoft.VisualBasic::e5d0a4efbfa4487a0082d960ea3ccbd4, ..\GCModeller\sub-system\PLAS.NET\SSystem\Script\SBML.vb"
 
     ' Author:
     ' 
@@ -31,6 +31,7 @@ Imports System.Text.RegularExpressions
 Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.Linq
+Imports Microsoft.VisualBasic.Language
 Imports SMRUCC.genomics.Analysis.SSystem.Kernel.ObjectModels
 Imports SMRUCC.genomics.Analysis.SSystem.Script
 Imports SMRUCC.genomics.GCModeller.Framework.Kernel_Driver

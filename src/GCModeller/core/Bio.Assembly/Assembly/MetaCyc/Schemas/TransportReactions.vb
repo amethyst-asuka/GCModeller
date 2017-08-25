@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::7693795526adfe2c71f2ba7e294d9982, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\Schemas\TransportReactions.vb"
+﻿#Region "Microsoft.VisualBasic::6da2daaf6d29d9953d6635581312cb99, ..\core\Bio.Assembly\Assembly\MetaCyc\Schemas\TransportReactions.vb"
 
     ' Author:
     ' 
@@ -53,7 +53,7 @@ Namespace Assembly.MetaCyc.Schema
                 End Get
             End Property
 
-            Public Property Identifier As String Implements sIdEnumerable.Identifier
+            Public Property Identifier As String Implements INamedValue.Key
                 Get
                     Return MyBase.PropertyValue
                 End Get
@@ -113,7 +113,7 @@ Namespace Assembly.MetaCyc.Schema
             End Get
             Set(value As CompoundSpecies())
                 _Left = value
-                MyBase.Left = (From item In _Left Select item.Identifier).ToList
+                MyBase.Left = (From item In _Left Select item.Identifier).AsList
             End Set
         End Property
         Public Shadows Property RIGHT As CompoundSpecies() Implements IEquation(Of CompoundSpecies).Products
@@ -122,7 +122,7 @@ Namespace Assembly.MetaCyc.Schema
             End Get
             Set(value As CompoundSpecies())
                 _Right = value
-                MyBase.Right = (From item In _Right Select item.Identifier).ToList
+                MyBase.Right = (From item In _Right Select item.Identifier).AsList
             End Set
         End Property
 
@@ -139,10 +139,10 @@ Namespace Assembly.MetaCyc.Schema
                                                         Return String.Format("{0} [^COMPARTMENT - {1}]", item.Identifier, item.Compartment)
                                                     End If
                                                 End Function
-                              Select New CompoundSpecieReference With {.Identifier = GetUniqueId(), .StoiChiometry = item.StoiChiometry}).ToArray,
+                              Select New CompoundSpecieReference With {.ID = GetUniqueId(), .StoiChiometry = item.StoiChiometry}).ToArray,
                 .Products = (From x As CompoundSpecies In _Right
-                              Select New CompoundSpecieReference With {
-                                  .Identifier = GetUniqueId(x),
+                             Select New CompoundSpecieReference With {
+                                  .ID = GetUniqueId(x),
                                   .StoiChiometry = x.StoiChiometry}).ToArray,
                                   .Reversible = Reversible
             }

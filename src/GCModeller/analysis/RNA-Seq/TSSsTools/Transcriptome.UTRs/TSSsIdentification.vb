@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::6452b0a1a3881f53c8f1d979724b13a2, ..\GCModeller\analysis\RNA-Seq\TSSsTools\Transcriptome.UTRs\TSSsIdentification.vb"
+﻿#Region "Microsoft.VisualBasic::0fcb806b9d7d21abdb381c8f26a74403, ..\GCModeller\analysis\RNA-Seq\TSSsTools\Transcriptome.UTRs\TSSsIdentification.vb"
 
     ' Author:
     ' 
@@ -32,7 +32,7 @@ Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports SMRUCC.genomics.ComponentModel.Loci
 
-<[PackageNamespace]("Assembler.TSSs",
+<Package("Assembler.TSSs",
                     Publisher:="xie.guigang@gcmodeller.org",
                     Description:="Package for TSSs identification.")>
 Public Module TSSsIdentification
@@ -82,7 +82,7 @@ and the shared number of the start site just lets you have a simple glimp on you
         Call $"Create transcript object....".__DEBUG_ECHO
         Dim CreateObjectLQuery = (From obj In ForwardGroup.AsParallel
                                   Let array = obj.Group.ToArray
-                                  Select __createObjectLeft(array, [shared], array.Length)).ToList
+                                  Select __createObjectLeft(array, [shared], array.Length)).AsList
         Call CreateObjectLQuery.AddRange((From obj In ReversedGroup.AsParallel
                                           Let array = obj.Group.ToArray
                                           Select __createObjectRight(array, [shared], array.Length)).ToArray)
@@ -163,10 +163,10 @@ and the shared number of the start site just lets you have a simple glimp on you
     <ExportAPI("Htseq.Merge")>
     Public Function MergeHtseq(Files As Generic.IEnumerable(Of String)) As Dictionary(Of String, Integer)
         Dim LQuery = (From file As String In Files.AsParallel
-                      Let Lines = IO.File.ReadAllLines(file)
+                      Let Lines = file.ReadAllLines
                       Select (From line As String In Lines
                               Let Tokens As String() = Strings.Split(line, vbTab)
-                              Select ID = Tokens(Scan0), Expr = CInt(Val(Tokens(1)))).ToArray).ToArray.MatrixToList
+                              Select ID = Tokens(Scan0), Expr = CInt(Val(Tokens(1)))).ToArray).ToArray.Unlist
         Dim ExprRaw = (From obj In LQuery
                        Select obj
                        Group obj By obj.ID Into Group).ToArray.ToDictionary(Function(obj) obj.ID, elementSelector:=Function(obj) (From nn In obj.Group Select nn.Expr).ToArray.Sum)

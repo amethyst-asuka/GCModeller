@@ -47,7 +47,7 @@ Imports Entry = System.Collections.Generic.KeyValuePair(Of
 
 Namespace Analysis
 
-    <PackageNamespace("NCBI.LocalBlast.BBH",
+    <Package("NCBI.LocalBlast.BBH",
                       Publisher:="amethyst.asuka@gcmodeller.org",
                       Category:=APICategories.ResearchTools,
                       Url:="http://gcmodeller.org")>
@@ -102,7 +102,7 @@ Namespace Analysis
         <ExportAPI("BBH_Entry.Build")>
         <Extension>
         Public Function BuildBBHEntry(DIR As String, Optional ext As String = "*.txt") As Entry()
-            Dim Source As List(Of AlignEntry) = LoadEntries(DIR, ext).ToList
+            Dim Source As List(Of AlignEntry) = LoadEntries(DIR, ext).AsList
             Return Source.BuildBBHEntry
         End Function
 
@@ -242,7 +242,7 @@ RETURN_VALUE:
                 Dim besthitsData As BBH.BestHit() = File.logData.ExportBestHit
 
                 'If Not SMRUCC.genomics.NCBI.Extensions.LocalBLAST.Application.BBH.BestHit.IsNullOrEmpty(besthitsData, TrimSelfAligned:=True) Then
-                Dim Path As String = EXPORT & "/" & IO.Path.GetFileNameWithoutExtension(File.path.FilePath) & ".besthit.csv"
+                Dim Path As String = EXPORT & "/" & File.path.FilePath.BaseName & ".besthit.csv"
                 File.path.FilePath = Path
                 Call besthitsData.SaveTo(Path, False, System.Text.Encoding.ASCII)
                 'End If
@@ -320,7 +320,7 @@ RETURN_VALUE:
             Dim result = GetDescriptionResult.GetAnonymousTypeList
 
             For Each EntryHit In GetDescriptionResult '保存临时数据
-                Dim FileName As String = EXPORT & "/" & IO.Path.GetFileNameWithoutExtension(EntryHit.Path.FilePath) & ".bibesthit.csv"
+                Dim FileName As String = EXPORT & "/" & EntryHit.Path.FilePath.BaseName & ".bibesthit.csv"
                 EntryHit.Path.FilePath = FileName
                 Call EntryHit.descrMatches.SaveTo(FileName, False)
                 result += EntryHit

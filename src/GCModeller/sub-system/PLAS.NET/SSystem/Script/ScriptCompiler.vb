@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::e2907fe07373c90788cd12d496347613, ..\GCModeller\sub-system\PLAS.NET\SSystem\Script\ScriptCompiler.vb"
+﻿#Region "Microsoft.VisualBasic::32c4d32708d3e720bff6e1dd7b470335, ..\GCModeller\sub-system\PLAS.NET\SSystem\Script\ScriptCompiler.vb"
 
     ' Author:
     ' 
@@ -88,7 +88,7 @@ Namespace Script
 
             Return New NamedValue(Of List(Of SEquation)) With {
                 .Name = sb.ToString,
-                .x = out
+                .Value = out
             }
         End Function
 
@@ -103,7 +103,7 @@ Namespace Script
             If Not String.IsNullOrEmpty(checked.Name) Then  ' 检测的结果有错误
                 Call printf("Trying to fix these problems.\n-----------------------------")
 
-                For Each Var As SEquation In checked.x
+                For Each Var As SEquation In checked.Value
                     CompiledModel += New var With {
                         .UniqueId = Var.x,
                         .Value = 0

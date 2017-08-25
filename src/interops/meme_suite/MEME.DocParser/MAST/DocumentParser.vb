@@ -34,7 +34,7 @@ Imports Microsoft.VisualBasic.Scripting.MetaData
 
 Namespace DocumentFormat.MAST.HTML
 
-    <[PackageNamespace]("MEME.MAST", Description:="Document parser for the mast html output.", Publisher:="xie.guigang@gcmodeller.org")>
+    <Package("MEME.MAST", Description:="Document parser for the mast html output.", Publisher:="xie.guigang@gcmodeller.org")>
     Public Module DocumentParser
 
         ''' <summary>
@@ -215,7 +215,7 @@ Namespace DocumentFormat.MAST.HTML
             Dim LQuery As MEME.HTML.MEMEOutput()() = (From motif As MEME.HTML.Motif
                                                      In MEME.Motifs
                                                       Select __createMEMEOutPut(MEME.ObjectId, motif, MAST)).ToArray
-            Dim result As MEME.HTML.MEMEOutput() = LQuery.MatrixToVector
+            Dim result As MEME.HTML.MEMEOutput() = LQuery.ToVector
             Return result
         End Function
 

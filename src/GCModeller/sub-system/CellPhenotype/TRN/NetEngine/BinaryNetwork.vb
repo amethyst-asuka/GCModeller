@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::cc81a37f2a60bba627d93c8e973cdada, ..\GCModeller\sub-system\CellPhenotype\TRN\NetEngine\BinaryNetwork.vb"
+﻿#Region "Microsoft.VisualBasic::5ccc2c0e102c5e59c98648f17f45e9cc, ..\GCModeller\sub-system\CellPhenotype\TRN\NetEngine\BinaryNetwork.vb"
 
     ' Author:
     ' 
@@ -27,7 +27,7 @@
 #End Region
 
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports SMRUCC.genomics.Analysis.CellPhenotype.TRN.KineticsModel
 Imports SMRUCC.genomics.GCModeller.Framework.Kernel_Driver
 Imports SMRUCC.genomics.GCModeller.Framework.Kernel_Driver.DataStorage.FileModel
@@ -118,7 +118,7 @@ Namespace TRN
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Function SetMutationFactor(GeneID As String, Factor As Double) As Boolean
-            Dim Expression = _DynamicsExprs.GetItem(uniqueId:=GeneID)
+            Dim Expression = _DynamicsExprs.Take(uniqueId:=GeneID)
 
             If Expression Is Nothing Then
                 Return False
@@ -150,7 +150,7 @@ Namespace TRN
                 Dim GenerateCsv = (From row In LQuery.AsParallel
                                    Let ID As String() = {row.UniqueId}
                                    Let Data As String()() = {ID, row.DataChunk}
-                                   Select CType(Data.MatrixToList, RowObject)).ToArray
+                                   Select CType(Data.Unlist, RowObject)).ToArray
                 Dim Csv As File = CType(GenerateCsv, File)
                 Return Csv.Save(url, False)
             End Using
@@ -185,8 +185,8 @@ Namespace TRN
                           Where Not GeneExpressionEvent.RegulatorySites.IsNullOrEmpty
                           Let Regulators = (From site As KineticsModel.SiteInfo
                                             In GeneExpressionEvent.RegulatorySites
-                                            Select (From data0expr In site.Regulators Select data0expr.Regulator).ToArray).ToArray.MatrixToVector
-                          Select Regulators).ToArray.MatrixToVector.Distinct.ToArray
+                                            Select (From data0expr In site.Regulators Select data0expr.Regulator).ToArray).ToArray.ToVector
+                          Select Regulators).ToArray.ToVector.Distinct.ToArray
             Return LQuery
         End Function
 

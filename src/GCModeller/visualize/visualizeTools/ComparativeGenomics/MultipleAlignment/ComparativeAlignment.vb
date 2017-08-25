@@ -1,53 +1,52 @@
-﻿#Region "Microsoft.VisualBasic::0781a8e34827ef106d172afb3f2ce448, ..\GCModeller\visualize\visualizeTools\ComparativeGenomics\MultipleAlignment\ComparativeAlignment.vb"
+﻿#Region "Microsoft.VisualBasic::0e46f2e8f72af3721b60956c8c6ad026, ..\visualize\visualizeTools\ComparativeGenomics\MultipleAlignment\ComparativeAlignment.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel.SchemaMaps
-Imports Microsoft.VisualBasic.ComponentModel.DataStructures
+Imports Microsoft.VisualBasic.ComponentModel.Algorithm.base
 Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Data.csv.Extensions
 Imports Microsoft.VisualBasic.Imaging
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
+Imports Microsoft.VisualBasic.ListExtensions
 Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.CsvExports
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
+Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH
 Imports SMRUCC.genomics.SequenceModel
 Imports SMRUCC.genomics.SequenceModel.NucleotideModels
 Imports SMRUCC.genomics.Visualize
 Imports SMRUCC.genomics.Visualize.ComparativeGenomics
-Imports SMRUCC.genomics.Visualize.ComponentModel
-Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application
 
 Namespace ComparativeAlignment
 
@@ -63,7 +62,7 @@ Namespace ComparativeAlignment
         End Function
 
         Private Function __invokeDrawing(Models As GenomeModel,
-                                           Device As GDIPlusDeviceHandle,
+                                           Device As Graphics2D,
                                            Length As Integer,
                                            MaxLengthTitleSize As Size,
                                            Height As Integer,
@@ -91,7 +90,7 @@ Namespace ComparativeAlignment
                 cO = True
             End If
 
-            Dim IDConflictedRegion As Rectangle
+            Dim IDConflictedRegion As MapLabelLayout
 
             For i As Integer = 0 To Models.Count - 2   '绘制基本图形
                 Dim GeneObjectModel As ComparativeGenomics.GeneObject = Models(i)
@@ -104,11 +103,11 @@ Namespace ComparativeAlignment
 
                 RegionLeft = GeneObjectModel.InvokeDrawing(Device.Graphics, New Point(RegionLeft, Height),
                                                        NextLeft:=NextGeneObject.Left,
-                                                       ConvertFactor:=ConvertFactor,
-                                                       Region:=rtvlRegion,
+                                                       convertFactor:=ConvertFactor,
+                                                       arrowRect:=rtvlRegion,
                                                        IdGrawingPositionDown:=True,
                                                        Font:=Font,
-                                                       AlternativeArrowStyle:=Type2Arrow, IDConflictedRegion:=IDConflictedRegion)
+                                                       AlternativeArrowStyle:=Type2Arrow, ID_conflictLayout:=IDConflictedRegion)
 
                 Call GeneObjectDrawingRegions.Add(GeneObjectModel.locus_tag, rtvlRegion)
             Next
@@ -120,10 +119,10 @@ Namespace ComparativeAlignment
             End If
 
             Call LastModel.InvokeDrawing(Device.Graphics, New Point(RegionLeft, Height), NextLeft:=Models.Length,
-                                     ConvertFactor:=ConvertFactor,
-                                     Region:=rtvlRegion, IdGrawingPositionDown:=True,
+                                     convertFactor:=ConvertFactor,
+                                     arrowRect:=rtvlRegion, IdGrawingPositionDown:=True,
                                      Font:=Font, AlternativeArrowStyle:=Type2Arrow,
-                                     IDConflictedRegion:=IDConflictedRegion)
+                                     ID_conflictLayout:=IDConflictedRegion)
             Call GeneObjectDrawingRegions.Add(Models.Last.locus_tag, rtvlRegion)
             Call Device.Graphics.DrawString(Models.Title, TitleDrawingFont, Brushes.Black, New Point(Margin, Height))
 
@@ -150,7 +149,7 @@ Namespace ComparativeAlignment
 
             Dim Font As Font = New Font(FontFace.MicrosoftYaHei, FontSize)
             Dim TitleDrawingFont As New Font("Microsoft YaHei", 20)
-            Dim MaxLengthTitleSize As System.Drawing.Size = (From str As String In New String()() {New String() {Model.Query.Title}, (From mm In Model.aligns Select mm.Title).ToArray}.MatrixToList
+            Dim MaxLengthTitleSize As System.Drawing.Size = (From str As String In New String()() {New String() {Model.Query.Title}, (From mm In Model.aligns Select mm.Title).ToArray}.Unlist
                                                              Select str
                                                              Order By Len(str) Descending).First.MeasureString(TitleDrawingFont) '得到最长的标题字符串作为基本的绘制长度的标准
 
@@ -169,7 +168,7 @@ Namespace ComparativeAlignment
             Dim RegionData1 = __invokeDrawing(Model.Query, Device, Length, MaxLengthTitleSize, Height, TitleDrawingFont, Font, Type2Arrow, color_overrides)
             Dim RegionData2 As Dictionary(Of String, Rectangle)
 
-            Dim Links As List(Of GeneLink) = (From itemfff In (From ItemLinks In Model.links Select ItemLinks Group By ItemLinks.genome1 Into Group).ToArray Let id = (From nnn In itemfff.Group Select nnn.genome2).ToArray Let idComb = Microsoft.VisualBasic.ComponentModel.Comb(Of String).CreateCompleteObjectPairs(id) Select (From nnnnn In idComb Select (From jjjjjj In nnnnn Select New ComparativeGenomics.GeneLink With {.genome1 = jjjjjj.Key, .genome2 = jjjjjj.Value}).ToArray).ToArray).ToArray.MatrixToList.MatrixToList
+            Dim Links As List(Of GeneLink) = (From itemfff In (From ItemLinks In Model.links Select ItemLinks Group By ItemLinks.genome1 Into Group).ToArray Let id = (From nnn In itemfff.Group Select nnn.genome2).ToArray Let idComb = Comb(Of String).CreateCompleteObjectPairs(id) Select (From nnnnn In idComb Select (From jjjjjj In nnnnn Select New ComparativeGenomics.GeneLink With {.genome1 = jjjjjj.Item1, .genome2 = jjjjjj.Item2}).ToArray).ToArray).ToArray.Unlist.Unlist
             Call Links.AddRange(Model.links)
 
             If DefaultColor = Nothing Then
@@ -256,7 +255,7 @@ Namespace ComparativeAlignment
             Next
 
             If String.IsNullOrEmpty(color_overrides) Then
-                Call Device.Graphics.DrawingCOGColors(Model.COGColors, New Point(Margin, Device.Height - Margin), Font, Device.Width, Margin)
+                Call Device.DrawingCOGColors(Model.COGColors, New Point(Margin, Device.Height - Margin), Font, Device.Width, Margin)
             End If
 
             Return Device.ImageResource
@@ -285,10 +284,10 @@ Namespace ComparativeAlignment
                                BBH = path.Value.LoadCsv(Of BestHit)(False)).ToArray
                             Select item).ToArray
             If FileIO.FileSystem.FileExists(Query) Then
-                Query = IO.Path.GetFileNameWithoutExtension(Query)
+                Query = BaseName(Query)
             End If
             Dim hitsID = (From path As String In FileIO.FileSystem.GetFiles(Subject_Fasta, FileIO.SearchOption.SearchTopLevelOnly, "*.txt", "*.fasta", "*.fsa")
-                          Select (From fsa In FASTA.FastaFile.Read(path) Select fsa.Attributes.First).ToArray).MatrixToVector
+                          Select (From fsa In FASTA.FastaFile.Read(path) Select fsa.Attributes.First).ToArray).ToVector
             Dim bir = (From item In bbhFiles Where String.Equals(Query, item.logEntry.HitName, StringComparison.OrdinalIgnoreCase) Select item).ToArray
             Dim queryBBH = (From item In bbhFiles Where String.Equals(Query, item.logEntry.QueryName, StringComparison.OrdinalIgnoreCase) Select item).ToArray
             '创建BBH数据，生成 gene link
@@ -327,7 +326,7 @@ Namespace ComparativeAlignment
                 .ToDictionary(Function(x) x.Key,
                               Function(x) DirectCast(New SolidBrush(x.Value), Brush))
             Dim COGsBrush As ICOGsBrush = loadPTT.Select(Function(x) x.GeneObjects) _
-                                                 .MatrixAsIterator _
+                                                 .IteratesALL _
                                                  .COGsColorBrush(, COGColors)
             Dim LQuery As GenomeModel() =
                 loadPTT.ToArray(Function(x) ModelAPI.CreateObject(x.GeneObjects,
@@ -346,7 +345,7 @@ Namespace ComparativeAlignment
             Next
 
             QueryModel.genes = (From item In QueryModel.genes Where Array.IndexOf(QueryIDList, item.locus_tag) > -1 Select item).ToArray
-            Dim ql = (From item In QueryModel.genes Select New Integer() {item.Left, item.Right}).ToArray.MatrixToList
+            Dim ql = (From item In QueryModel.genes Select New Integer() {item.Left, item.Right}).ToArray.Unlist
             QueryModel.Length = ql.Max - ql.Min
 
             Dim Min As Double = ql.Min
@@ -366,7 +365,7 @@ Namespace ComparativeAlignment
 
             Dim Models = (From DrawingModel In LQuery Select DrawingModel Order By DrawingModel.genes.Count Descending).ToArray '绘图的时候按照比对上的数目的多少来进行排序
             Dim MaxGenomeLength = (From DrawingModel As ComparativeGenomics.GenomeModel In Models
-                                   Let LociList As List(Of Integer) = (From GeneObject In DrawingModel.genes Select New Integer() {GeneObject.Left, GeneObject.Right}).ToArray.MatrixToList
+                                   Let LociList As List(Of Integer) = (From GeneObject In DrawingModel.genes Select New Integer() {GeneObject.Left, GeneObject.Right}).ToArray.Unlist
                                    Select LociList.Max - LociList.Min).ToArray.Max
 
             QueryModel.Length = Math.Max(QueryModel.Length, MaxGenomeLength)
@@ -391,7 +390,7 @@ Namespace ComparativeAlignment
                                       LinkWith As Func(Of String, String, Boolean),
                                       maxLen As Integer) As ComparativeGenomics.GenomeModel
 
-            Dim SubjectLength = (From GeneObject In subject.genes Select New Integer() {GeneObject.Left, GeneObject.Right}).ToArray.MatrixToList
+            Dim SubjectLength = (From GeneObject In subject.genes Select New Integer() {GeneObject.Left, GeneObject.Right}).ToArray.Unlist
             subject.Length = QueryModel.Length '定长
 
             '按照最佳比对结果找出空缺的长度
@@ -403,10 +402,10 @@ Namespace ComparativeAlignment
                 End If
             Next
 
-            Dim Direction As Integer() = (From n In IndexList.CreateSlideWindows(2) Select n.Elements.First - n.Elements.Last).ToArray
+            Dim Direction As Integer() = (From n In IndexList.CreateSlideWindows(2) Select n.Items.First - n.Items.Last).ToArray
 
             If (From nnn In Direction Where nnn > 0 Select nnn).ToArray.Count >= (subject.genes.Count - 1) / 2 OrElse
-           (Direction.Count = 1 AndAlso (subject.genes.First.Direction = -1 OrElse subject.genes.Last.Direction = -1)) Then
+                (Direction.Count = 1 AndAlso (subject.genes.First.Direction = -1 OrElse subject.genes.Last.Direction = -1)) Then
 
                 '反向的   '假设所有的基因都是挨在一起的
                 '则尝试将所有基因进行反向映射
@@ -509,7 +508,7 @@ POSITIONNING:
             Dim HHKBr As Brush = New SolidBrush(hhk_color)
 
 
-            For Each Genome In {model.aligns, New ComparativeGenomics.GenomeModel() {model.Query}}.MatrixToList
+            For Each Genome In {model.aligns, New ComparativeGenomics.GenomeModel() {model.Query}}.Unlist
                 For Each Gene In Genome.genes
                     If InStr(Gene.geneName, "hybrid", CompareMethod.Text) > 0 Then
                         Gene.Color = HHKBr
@@ -533,7 +532,7 @@ POSITIONNING:
         ''' <returns></returns>
         ''' <remarks></remarks>
         <ExportAPI("Model.Build", Info:="Build the comparative drawing model from the ncbi ptt source.")>
-        Public Function BuildModel(DF As DocumentStream.DataFrame,
+        Public Function BuildModel(DF As IO.DataFrame,
                                <Parameter("List.Paths.Ptt", "The source file list of the ptt data of the target drawing genomes.")> PttSource As IEnumerable(Of String),
                                <Parameter("List.ID", "The column id headers in the data frame csv data file.")> Optional ColumnList As IEnumerable(Of String) = Nothing,
                                <Parameter("Query.ID", "The column query id in the data frame.")> Optional Query As String = "",
@@ -566,16 +565,19 @@ POSITIONNING:
 
             Do While DF.Read
                 Dim Genes = (From p As Integer In Orders Let s As String = DF.GetValue(p) Where Not String.IsNullOrEmpty(s) Select s).ToArray
-REPEAT:         Dim Combs As List(Of KeyValuePair(Of String, String)) = Comb(Of String).CreateObject(Genes).CombList.MatrixToList
-                Combs = (From cb As KeyValuePair(Of String, String)
+REPEAT:         Dim Combs As List(Of Tuple(Of String, String)) = Comb(Of String).CreateObject(Genes).CombList.Unlist
+                Combs = (From cb As Tuple(Of String, String)
                      In Combs
-                         Where Not (cb.Key.First = "/"c OrElse cb.Value.First = "/"c) Select cb).ToList
-                Call Links.AddRange((From cb As KeyValuePair(Of String, String)
-                                 In Combs
-                                     Select New Orthology With {.genome1 = cb.Key, .genome2 = cb.Value}).ToArray)
+                         Where Not (cb.Item1.First = "/"c OrElse cb.Item2.First = "/"c) Select cb).AsList
+                Links += From cb As Tuple(Of String, String)
+                         In Combs
+                         Select New Orthology With {
+                             .genome1 = cb.Item1,
+                             .genome2 = cb.Item2
+                         }
                 Genes = (From ID As String In Genes Where Not ID.First = "/"c Select ID).ToArray
                 If Genes.Count = 1 And Combs.IsNullOrEmpty Then
-                    Genes = {Genes, PreGeneCombs}.MatrixToVector
+                    Genes = {Genes, PreGeneCombs}.ToVector
                     GoTo REPEAT
                 End If
                 PreGeneCombs = Genes
@@ -597,7 +599,7 @@ REPEAT:         Dim Combs As List(Of KeyValuePair(Of String, String)) = Comb(Of 
             Model.aligns = (From Genome In SubjectsPtt Select ModelAPI.CreateObject(Genome.Ptt, COGsColor:=Nothing)).ToArray
 
             If UsingColumnHeadersAsName Then
-                Dim TempList = ColumnList.ToList
+                Dim TempList = ColumnList.AsList
                 Dim setValue = New SetValue(Of GenomeModel) <= NameOf(GenomeModel.Title)
 
                 Call TempList.RemoveAt(Qp)
@@ -610,7 +612,7 @@ REPEAT:         Dim Combs As List(Of KeyValuePair(Of String, String)) = Comb(Of 
                                                     Select setValue(Subject, TempList(i))
             End If
 
-            Dim HitsID As String() = (From goLink In Model.links Select New String() {goLink.genome1, goLink.genome2}).ToArray.MatrixToList.Distinct.ToArray
+            Dim HitsID As String() = (From goLink In Model.links Select New String() {goLink.genome1, goLink.genome2}).ToArray.Unlist.Distinct.ToArray
             Dim LinkWith = Function(Id__1 As String, id___2 As String) As Boolean
                                Dim LinksLQuery = (From goLink In Links Where goLink.Equals(Id__1, id___2) Select goLink).ToArray
                                Return Not LinksLQuery.IsNullOrEmpty
@@ -623,7 +625,7 @@ REPEAT:         Dim Combs As List(Of KeyValuePair(Of String, String)) = Comb(Of 
             Dim QueryModel = Model.Query
             Dim QueryLength = (From GeneObject As ComparativeGenomics.GeneObject
                            In QueryModel.genes
-                               Select New Integer() {GeneObject.Left, GeneObject.Right}).ToArray.MatrixToList
+                               Select New Integer() {GeneObject.Left, GeneObject.Right}).ToArray.Unlist
             QueryModel.Length = QueryLength.Max - QueryLength.Min
 
             Dim Min As Double = QueryLength.Min
@@ -642,8 +644,8 @@ REPEAT:         Dim Combs As List(Of KeyValuePair(Of String, String)) = Comb(Of 
                        In Model.aligns
                            Let Loci As List(Of Integer) = (From Gene As ComparativeGenomics.GeneObject
                                                        In GenomeDrawingModel.genes
-                                                           Select New Integer() {Gene.Left, Gene.Right}).ToArray.MatrixToList
-                           Select Loci.Max - Loci.Min).ToList
+                                                           Select New Integer() {Gene.Left, Gene.Right}).ToArray.Unlist
+                           Select Loci.Max - Loci.Min).AsList
 
             Model.Query.Length = Math.Max(Model.Query.Length, QueryLength.Max)
             Model.Query.SegmentOffset = Min
@@ -656,7 +658,7 @@ REPEAT:         Dim Combs As List(Of KeyValuePair(Of String, String)) = Comb(Of 
             Model.aligns = (From Genome In Model.aligns.AsParallel Select __internalFilter(Genome, Model.Query, LinkWith, maxLen:=Model.Query.Length)).ToArray
 
             If IgnoreOffset Then
-                QueryLength = (From item In QueryModel.genes Select New Integer() {item.Left, item.Right}).ToArray.MatrixToList
+                QueryLength = (From item In QueryModel.genes Select New Integer() {item.Left, item.Right}).ToArray.Unlist
                 QueryModel.Length = QueryLength.Max - QueryLength.Min
                 Min = QueryLength.Min
 

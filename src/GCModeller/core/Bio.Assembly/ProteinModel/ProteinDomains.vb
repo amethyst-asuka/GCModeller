@@ -1,38 +1,37 @@
-﻿#Region "Microsoft.VisualBasic::04963b10520bd2941207755918c9f58c, ..\GCModeller\core\Bio.Assembly\ProteinModel\ProteinDomains.vb"
+﻿#Region "Microsoft.VisualBasic::e569a1405b37f0de33c889dfb1d87bdc, ..\core\Bio.Assembly\ProteinModel\ProteinDomains.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports System.Xml.Serialization
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Microsoft.VisualBasic.Linq
-Imports Microsoft.VisualBasic.Serialization
 Imports Microsoft.VisualBasic.Serialization.JSON
 Imports Microsoft.VisualBasic.Text
+Imports Microsoft.VisualBasic.Text.Levenshtein
 Imports SMRUCC.genomics.Assembly
 Imports SMRUCC.genomics.SequenceModel
 
@@ -44,7 +43,7 @@ Namespace ProteinModel
     ''' <remarks></remarks>
     ''' 
     <XmlType("ProtDomains", [Namespace]:="http://gcmodeller.org/models/protein")>
-    Public Class Protein : Implements sIdEnumerable, I_PolymerSequenceModel
+    Public Class Protein : Implements INamedValue, IPolymerSequenceModel
 
         ''' <summary>
         ''' 该目标蛋白质的唯一标识符
@@ -53,11 +52,11 @@ Namespace ProteinModel
         ''' <returns></returns>
         ''' <remarks></remarks>
         <XmlAttribute("Identifier", [Namespace]:="http://gcmodeller.org/programming/language/visualbasic/Identifier")>
-        Public Overridable Property Identifier As String Implements sIdEnumerable.Identifier
+        Public Overridable Property Identifier As String Implements INamedValue.Key
         Public Property Organism As String
 
         <XmlElement> Public Property Description As String
-        <XmlElement> Public Property SequenceData As String Implements I_PolymerSequenceModel.SequenceData
+        <XmlElement> Public Property SequenceData As String Implements IPolymerSequenceModel.SequenceData
         ''' <summary>
         ''' 结构域分布
         ''' </summary>
@@ -84,7 +83,7 @@ Namespace ProteinModel
 
         Public Function ContainsDomain(DomainAccession As String) As Boolean
             Dim LQuery = From Domain In Domains
-                         Where String.Equals(DomainAccession, Domain.Identifier)
+                         Where String.Equals(DomainAccession, Domain.Name)
                          Select 100 '
             Return LQuery.FirstOrDefault > 50
         End Function
@@ -115,7 +114,7 @@ Namespace ProteinModel
             Else
                 Dim lstInteracts As IEnumerable(Of String) = (From motif As DomainObject
                                                               In Me.Domains
-                                                              Select motif.GetInteractionDomains(DOMINE)).MatrixAsIterator
+                                                              Select motif.GetInteractionDomains(DOMINE)).IteratesALL
                 Return lstInteracts.Distinct.ToArray
             End If
         End Function
@@ -128,8 +127,8 @@ Namespace ProteinModel
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Shared Function SimilarTo(Protein1 As Protein, Protein2 As Protein, Optional threshold As Double = 0.3) As Boolean
-            Dim a As String() = Protein1.Domains.ToArray(Function(x) x.Identifier)
-            Dim b As String() = Protein2.Domains.ToArray(Function(x) x.Identifier)
+            Dim a As String() = Protein1.Domains.ToArray(Function(x) x.Name)
+            Dim b As String() = Protein2.Domains.ToArray(Function(x) x.Name)
             Dim edits As DistResult = LevenshteinDistance.ComputeDistance(a, b, AddressOf __equals, Function(c) "")
             Return edits.MatchSimilarity >= threshold
         End Function

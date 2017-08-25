@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::4ff471b68326d0fd158dc14aed50b84d, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\Extensions\System.vb"
+﻿#Region "Microsoft.VisualBasic::023286ff57cbba4ffd32f63719093656, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\Extensions\System.vb"
 
     ' Author:
     ' 
@@ -31,30 +31,93 @@ Imports System.Runtime.CompilerServices
 Imports System.Text
 Imports System.Text.RegularExpressions
 Imports Microsoft.VisualBasic.Linq
+Imports Microsoft.VisualBasic.Text
 Imports RDotNET.Extensions.VisualBasic.SymbolBuilder
 
 Public Class ExtendedEngine : Inherits REngine
 
     ''' <summary>
     ''' Evaluates a R statement in the given string.
+    ''' (由于这个函数并不返回数据，所以只推荐无返回值的方法调用或者变量初始化的时候是用本只写属性)
     ''' </summary>
     Public WriteOnly Property [call] As String
         Set(value As String)
 #If DEBUG Then
-            Call __logs.WriteLine(R)
+            Call __logs.WriteLine(value)
             Call __logs.Flush()
 #End If
             Call Evaluate(statement:=value)
         End Set
     End Property
 
+    ''' <summary>
+    ''' 返回一个逻辑值类型的变量指针
+    ''' </summary>
+    ''' <param name="object$">An object from a formally defined class.</param>
+    ''' <param name="name$">
+    ''' The name of the slot. The operator takes a fixed name, which can be unquoted if it is syntactically a name in the language. 
+    ''' A slot name can be any non-empty string, but if the name is not made up of letters, numbers, and ., it needs to be quoted 
+    ''' (by backticks or single or double quotes).
+    ''' In the case of the slot function, name can be any expression that evaluates to a valid slot in the class definition. 
+    ''' Generally, the only reason to use the functional form rather than the simpler operator Is because the slot name has 
+    ''' to be computed.</param>
+    ''' <returns></returns>
+    Public Function hasSlot(object$, name$) As String
+        Dim var$ = App.NextTempName
+
+        SyncLock Me
+            With Me
+                .call = $"{var} <- .hasSlot({object$}, {name});"
+            End With
+        End SyncLock
+
+        Return var
+    End Function
+
     Sub New(id As String, dll As String)
         MyBase.New(id, dll)
+
+#If DEBUG Then
+        Call App.AddExitCleanHook(hook:=AddressOf __cleanHook)
+#End If
     End Sub
 
 #If DEBUG Then
-    Friend ReadOnly __logs As StreamWriter = App.GetAppSysTempFile(".log").OpenWriter
+    Public Overrides Function Evaluate(statement As String) As SymbolicExpression
+        Try
+            Return MyBase.Evaluate(statement)
+        Catch ex As Exception
+            ex = New Exception(vbCrLf & vbCrLf &
+                               statement &
+                               vbCrLf & vbCrLf, ex)
+            Call App.LogException(ex)
+
+            Throw ex
+        End Try
+    End Function
 #End If
+
+#If DEBUG Then
+    Friend ReadOnly __logs As StreamWriter = (App.CurrentDirectory & $"/{App.PID}_logs.R").OpenWriter(Encodings.ASCII)
+
+    Private Sub __cleanHook()
+        Call __logs.WriteLine()
+        Call __logs.WriteLine()
+        Call __logs.WriteLine("# Show warnings():")
+        Call __logs.WriteLine()
+        Call __logs.WriteLine(Evaluate("str(warnings())").ToStrings.Select(Function(s) "# " & s).JoinBy(ASCII.LF))
+
+        Call __logs.WriteLine()
+        Call __logs.WriteLine($"#### =================={App.PID} {App.CommandLine.ToString}=======================================")
+        Call __logs.Flush()
+        Call __logs.Close()
+        Call __logs.Dispose()
+        Call "Execute R server logs clean job done!".__INFO_ECHO
+    End Sub
+#End If
+
+    Shared Sub New()
+    End Sub
 
     Friend Shared Function __init(id As String, Optional dll As String = Nothing) As ExtendedEngine
         If id Is Nothing Then
@@ -104,14 +167,21 @@ Public Module RSystem
     Const UnableRunAutomatically As String = "R server can not be initialized automatically, please manual set up init later."
 
     ''' <summary>
-    ''' Initialize the default R Engine.
+    ''' Initialize the default R Engine.(可以通过在命令行之中使用``/@set``开关设置``R_HOME``参数来手动设置R的文件夹位置)
     ''' </summary>
     Sub New()
+        Dim R_HOME$ = App.GetVariable("R_HOME")
+
         Try
-            RSystem.R = RInit.StartEngineServices
+            If R_HOME.StringEmpty Then
+                Call TryInit()
+            Else
+                Call TryInit(R_HOME)
+            End If
         Catch ex As Exception
             ' 无法自动初始化，需要手动启动R的计算引擎
             ex = New Exception(UnableRunAutomatically, ex)
+            Call ex.PrintException
             Call App.LogException(ex)
         End Try
     End Sub
@@ -333,7 +403,7 @@ Public Module RSystem
         Dim colors As String() = RColors.Shuffles
         Dim dict As Dictionary(Of T, String) = (From idx As SeqValue(Of T)
                                                 In uniques.SeqIterator
-                                                Select id = idx.obj,
+                                                Select id = idx.value,
                                                     cl = colors(idx.i)) _
                                                    .ToDictionary(Function(obj) obj.id,
                                                                  Function(obj) obj.cl)

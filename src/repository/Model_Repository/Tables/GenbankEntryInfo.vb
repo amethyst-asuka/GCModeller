@@ -27,8 +27,8 @@
 #End Region
 
 Imports System.Data.Linq.Mapping
-Imports System.Data.SQLite.Linq
-Imports System.Data.SQLite.Linq.Reflector
+' Imports System.Data.SQLite.Linq
+' Imports System.Data.SQLite.Linq.Reflector
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank
 
 Namespace Tables
@@ -62,7 +62,7 @@ Namespace Tables
                 Return Nothing  '数据入口点已经失效了
             End If
 
-            Dim Genbank As GBFF.File = GBFF.File.Read(Path:=File)
+            Dim Genbank As GBFF.File = GBFF.File.Load(Path:=File)
 
             Me.LocusID = Genbank.Locus.AccessionID
             Me.GI = Genbank.Version.GI
@@ -74,22 +74,22 @@ Namespace Tables
             Return Me
         End Function
 
-        ''' <summary>
-        ''' Only using for the development when you have change the definition of this table, then using this function to update the database.(在更新了数据表的结构之后，请使用本方法更新数据库)
-        ''' </summary>
-        ''' <param name="DB"></param>
-        ''' <returns></returns>
-        ''' <remarks></remarks>
-        Public Shared Function UpdateTableSchema(DB As SQLEngines.SQLiteIndex) As Boolean
-            Dim TableSchema = GetType(GenbankEntryInfo)
-            Dim Data = (From item In Reflector.Load(DB.SQLiteEngine, TableSchema) Select DirectCast(item, GenbankEntryInfo)).ToArray
-            Data = (From item As GenbankEntryInfo In Data.AsParallel Let obj = item.InternalUpdateInfo(DB.RepositoryRoot) Where Not obj Is Nothing Select obj).ToArray '更新数据
-            '删除原来的表
-            Call DB.SQLiteEngine.DeleteTable(TableSchema)
-            Call DB.SQLiteEngine.CreateTableFor(TableSchema)
-            '插入新的数据
-            Return DB.SQLiteEngine.Insert(data:=Data)
-        End Function
+        '''' <summary>
+        '''' Only using for the development when you have change the definition of this table, then using this function to update the database.(在更新了数据表的结构之后，请使用本方法更新数据库)
+        '''' </summary>
+        '''' <param name="DB"></param>
+        '''' <returns></returns>
+        '''' <remarks></remarks>
+        'Public Shared Function UpdateTableSchema(DB As SQLEngines.SQLiteIndex) As Boolean
+        '    Dim TableSchema = GetType(GenbankEntryInfo)
+        '    Dim Data = (From item In Reflector.Load(DB.SQLiteEngine, TableSchema) Select DirectCast(item, GenbankEntryInfo)).ToArray
+        '    Data = (From item As GenbankEntryInfo In Data.AsParallel Let obj = item.InternalUpdateInfo(DB.RepositoryRoot) Where Not obj Is Nothing Select obj).ToArray '更新数据
+        '    '删除原来的表
+        '    Call DB.SQLiteEngine.DeleteTable(TableSchema)
+        '    Call DB.SQLiteEngine.CreateTableFor(TableSchema)
+        '    '插入新的数据
+        '    Return DB.SQLiteEngine.Insert(data:=Data)
+        'End Function
     End Class
 End Namespace
 

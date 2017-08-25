@@ -9,13 +9,15 @@
 GCModeller: genomics CAD(Computer Assistant Design) Modeller system in .NET language
 
 > + HOME: http://gcmodeller.org
-> + Github: https://github.com/smrucc/GCModeller
+> + Github: https://github.com/SMRUCC/GCModeller
 > + SDK docs: http://docs.gcmodeller.org
 
-**Supported platform:** ``Microsoft Windows``, ``GNU Linux``, ``MAC`` <br />
-**Development:** Microsoft VisualStudio 2015 | VisualBasic.NET<br />
-**Runtime environment:** [VisualBasic App](https://www.nuget.org/packages/VB_AppFramework/) v1.0.40 &amp; ``.NET Framework 4.6`` (or ``mono 4.4``)<br />
-**Installation:** ``VS2015`` is required of compiles this project. After the source code have been download, just open solution file **[/src/GCModeller.sln](./src/GCModeller.sln)**, and when restore nuget packages finished, then you are good to go of compile GCModeller project.
+**Supported platform:** ``Microsoft Windows``, ``GNU Linux``, ``MAC``, ``Microsoft Azure Cloud`` <br />
+**Development:** Microsoft VisualStudio 2017 | VisualBasic.NET<br />
+**Runtime environment:** [sciBASIC#](https://www.nuget.org/packages/sciBASIC/) v2.1.5 beta &amp; ``.NET Framework 4.6`` (or ``mono 4.4``)<br />
+**Installation:** ``VS2017`` is required of compiles this project. After the source code have been clone using git, just open solution file **[/src/GCModeller.sln](./src/GCModeller.sln)**, and when restore nuget packages finished, then you are good to go of compile GCModeller project.
+
+**NOTE:** Due to the reason of this project is using git submodule for manage some runtime component, so that **please do not directly download** the project source code from github by using the ``Donwload Zip`` button. The internal github client in the VisualStudio is recommended using for download the project source code.
 
 ---------------------------------------------------------------------------------------------------
 
@@ -45,6 +47,35 @@ Currently the ``R`` language hybrids programming environment just provides some 
 
 <a href="http://sbml.org/Main_Page"><img src="./src/GCModeller/models/images/sbml-logo-70.png" width=80></a> <a href="http://biom-format.org/"><img src="./src/GCModeller/models/images/biom-format.png" width=80></a> <a href="http://www.psidev.info/overview"><img src="./images/data_standards/PSI_logo_s.png" width=80></a> <a href="http://www.obofoundry.org/"><img src="./images/data_standards/foundrylogo.png" width=80></a>
 
+### Modules &amp; Functions
+
+GCModeller provides a set of .NET libraries and CLI tools for processing biological analysis data. Currently **GCModeller** can provides these productive ready libraries:
+
+###### 1.Basically libraries
+
++ NCBI data analysis toolkit: Genbank/Taxonomy/nt/nr database
++ Common Data: FastA database, FastQ, SAM data file I/O class
++ Biological Data Standard Supports: SBML(level 3), BIOM(level1), PSI, OBO
++ Biological Pathway Database: MetaCyc, Reactome, KEGG data tools for .NET language
+
+###### 2.Biological Data Visualization software API for .NET
+
++ Circos API(genomic visualizing), Cytoscape DataModel API(Biological network visualizing), SequenceLogo(Molecular motif site visualize)
+
+###### 3.Annotation Tools:
+
++ A complete NCBI localblast toolkit for proteins and nucleotide sequence analysis, includes parallel task library for Win/Linux Server and data analysis protocol.
++ SNP toolkit
++ Nucleotide sequence topology feature site analysis toolkit.
++ RegPrecise database tool and MEME software toolkit for the annotation of bacterial genomics regulation network.
++ Go(Gene Ontology) annotation tools
+
+###### 4.R language hybrids environment for bioinformatics
+
++ Includes basically R language API, and some R package API from CRAN and Bioconductor
+
+###### 5.WebAPI wrapper for KEGG database and RegPrecise Database
+
 ### Publications
 
 Here listing the scientific paperworks that based on the analysis services of GCModeller:
@@ -55,46 +86,49 @@ Here listing the scientific paperworks that based on the analysis services of GC
 
 > Bacterial plasmids have a major impact on metabolic function and adaptation of their hosts. An indigenous plasmid was identified in a Chinese isolate (GX01) of the invasive phytopathogen Xanthomonas oryzae pv. oryzicola (Xoc), the causal agent of rice bacterial leaf streak (BLS). To elucidate the biological functions of the plasmid, we have sequenced and comprehensively annotated the plasmid.
 
-### Gallery
-
 ![](./2016-05-17.png)
+
+## Gallery
+
+![](./images/KEGG-pathway-network-clusters.png)
+![](./images/KOBAS-GeneOntology.GO_enrichment.bubble.png)
+<img src="./manual/KEGG/Unigenes.blast.m8.filter-KO.Catalogs/kegg-level-A.png" width=435 /><img src="/images/GO-enrichment.png" width=435 />
 ![](./images/FUR-lightbox.png)
 ![](./images/Xanthomonas_oryzae_oryzicola_BLS256_uid16740-lightbox.png)
 ![](./images/pXOCGX01-lightbox.png)
 ![](./images/phenotypic-bTree-lightbox.png)
 ![](./images/pxocgx01_blastx-lightbox.png)
 
-### Feature tools
-
-*  1. NCBI localblast utility
-*  2. MEME tools combine with Regprecise database
-*  3. Circos plots utility
-*  4. Protein structure analysis tools
-*  5. KEGG database tools
-*  6. Reactome/MetaCyc database tools
-*  7. Venn diagram drawing tools
-*  8. Cytoscape utility tools
-*  9. Motif Parallel alignment tools for the protein interaction network and family annotation
-
-**The main virtual cell analysis engine is under development progress.**
-
 Visit our project home: http://gcmodeller.org
 
 ## For developers
 Here are some released library of the ``GCModeller`` is published on nuget, then you can install these library in ``VisualStudio`` from **Package Manager Console**:
 
-Install Microsoft VisualBasic Runtime environment library for GCModeller:
-https://github.com/xieguigang/VisualBasic_AppFramework
->PM>  Install-Package VB_AppFramework
+```bash
+# Install Microsoft VisualBasic sciBASIC# runtime via nuget:
+# https://github.com/xieguigang/sciBASIC/
+PM>  Install-Package sciBASIC -Pre
 
-The GCModeller core base library was released:
-https://github.com/SMRUCC/GCModeller.Core
->PM>  Install-Package GCModeller.Core
+# The GCModeller core base library was released:
+# https://github.com/SMRUCC/GCModeller.Core
+PM>  Install-Package GCModeller.Core
 
-The NCBI localblast analysis toolkit:
-https://github.com/SMRUCC/ncbi-localblast
->PM>  Install-Package NCBI_localblast
+# The NCBI localblast analysis toolkit:
+# https://github.com/SMRUCC/ncbi-localblast
+PM>  Install-Package NCBI_localblast
+```
+
+## For User
+
+The GCModeller demo script and data for user tutorials can be download from these public data repository:
++ [[Xanthomonas campestris pv. campestris 8004] GCModeller genomics Modelling Project](https://github.com/SMRUCC/Xanthomonas_campestris_8004_uid15).
+
+###### genome map plot of Xanthomonas campestris pv. campestris 8004
+
+[![](https://raw.githubusercontent.com/SMRUCC/Xanthomonas_campestris_8004_uid15/master/thumbnails/map-part-A.png)](https://github.com/SMRUCC/Xanthomonas_campestris_8004_uid15/tree/master/genome/chromsome-map)
+[![](https://raw.githubusercontent.com/SMRUCC/Xanthomonas_campestris_8004_uid15/master/thumbnails/map-part-B.png)](https://github.com/SMRUCC/Xanthomonas_campestris_8004_uid15/tree/master/genome/chromsome-map)
 
 ----------------------------------------------------------------------------------------------------
+<img src="./images/links/osi-certified.png" width="40px"/> ![](./images/links/github.ico)
 
-Copyright &copy; [SMRUCC genomics](http://smrucc.org) 2016. All rights reversed.
+Copyleft &copy; [SMRUCC genomics](http://smrucc.org) 2016. All rights reversed.

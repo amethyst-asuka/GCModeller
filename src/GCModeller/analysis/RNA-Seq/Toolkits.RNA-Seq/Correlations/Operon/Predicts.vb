@@ -42,7 +42,7 @@ Namespace Operon
     ''' 由于在这里operon里面的基因都是共转录的，而非调控关系，所以必须选择PCC矩阵，并且pcc的值不能够为负数
     ''' </summary>
     ''' <remarks></remarks>
-    <[PackageNamespace]("Operon.Predict", Category:=APICategories.UtilityTools)>
+    <Package("Operon.Predict", Category:=APICategories.UtilityTools)>
     Public Module Predicts
 
         <ExportAPI("Write.Csv.Operons")>
@@ -64,11 +64,11 @@ Namespace Operon
             Return DOOR.SaveFile(data:=datas.ToArray, Path:=saveto)
         End Function
 
-        <Extension> Private Function __getStrands(source As DOOR.GeneBrief(), strand As Strands) As List(Of DOOR.GeneBrief)
-            Dim LQuery = (From g As DOOR.GeneBrief In source.AsParallel
+        <Extension> Private Function __getStrands(source As DOOR.OperonGene(), strand As Strands) As List(Of DOOR.OperonGene)
+            Dim LQuery = (From g As DOOR.OperonGene In source.AsParallel
                           Where g.Location.Strand = strand
                           Select g
-                          Order By g.Synonym Ascending).ToList
+                          Order By g.Synonym Ascending).AsList
             Return LQuery
         End Function
 
@@ -88,7 +88,7 @@ Namespace Operon
                                  <Parameter("PCC.Cut")> Optional PccCutoff As Double = 0.7,
                                  Optional Distance As Integer = 500) As DOOR.CsvModel.Operon()
 
-            Dim geneObjs As DOOR.GeneBrief() = (From x As ComponentModels.GeneBrief In PTT.GeneObjects Select New DOOR.GeneBrief(x)).ToArray
+            Dim geneObjs As DOOR.OperonGene() = (From x As ComponentModels.GeneBrief In PTT.GeneObjects Select New DOOR.OperonGene(x)).ToArray
             Dim ForwardGene = geneObjs.__getStrands(Strands.Forward)
             Dim ReverseGene = geneObjs.__getStrands(Strands.Reverse)
             Dim PredictedOperon As List(Of DOOR.CsvModel.Operon) = New List(Of DOOR.CsvModel.Operon)
@@ -97,13 +97,13 @@ Namespace Operon
             Do While ForwardGene.Count > 0
                 Dim FirstGene = ForwardGene.First
                 Dim Id As Integer = Val(Regex.Match(FirstGene.Synonym, "\d+").Value)
-                Dim Operon As List(Of DOOR.GeneBrief) = New List(Of DOOR.GeneBrief)
+                Dim Operon As List(Of DOOR.OperonGene) = New List(Of DOOR.OperonGene)
 
                 Call Operon.Add(FirstGene)
 
                 Dim NewOperon = Sub()
                                     Call ForwardGene.Remove(FirstGene)
-                                    For Each gene As DOOR.GeneBrief In Operon
+                                    For Each gene As DOOR.OperonGene In Operon
                                         Call ForwardGene.Remove(gene)
                                     Next
 
@@ -140,12 +140,12 @@ Namespace Operon
             Do While ReverseGene.Count > 0
                 Dim FirstGene = ReverseGene.First
                 Dim Id As Integer = Val(Regex.Match(FirstGene.Synonym, "\d+").Value)
-                Dim Operon As List(Of DOOR.GeneBrief) = New List(Of DOOR.GeneBrief)
+                Dim Operon As List(Of DOOR.OperonGene) = New List(Of DOOR.OperonGene)
                 Call Operon.Add(FirstGene)
 
                 Dim NewOperon = Sub()
                                     Call ReverseGene.Remove(FirstGene)
-                                    For Each gene As DOOR.GeneBrief In Operon
+                                    For Each gene As DOOR.OperonGene In Operon
                                         Call ReverseGene.Remove(gene)
                                     Next
 

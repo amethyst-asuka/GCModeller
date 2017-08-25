@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::bd4ea7c55c2b187b12b2c36da2863187, ..\GCModeller\engine\GCMarkupLanguage\Extensions.vb"
+﻿#Region "Microsoft.VisualBasic::1ded40bd65a742b98827de20224a6775, ..\GCModeller\engine\GCMarkupLanguage\Extensions.vb"
 
     ' Author:
     ' 
@@ -65,7 +65,7 @@ Public Module Extensions
 
     <Extension> Public Function AsMetabolites(Collection As IEnumerable(Of Level2.Elements.Specie)) As List(Of Metabolism.Metabolite)
         Dim Query = From e In Collection.AsParallel Select Metabolism.Metabolite.CastTo(e) '
-        Return Query.ToList
+        Return Query.AsList
     End Function
 
     ''' <summary>
@@ -232,20 +232,20 @@ Public Module Extensions
     <Extension> Public Function Generate(Of T_REF As ICompoundSpecies)(Metabolite As FLuxBalanceModel.IMetabolite,
                                                                        Metabolism As IEnumerable(Of FLuxBalanceModel.I_ReactionModel(Of T_REF))) As FBACompatibility.Vector
 
-        Dim LQuery = From Flux In Metabolism Select Flux.GetStoichiometry(Metabolite.Identifier) '
+        Dim LQuery = From Flux In Metabolism Select Flux.GetStoichiometry(Metabolite.Key) '
         Return New FBACompatibility.Vector With {
             .Values = LQuery.ToArray,
-            .Identifier = Metabolite.Identifier
+            .Identifier = Metabolite.Key
         }
     End Function
 
     <Extension> Public Function Replace2(Of TMetabolite As FLuxBalanceModel.IMetabolite)(ByRef Vector As TMetabolite, StringList As Escaping()) As TMetabolite
-        Vector.Identifier = Replace(Vector.Identifier, StringList)
+        Vector.Key = Replace(Vector.Key, StringList)
         Return Vector
     End Function
 
     <Extension> Public Function Replace(Of T_REF As ICompoundSpecies)(ByRef MetabolismFlux As FLuxBalanceModel.I_ReactionModel(Of T_REF), StringList As Escaping()) As FLuxBalanceModel.I_ReactionModel(Of T_REF)
-        MetabolismFlux.Identifier = Replace(MetabolismFlux.Identifier, StringList)
+        MetabolismFlux.Key = Replace(MetabolismFlux.Key, StringList)
         Return MetabolismFlux
     End Function
 

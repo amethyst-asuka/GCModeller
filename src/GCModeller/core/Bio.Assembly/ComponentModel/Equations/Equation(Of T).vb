@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::982b4d1d7e6750a69246c3e9963c33ab, ..\GCModeller\core\Bio.Assembly\ComponentModel\Equations\Equation(Of T).vb"
+﻿#Region "Microsoft.VisualBasic::a545be1b29cbb0cfc01e9b8a089be2d1, ..\core\Bio.Assembly\ComponentModel\Equations\Equation(Of T).vb"
 
     ' Author:
     ' 
@@ -26,14 +26,19 @@
 
 #End Region
 
-Imports Microsoft.VisualBasic.Linq
 Imports System.Xml.Serialization
+Imports Microsoft.VisualBasic.Linq
 
 Namespace ComponentModel.EquaionModel
 
     Public MustInherit Class Equation(Of T As ICompoundSpecies) : Implements IEquation(Of T)
 
 #Region "SBML接口"
+
+        ''' <summary>
+        ''' list of metabolism reaction substrates
+        ''' </summary>
+        ''' <returns></returns>
         <XmlArray("listOfReactants")> Public Overridable Property Reactants As T() Implements IEquation(Of T).Reactants
             Get
                 Return __leftOri
@@ -49,6 +54,11 @@ Namespace ComponentModel.EquaionModel
             End Set
         End Property
         <XmlAttribute> Public Overridable Property Reversible As Boolean Implements IEquation(Of T).Reversible
+
+        ''' <summary>
+        ''' list of metabolism reaction products
+        ''' </summary>
+        ''' <returns></returns>
         <XmlArray("listOfProducts")> Public Overridable Property Products As T() Implements IEquation(Of T).Products
             Get
                 Return __rightOri
@@ -77,9 +87,9 @@ Namespace ComponentModel.EquaionModel
             Dim Groups = (From x As T
                           In value
                           Select x
-                          Group x By x.Identifier.ToLower Into Group)
+                          Group x By x.Key.ToLower Into Group)
             Dim hash As Dictionary(Of String, T()) =
-                Groups.ToDictionary(Function(x) x.Group.First.Identifier,
+                Groups.ToDictionary(Function(x) x.Group.First.Key,
                                     Function(x) x.Group.ToArray)
             Return hash
         End Function
@@ -121,11 +131,11 @@ Namespace ComponentModel.EquaionModel
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Function Produce(metabolite As T) As Boolean
-            Return __rightHash.ContainsKey(metabolite.Identifier)
+            Return __rightHash.ContainsKey(metabolite.Key)
         End Function
 
         Public Function Consume(metabolite As T) As Boolean
-            Return __leftHash.ContainsKey(metabolite.Identifier)
+            Return __leftHash.ContainsKey(metabolite.Key)
         End Function
 
         ''' <summary>

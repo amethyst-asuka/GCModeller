@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::ed55d2a10b0a886ca9da58d64f70c2a6, ..\R.Bioconductor\Bioconductor\Bioconductor\Web\pkgInfo\Package.vb"
+﻿#Region "Microsoft.VisualBasic::ec1d039c191674b886069f90c8a23617, ..\R.Bioconductor\Bioconductor\Bioconductor\Web\pkgInfo\Package.vb"
 
     ' Author:
     ' 
@@ -34,10 +34,10 @@ Imports Microsoft.VisualBasic.Serialization.JSON
 
 Namespace Web.Packages
 
-    Public Class Package : Implements sIdEnumerable
+    Public Class Package : Implements INamedValue
         Implements ILocalSearchHandle
 
-        Public Property Package As String Implements sIdEnumerable.Identifier
+        Public Property Package As String Implements INamedValue.Key
         Public Property Maintainer As String
         Public Property Title As String
         Public Property Category As BiocTypes

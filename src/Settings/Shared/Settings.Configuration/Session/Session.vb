@@ -38,7 +38,7 @@ Namespace Settings
     ''' <remarks></remarks>
     ''' 
 #If ENABLE_API_EXPORT Then
-    <[PackageNamespace]("GCModeller.Profile.Session",
+    <Package("GCModeller.Profile.Session",
                     Description:="The application profile data session for the GCModeller application modules.",
                     Publisher:="amethyst.asuka@gcmodeller.org")>
     Module Session
@@ -143,7 +143,7 @@ Namespace Settings
         ''' <remarks></remarks>
         Public ReadOnly Property SettingsDIR As String
             Get
-                Return My.Application.Info.DirectoryPath & "/Settings"
+                Return File.DefaultXmlFile.ParentPath
             End Get
         End Property
 
@@ -170,10 +170,19 @@ Namespace Settings
             Call FileIO.FileSystem.CreateDirectory(DataCache)
 
             Dim settings As String = Session.SettingsDIR & "/Settings.xml"
-            Dim saveHwnd As Action(Of Settings.File, String) = Sub(profile, path) profile.GetXml.SaveTo(path)
-
-            Session._ProfileData = Microsoft.VisualBasic.ComponentModel.Settings.Settings(Of Settings.File).LoadFile(settings, saveHwnd)
+            Dim saveHwnd As Action(Of Settings.File, String) =
+                Sub(profile, path) profile.GetXml.SaveTo(path)
+#If DEBUG Then
+            Call $"Load GCModeller settings data from xml file: {settings.ToFileURL}".__DEBUG_ECHO
+#End If
+            Session._ProfileData = Microsoft.VisualBasic.ComponentModel.Settings _
+                .Settings(Of Settings.File) _
+                .LoadFile(settings, saveHwnd)
             Session._initFlag = True
+
+            Call App.JoinVariable("Settings", settings)
+            Call App.JoinVariable("Workspace", _Worksapce)
+            Call App.JoinVariable("Cache", _Cache)
 
             Return SettingsFile
         End Function
@@ -190,7 +199,7 @@ Namespace Settings
             If Session.SettingsFile.ShoalShell.FileExists Then
                 Return Session.SettingsFile.ShoalShell
             Else
-                Call Console.WriteLine($"[DEBUG {Now.ToString}] The shoal shell bin in the settings file is not a valid path value, try to using self as interpreter....")
+                Call $"The shoal shell bin in the settings file is not a valid path value, try to using self as interpreter....".Warning
             End If
 
             '没有找到，由于这个函数本身可能就是从Shoal脚本之中调用的，则尝试使用自身作为解释器程序
@@ -199,10 +208,10 @@ Namespace Settings
             Call AskVersion.Run()
 
             If Not Regex.Match(AskVersion.StandardOutput, "Shoal Shell \d+(\.\d+)*").Success Then
-                Call Console.WriteLine($"[DEBUG {Now.ToString}] Could not found the ShoalShell interpreter environment!")
+                Call $"Could not found the ShoalShell interpreter environment!".PrintException
                 Return ""
             Else
-                Call Console.WriteLine($"[DEBUG {Now.ToString}] Test self ""{App}"" as the ShoalShell interpreter!")
+                Call $"Test self ""{App}"" as the ShoalShell interpreter!".PrintException
             End If
 
             Session.SettingsFile.ShoalShell = App

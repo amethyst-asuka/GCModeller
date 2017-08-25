@@ -18,8 +18,11 @@ local.properties
 .settings/
 .loadpath
 
+slnx.sqlite-journal
+slnx.sqlite
 bin-Debug/
 GCModeller-[Xx]64/
+slnx.sqlite
 
 # External tool builders
 .externalToolBuilders/
@@ -221,3 +224,8 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+/src/runtime/GCModeller/GCModeller
+/src/runtime/httpd/httpd/ftp_publish
+/.vs/GCModeller/v15
+/src/.vs/GCModeller/v15/sqlite3/storage.ide
+*.ide

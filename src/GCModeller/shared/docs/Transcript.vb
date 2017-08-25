@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::513124441a61579804e9937c3e0c5f0a, ..\GCModeller\shared\docs\Transcript.vb"
+﻿#Region "Microsoft.VisualBasic::a0604910bcf35649516cb1ab37943a2f, ..\GCModeller\shared\docs\Transcript.vb"
 
     ' Author:
     ' 
@@ -261,7 +261,7 @@ Namespace DocumentFormat
             Dim LQuery = (From x In source Select x Group x By x.Synonym Into Group) _
                 .ToDictionary(Function(x) x.Synonym,
                               Function(array) (From x In array.Group Select x Order By x.TSSs Ascending).ToArray)
-            Dim arrayMerged As Transcript() = (From x In LQuery Select __merge(x.Value, offset)).MatrixToVector
+            Dim arrayMerged As Transcript() = (From x In LQuery Select __merge(x.Value, offset)).ToVector
             Return arrayMerged
         End Function
 

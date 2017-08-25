@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::39032bdae23ee7194f4ab23650c6e1ad, ..\GCModeller\analysis\Metagenome\Metagenome\MeganImports.vb"
+﻿#Region "Microsoft.VisualBasic::dd9565e456223188f3719d7f2d80302d, ..\GCModeller\analysis\Metagenome\Metagenome\MeganImports.vb"
 
     ' Author:
     ' 
@@ -29,11 +29,12 @@
 Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.ComponentModel.Collection
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports Microsoft.VisualBasic.Serialization.JSON
 Imports SMRUCC.genomics.Analysis.Metagenome.gast
 Imports SMRUCC.genomics.Assembly.NCBI
+Imports SMRUCC.genomics.Assembly.NCBI.Taxonomy
 Imports SMRUCC.genomics.SequenceModel.SAM
 
 ''' <summary>
@@ -82,8 +83,8 @@ Public Class MeganImports
         Next
     End Function
 
-    Public Shared Function Out(source As IEnumerable(Of Names)) As DocumentStream.File
-        Dim file As New DocumentStream.File
+    Public Shared Function Out(source As IEnumerable(Of Names)) As IO.File
+        Dim file As New IO.File
 
         file += {NameOf(READ_NAME), NameOf(CLASS_NAME), NameOf(COUNT)}
 

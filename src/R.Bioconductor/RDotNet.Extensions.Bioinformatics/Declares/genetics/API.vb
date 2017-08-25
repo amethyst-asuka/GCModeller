@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::6a8940584489da11747863bcd35aa2e5, ..\R.Bioconductor\RDotNet.Extensions.Bioinformatics\Declares\genetics\API.vb"
+﻿#Region "Microsoft.VisualBasic::754022a942b047b17a634ba04760eebc, ..\R.Bioconductor\RDotNet.Extensions.Bioinformatics\Declares\genetics\API.vb"
 
     ' Author:
     ' 
@@ -29,7 +29,8 @@
 Imports System.Runtime.CompilerServices
 Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
+Imports Microsoft.VisualBasic.Language
 Imports RDotNET.Extensions.VisualBasic
 Imports RDotNET.Extensions.VisualBasic.API.base
 Imports RDotNET.Extensions.VisualBasic.SymbolBuilder
@@ -109,7 +110,7 @@ Namespace genetics
             Dim locis As New List(Of String)
             Dim tmp As String = App.NextTempName
 
-            For Each col In df.Columns.Where(Function(x) x(Scan0) <> NameOf(EntityObject.Identifier))
+            For Each col In df.Columns.Where(Function(x) x(Scan0) <> NameOf(EntityObject.ID))
                 Dim loci As String = col(Scan0)
                 Dim vec As String = RScripts.c(col.Skip(1).ToArray)
 

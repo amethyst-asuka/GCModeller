@@ -185,12 +185,12 @@ Public Module InternalCommands
                                <Parameter("Dir.CopyTo")> CopyTo As String) As String()
 
         Dim FailuredList As New List(Of String)
-        Dim FileList = FileIO.FileSystem.GetFiles(Source, FileIO.SearchOption.SearchTopLevelOnly).ToList
+        Dim FileList = FileIO.FileSystem.GetFiles(Source, FileIO.SearchOption.SearchTopLevelOnly).AsList
 
         Call FileIO.FileSystem.CreateDirectory(CopyTo)
 
         For Each ID As String In IDList
-            Dim Files = (From path As String In FileList.AsParallel Let Name As String = IO.Path.GetFileNameWithoutExtension(path) Where String.Equals(ID, Name, StringComparison.OrdinalIgnoreCase) Select path).ToArray
+            Dim Files = (From path As String In FileList.AsParallel Let Name As String = basename(path) Where String.Equals(ID, Name, StringComparison.OrdinalIgnoreCase) Select path).ToArray
             If Files.IsNullOrEmpty Then
                 Call FailuredList.Add(ID)
             End If
@@ -220,7 +220,7 @@ Public Module InternalCommands
     <ExportAPI("___overloads_test()")>
     Public Function OverloadsTest(n As Integer) As Integer
         Call Console.WriteLine(Integer.MaxValue)
-        Call Console.WriteLine(RandomDouble() * n)
+        Call Console.WriteLine(Rnd() * n)
         Return Integer.MaxValue
     End Function
 

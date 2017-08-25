@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::45423e9721f8a7edf5d8838846b5cd3a, ..\GCModeller\data\RegulonDatabase\Regprecise\BBHH.vb"
+﻿#Region "Microsoft.VisualBasic::c3215263c54ffa26cbd7636e37112c62, ..\GCModeller\data\RegulonDatabase\Regprecise\BBHH.vb"
 
     ' Author:
     ' 
@@ -27,6 +27,7 @@
 #End Region
 
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH
+Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH.Abstract
 
 Namespace Regprecise
 

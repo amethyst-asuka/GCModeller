@@ -1,44 +1,48 @@
-﻿#Region "Microsoft.VisualBasic::ccc58a52981c84ac30c032ed699cd0ea, ..\GCModeller\CLI_tools\GCModeller\CLI\CLI.vb"
+﻿#Region "Microsoft.VisualBasic::43c285ab4462296b71f90dfcbf2b2bdc, ..\GCModeller\CLI_tools\GCModeller\CLI\CLI.vb"
 
-' Author:
-' 
-'       asuka (amethyst.asuka@gcmodeller.org)
-'       xieguigang (xie.guigang@live.com)
-'       xie (genetics@smrucc.org)
-' 
-' Copyright (c) 2016 GPL3 Licensed
-' 
-' 
-' GNU GENERAL PUBLIC LICENSE (GPL3)
-' 
-' This program is free software: you can redistribute it and/or modify
-' it under the terms of the GNU General Public License as published by
-' the Free Software Foundation, either version 3 of the License, or
-' (at your option) any later version.
-' 
-' This program is distributed in the hope that it will be useful,
-' but WITHOUT ANY WARRANTY; without even the implied warranty of
-' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-' GNU General Public License for more details.
-' 
-' You should have received a copy of the GNU General Public License
-' along with this program. If not, see <http://www.gnu.org/licenses/>.
+    ' Author:
+    ' 
+    '       asuka (amethyst.asuka@gcmodeller.org)
+    '       xieguigang (xie.guigang@live.com)
+    '       xie (genetics@smrucc.org)
+    ' 
+    ' Copyright (c) 2016 GPL3 Licensed
+    ' 
+    ' 
+    ' GNU GENERAL PUBLIC LICENSE (GPL3)
+    ' 
+    ' This program is free software: you can redistribute it and/or modify
+    ' it under the terms of the GNU General Public License as published by
+    ' the Free Software Foundation, either version 3 of the License, or
+    ' (at your option) any later version.
+    ' 
+    ' This program is distributed in the hope that it will be useful,
+    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
+    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    ' GNU General Public License for more details.
+    ' 
+    ' You should have received a copy of the GNU General Public License
+    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
+Imports System.IO
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
+Imports Microsoft.VisualBasic.Data.csv.DATA
 Imports Microsoft.VisualBasic.Language.UnixBash
+Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports Microsoft.VisualBasic.Terminal.STDIO
+Imports Microsoft.VisualBasic.Text
 Imports SMRUCC.genomics.GCModeller.ModellingEngine.EngineSystem.Services
 
-<PackageNamespace("GCModeller.CLI", Publisher:="xie.guigang@gcmodeller.org", Category:=APICategories.CLI_MAN, Url:="http://gcmodeller.org")>
+<Package("GCModeller.CLI", Publisher:="xie.guigang@gcmodeller.org", Category:=APICategories.CLI_MAN, Url:="http://gcmodeller.org")>
 Public Module CLI
 
-    <ExportAPI("/Merge.Table",
-               Usage:="/Merge.Table /in <*.csv.DIR> [/out <EXPORT.csv>]")>
+    <ExportAPI("/rbind")>
+    <Usage("/rbind /in <*.csv.DIR> [/out <EXPORT.csv>]")>
     Public Function MergeTable(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim out As String = args.GetValue("/out", [in].TrimSuffix & ".MERGE.csv")
@@ -46,6 +50,18 @@ Public Module CLI
         Return DocumentExtensions _
             .MergeTable(
             out, ls - l - r - wildcards("*.csv") <= [in])
+    End Function
+
+    <ExportAPI("/cbind")>
+    <Usage("/cbind /in <a.csv> /append <b.csv> [/out <ALL.csv>]")>
+    Public Function Appends(args As CommandLine) As Integer
+        Dim in$ = args <= "/in"
+        Dim append$ = args <= "/append"
+        Dim out$ = args.GetValue("/out", [in].TrimSuffix & "+" & append.BaseName & ".csv")
+
+        Return (DataFrame.Load([in]) + DataFrame.Load(append)) _
+            .SaveTable(out) _
+            .CLICode
     End Function
 
     <ExportAPI("help", Example:="gc help", Usage:="gc help", Info:="Show help information about this program.")>
@@ -89,7 +105,7 @@ Public Module CLI
     ''' <summary>
     ''' 从MYSQL数据库服务器之中导出计算数据
     ''' </summary>
-    ''' <param name="CommandLine"></param>
+    ''' <param name="args"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
     <ExportAPI("export", Info:="Export the calculation data from a specific data table in the mysql database server.",
@@ -107,10 +123,10 @@ Public Module CLI
     <Argument("-mysql",
         Description:="The mysql connection string for gc program connect to a specific mysql database server.",
         Example:="http://localhost:8080/client?user=username%password=password%database=database")>
-    Public Function ExportData(CommandLine As Microsoft.VisualBasic.CommandLine.CommandLine) As Integer
-        Dim Cnn As String = CommandLine("-mysql")  '获取与MySQL服务器的连接URL
-        Dim Table As String = CommandLine("-t") '获取表名称
-        Dim Output As String = CommandLine("-o") '获取数据输出位置
+    Public Function ExportData(args As CommandLine) As Integer
+        Dim Cnn As String = args("-mysql")  '获取与MySQL服务器的连接URL
+        Dim Table As String = args("-t") '获取表名称
+        Dim Output As String = args("-o") '获取数据输出位置
         Dim ExportDirectory As Boolean = False
 
         If String.IsNullOrEmpty(Output) Then
@@ -165,7 +181,7 @@ Public Module CLI
             .Database = DbName,
             .IPAddress = IPAddress,
             .Password = pass,
-            .ServicesPort = Port,
+            .Port = Port,
             .User = user
         }
         MySQLExtensions.MySQL = uri
@@ -179,5 +195,52 @@ Public Module CLI
 
     Public Function MultipleAlignment(args As CommandLine) As Integer
 
+    End Function
+
+    ''' <summary>
+    ''' 只是对文本文件进行合并处理
+    ''' </summary>
+    ''' <param name="args"></param>
+    ''' <returns></returns>
+    ''' <remarks>
+    ''' ###### 2016-11-26: 合并fasta文件的时候会出现问题？ 已解决，是输出的文件的textEncoding的问题，fasta文件应该是ASCII的
+    ''' ```
+    ''' BLAST options error: D:\11.24\Aedes-Anopheles-Culex.fasta does not match input format type, default input type is FASTA
+    ''' ```
+    ''' </remarks>
+    <ExportAPI("/Merge.Files",
+               Info:="Tools that works on the text files merge operation. This tool is usually used for merge of the fasta files into a larger fasta file.",
+               Usage:="/Merge.Files /in <in.DIR> [/trim /ext <*.txt> /encoding <ascii> /out <out.txt>]")>
+    <Group(CLIGrouping.GCModellerAppTools)>
+    <Argument("/encoding", True, CLITypes.String,
+              AcceptTypes:={GetType(Encodings)},
+              Description:="Specific the output text file encoding value, default is ASCII encoding. Fasta file merge must be ASCII encoding output")>
+    Public Function FileMerges(args As CommandLine) As Integer
+        Dim [in] As String = args("/in")
+        Dim ext As String = args.GetValue("/ext", "*.txt")
+        Dim out As String = args.GetValue("/out", [in].TrimDIR & ext.Replace("*", ""))
+        Dim exts = ext.Split(","c).ToArray(AddressOf Trim)
+        Dim trimNull = args.GetBoolean("/trim")
+        Dim encoding As String = args.GetValue("/encoding", "ascii")
+        Dim encodings As Encodings = encoding.ParseEncodingsName
+
+        Using writer As StreamWriter = out.OpenWriter(encodings)
+            For Each file$ In ls - l - r - exts <= [in]
+                If trimNull Then
+                    For Each line$ In file _
+                        .IterateAllLines _
+                        .Where(Function(s) Not String.IsNullOrEmpty(s))
+
+                        Call writer.WriteLine(line)
+                    Next
+                Else
+                    For Each line$ In file.IterateAllLines
+                        Call writer.WriteLine(line)
+                    Next
+                End If
+            Next
+
+            Return 0
+        End Using
     End Function
 End Module

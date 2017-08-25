@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::c663c732d53f7ebde4b45777287b6ff7, ..\GCModeller\core\Bio.Assembly\ComponentModel\Loci.Models\Nucleotide\NucleotideLocation.vb"
+﻿#Region "Microsoft.VisualBasic::b2310bae452fd6e5b97cd77f7003c5a7, ..\core\Bio.Assembly\ComponentModel\Loci.Models\Nucleotide\NucleotideLocation.vb"
 
     ' Author:
     ' 
@@ -41,9 +41,12 @@ Namespace ComponentModel.Loci
 
         ''' <summary>
         ''' 这个位点在哪一条DNA核酸链
-        ''' Forward = 1; 
+        ''' 
+        ''' ```
+        ''' Forward =  1; 
         ''' Reverse = -1; 
-        ''' Unknown = 0
+        ''' Unknown =  0
+        ''' ```
         ''' </summary>
         ''' <value></value>
         ''' <returns></returns>
@@ -320,5 +323,9 @@ Namespace ComponentModel.Loci
                 Return Not (Left = 0 OrElse Right = 0)
             End Get
         End Property
+
+        Public Shared Function Parse(loci$) As NucleotideLocation
+            Return LociAPI.TryParse(loci)
+        End Function
     End Class
 End Namespace

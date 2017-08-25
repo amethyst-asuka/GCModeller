@@ -1,35 +1,35 @@
-﻿#Region "Microsoft.VisualBasic::b1a3f56939a517483cc62caffb0a68fa, ..\GCModeller\visualize\visualizeTools\NCBIBlastResult\BlastVisualize.vb"
+﻿#Region "Microsoft.VisualBasic::439397fdf80b3d9df6f581dfc36797de, ..\visualize\visualizeTools\NCBIBlastResult\BlastVisualize.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
+Imports System.Runtime.CompilerServices
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine.Reflection
-Imports Microsoft.VisualBasic.ComponentModel
+Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel.SchemaMaps
 Imports Microsoft.VisualBasic.ComponentModel.Ranges
 Imports Microsoft.VisualBasic.Data.csv
@@ -49,10 +49,14 @@ Imports SMRUCC.genomics.SequenceModel
 Imports SMRUCC.genomics.SequenceModel.FASTA
 Imports SMRUCC.genomics.Visualize
 Imports SMRUCC.genomics.Visualize.ComparativeGenomics
+Imports VBLinq = Microsoft.VisualBasic.Linq
 
 Namespace NCBIBlastResult
 
-    <[PackageNamespace]("NCBI.Visualization.BLAST",
+    ''' <summary>
+    ''' 对blastn和blastx的比对结果进行可视化操作
+    ''' </summary>
+    <Package("NCBI.Visualization.BLAST",
                         Description:="Visualization of the blast result",
                         Category:=APICategories.ResearchTools,
                         Publisher:="xie.guigang@gmail.com")>
@@ -70,47 +74,47 @@ Namespace NCBIBlastResult
         End Function
 
         <ExportAPI("Invoke.Drawing")>
-        Public Function InvokeDrawing(Query As Query) As Image
-            Dim Gr = New Size(Margin * 3 + Query.QueryLength, 2 * Margin + 100).CreateGDIDevice
+        <Extension> Public Function InvokeDrawing(query As Query) As Image
+            Dim g = New Size(Margin * 3 + query.QueryLength, 2 * Margin + 100).CreateGDIDevice
             Dim Y As Integer = Margin / 2
-            Dim rect As Rectangle = New Rectangle(New Point(Margin, Y), New Size(Query.QueryLength, 10))
+            Dim rect As New Rectangle(New Point(Margin, Y), New Size(query.QueryLength, 10))
             Y += rect.Height
             Dim font As New Font(FontFace.Ubuntu, 6, FontStyle.Regular)
 
-            Call Gr.Graphics.FillRectangle(Brushes.Black, rect)
+            Call g.Graphics.FillRectangle(Brushes.Black, rect)
 
-            Dim sz = Gr.Graphics.MeasureString("0", font)
+            Dim sz = g.Graphics.MeasureString("0", font)
 
-            For i As Integer = 0 To Query.QueryLength Step 10
+            For i As Integer = 0 To query.QueryLength Step 10
                 If i Mod 50 = 0 Then
                     Dim YY As Integer = Y + 5
-                    Call Gr.Graphics.DrawLine(New Pen(Color.Black, 2), New Point(i + Margin, YY), New Point(i + Margin, Y))   ' 大标尺
-                    sz = Gr.Graphics.MeasureString(i, font)
-                    Call Gr.Graphics.DrawString(i, font, Brushes.Black, New Point(sz.Width / 2 + i + Margin, YY))
+                    Call g.Graphics.DrawLine(New Pen(Color.Black, 2), New Point(i + Margin, YY), New Point(i + Margin, Y))   ' 大标尺
+                    sz = g.Graphics.MeasureString(i, font)
+                    Call g.Graphics.DrawString(i, font, Brushes.Black, New Point(sz.Width / 2 + i + Margin, YY))
                 Else
-                    Call Gr.Graphics.DrawLine(New Pen(Color.Gray, 1), New Point(i + Margin, Y + 3), New Point(i + Margin, Y)) ' 小标尺
+                    Call g.Graphics.DrawLine(New Pen(Color.Gray, 1), New Point(i + Margin, Y + 3), New Point(i + Margin, Y)) ' 小标尺
                 End If
             Next
 
-            Call Gr.Graphics.DrawString($"({Query.QueryLength})", font, Brushes.Black, New Point(Query.QueryLength + Margin + 5, Y + 5))
+            Call g.Graphics.DrawString($"({query.QueryLength})", font, Brushes.Black, New Point(query.QueryLength + Margin + 5, Y + 5))
 
             Y += (10 + sz.Height)
             font = New Font(FontFace.Ubuntu, 8, FontStyle.Regular)
 
-            For Each hit In Query.SubjectHits
+            For Each hit In query.SubjectHits
                 Dim loci = hit.QueryLocation
 #If DEBUG Then
                 Call loci.__DEBUG_ECHO
 #End If
                 rect = New Rectangle(New Point(Margin + loci.Left, Y), New Size(loci.FragmentSize, 10))
-                Call Gr.Graphics.FillRectangle(Brushes.Blue, rect)
-                Dim x As Integer = Gr.Graphics.MeasureString(hit.Name, font).Width
+                Call g.Graphics.FillRectangle(Brushes.Blue, rect)
+                Dim x As Integer = g.Graphics.MeasureString(hit.Name, font).Width
                 x = rect.Left + (rect.Width - x) / 2
-                Call Gr.Graphics.DrawString(hit.Name, font, brush:=Brushes.Gray, point:=New PointF(x, rect.Bottom + 2))
+                Call g.Graphics.DrawString(hit.Name, font, brush:=Brushes.Gray, point:=New PointF(x, rect.Bottom + 2))
                 Y += 32
             Next
 
-            Return Gr.ImageResource
+            Return g.ImageResource
         End Function
 
         <DataFrameColumn("margin")> Dim Margin As Integer = 100
@@ -124,12 +128,12 @@ Namespace NCBIBlastResult
 
         <ExportAPI("alignment_dump.from.blastx")>
         Public Function AlignmentTableFromBlastX(<Parameter("dir.source", "The directory which contains the blastx output data.")> source As String) As AlignmentTable
-            Return ParserAPI.CreateFromBlastX(source)
+            Return AlignmentTableParserAPI.CreateFromBlastX(source)
         End Function
 
         <ExportAPI("alignment_dump.from.blastn")>
         Public Function AlignmentTableFromBlastn(<Parameter("dir.source", "The directory which contains the blastn output data.")> source As String) As AlignmentTable
-            Return ParserAPI.CreateFromBlastn(source)
+            Return AlignmentTableParserAPI.CreateFromBlastn(source)
         End Function
 
         Private Function InternalShortID_s(srcFasta As FASTA.FastaToken) As String
@@ -151,33 +155,45 @@ Namespace NCBIBlastResult
         ''' <remarks></remarks>
         <ExportAPI("alignment_dump.def2id",
                    Info:="if the export parameter is not empty then the function will export the entry information into the target directory.")>
-        Public Function ShortID(<Parameter("data.fasta")> data As FASTA.FastaFile,
+        Public Function ShortID(<Parameter("data.fasta")> data As FastaFile,
                                 <Parameter("dir.export",
                                            "if this dir path parameter is not empty then the function will export the entry information into the directory that this parameter specificed.")>
-                                Optional EXPORT As String = "") As FASTA.FastaFile
+                                Optional EXPORT$ = "") As FastaFile
 
-            Dim setValue = New SetValue(Of FastaToken) <= NameOf(FastaToken.Attributes)
-            Dim LQuery = (From srcFasta As FASTA.FastaToken
+            Dim LQuery = (From fa As FastaToken
                           In data
-                          Let ShortID_s As String = InternalShortID_s(srcFasta)
+                          Let ShortID_s As String = InternalShortID_s(fa)
                           Select ShortID_s,
-                              srcFasta.Title,
-                              Fasta = setValue(srcFasta, New String() {ShortID_s})).ToArray
-            Dim FastaData As New FASTA.FastaFile(From ShortIDFasta In LQuery Select ShortIDFasta.Fasta)
+                              fa.Title,
+                              Fasta = fa).ToArray
 
-            If String.IsNullOrEmpty(EXPORT) Then Return FastaData
+            Const attrs$ = NameOf(FastaToken.Attributes)
+
+            With LQuery
+                VBLinq _
+                    .DATA(.Select(Function(x) x.Fasta)) _
+                    .Evaluate(attrs) = .Select(Function(x) {x.ShortID_s}) _
+                                       .ToArray
+            End With
+
+            Dim fastaFile As New FastaFile(From ShortIDFasta In LQuery Select ShortIDFasta.Fasta)
+
+            If String.IsNullOrEmpty(EXPORT) Then
+                Return fastaFile
+            End If
+
             Dim TableGrouped = (From title In LQuery Select title.ShortID_s, title.Title Group By ShortID_s Into Group).ToArray
-            Dim TableDistinct = (From srcFasta In TableGrouped Select srcFasta.ShortID_s, Title = srcFasta.Group.First).ToArray
+            Dim TableDistinct = (From fa In TableGrouped Select fa.ShortID_s, Title = fa.Group.First).ToArray
 
-            Call TableDistinct.SaveTo(EXPORT, explicit:=False)
+            Call TableDistinct.SaveTo(EXPORT, strict:=False)
 
-            EXPORT = FileIO.FileSystem.GetParentPath(EXPORT) & "/" & IO.Path.GetFileNameWithoutExtension(EXPORT) & "/"
+            EXPORT = EXPORT.ParentPath & "/" & BaseName(EXPORT) & "/"
 
             For Each fa In LQuery
                 Call fa.Fasta.SaveTo(EXPORT & fa.ShortID_s & ".fasta")
             Next
 
-            Return FastaData
+            Return fastaFile
         End Function
 
         <ExportAPI("export.order.gi", Info:="Export the drawing order of the species hits on the graphics.")>
@@ -195,9 +211,9 @@ Namespace NCBIBlastResult
         <ExportAPI("alignment_table.gi2def")>
         Public Function ApplyDescription(Table As AlignmentTable,
                                          info As IEnumerable(Of gbEntryBrief),
-                                         Optional MaxLength As Integer = 0) As AlignmentTable
+                                         Optional maxLength% = 0) As AlignmentTable
             Call Table.DescriptionSubstituted(info.ToArray)
-            Call Table.TrimLength(MaxLength)
+            Call Table.TrimLength(maxLength)
             Return Table
         End Function
 
@@ -224,7 +240,7 @@ Namespace NCBIBlastResult
 
         <ExportAPI("read.txt.blast_result", Info:="Read the blast output table result text file which was download from the NCBI blast website.")>
         Public Function LoadResult(path As String) As AlignmentTable
-            Return ParserAPI.LoadDocument(path)
+            Return AlignmentTableParserAPI.LoadTable(path)
         End Function
 
         ''' <summary>
@@ -417,13 +433,13 @@ CONTINUTE:
         <ExportAPI("Cog.Class.Assign")>
         Public Sub AssignCogClass(PTT As PTTDbLoader,
                                   <Parameter("Class.Cog.Mappings",
-                                             "The excel table object which contains the gene cog value.")> Mapping As DocumentStream.File,
+                                             "The excel table object which contains the gene cog value.")> Mapping As IO.File,
                                   <Parameter("Mapping.Gene.ID",
                                              "The column name of the gene id in the execel table.")> Optional GeneID As String = "GeneID",
                                   <Parameter("Mapping.COG",
                                              "The column name of the cog class value in the excel table.")> Optional COG As String = "COG")
 
-            Dim DF As DocumentStream.DataFrame = DocumentStream.DataFrame.CreateObject(Mapping)
+            Dim DF As IO.DataFrame = IO.DataFrame.CreateObject(Mapping)
             Dim CogValue As Dictionary(Of String, String) =
                 DF.CreateDataSource.ToDictionary(Function(x) x.Attribute(GeneID), Function(x) x(COG))
 
@@ -439,52 +455,73 @@ CONTINUTE:
             Next
         End Sub
 
+        ''' <summary>
+        ''' 这个函数使用的是<see cref="GeneBrief.COG"/>属性来获取分类值
+        ''' </summary>
+        ''' <param name="queryNoColor"></param>
+        ''' <param name="refQuery"></param>
+        ''' <param name="COGTextureMappings"></param>
+        ''' <param name="TextureSource$"></param>
+        ''' <param name="ResourceIDMapping"></param>
+        ''' <param name="g"></param>
+        ''' <param name="MaxIDLength%"></param>
+        ''' <returns></returns>
         Private Function __COGsBrush(queryNoColor As Boolean,
                                      refQuery As PTT,
                                      COGTextureMappings As Boolean,
-                                     TextureSource As String,
+                                     TextureSource$,
                                      ResourceIDMapping As Boolean,
-                                     Device As GDIPlusDeviceHandle,
-                                     MaxIDLength As Integer) As ICOGsBrush
+                                     g As Graphics2D,
+                                     MaxIDLength%) As ICOGsBrush
 
             Dim COGsColor As Dictionary(Of String, Brush) = Nothing
 
             If Not queryNoColor Then
-                Dim CogCategory As String() = (From gene As GeneBrief
-                                               In refQuery.GeneObjects
-                                               Where Not String.IsNullOrEmpty(gene.COG)
-                                               Select gene.COG Distinct).ToArray
+                Dim COGs$() = LinqAPI.Exec(Of String) <=
+ _
+                    From gene As GeneBrief
+                    In refQuery.GeneObjects
+                    Where Not String.IsNullOrEmpty(gene.COG)
+                    Select gene.COG
+                    Distinct
 
                 If COGTextureMappings Then    ' 使用材质映射，假若没有设置资源文件夹，则使用系统默认的材质进行绘图
                     If String.IsNullOrEmpty(TextureSource) Then
                         Dim TextureList As Image() = TextureResourceLoader.LoadInternalDefaultResource.Shuffles
-                        COGsColor = RenderingColor.CategoryMapsTextures(categories:=CogCategory, textures:=TextureList)
+                        COGsColor = RenderingColor.CategoryMapsTextures(categories:=COGs, textures:=TextureList)
                     Else
-                        Dim TextureList As TagValue(Of Image)() =
-                            LinqAPI.Exec(Of TagValue(Of Image)) <= From path As String
-                                                                   In ls - l - r - wildcards("*.bmp", "*.jpg", "*.png") <= TextureSource
-                                                                   Select New TagValue(Of Image)(path.BaseName, path.LoadImage)
+                        Dim TextureList = LinqAPI.Exec(Of NamedValue(Of Image)) <=
+ _
+                            From path As String
+                            In ls - l - r - {"*.bmp", "*.jpg", "*.png"} <= TextureSource
+                            Select New NamedValue(Of Image) With {
+                                .Name = path.BaseName,
+                                .Value = path.LoadImage
+                            }
 
                         If ResourceIDMapping Then
-                            COGsColor = TextureList.ToDictionary(Function(obj) obj.tag.ToUpper, Function(obj) DirectCast(New TextureBrush(obj.Value), Brush))
+                            COGsColor = TextureList.ToDictionary(
+                                Function(obj) obj.Name.ToUpper,
+                                Function(obj) DirectCast(New TextureBrush(obj.Value), Brush))
                         Else
-                            COGsColor = RenderingColor.CategoryMapsTextures(categories:=CogCategory, textures:=TextureList.ToArray(Function(obj) obj.Value))
+                            COGsColor = RenderingColor.CategoryMapsTextures(
+                                categories:=COGs,
+                                textures:=TextureList.ToArray(Function(obj) obj.Value))
                         End If
                     End If
 
                     Call COGsColor.Add("", Brushes.White)
                 Else
-                    COGsColor = RenderingColor.InitCOGColors(categories:=CogCategory) _
+                    COGsColor = RenderingColor.InitCOGColors(categories:=COGs) _
                         .ToDictionary(Function(obj) obj.Key,
                                       Function(cl) CType(New SolidBrush(cl.Value), Brush))
                     Call COGsColor.Add("", New SolidBrush(Color.Brown))
-                    Call COGsColor.Remove("")
-                    Call COGsColor.Add("COG_NOT_ASSIGN", Brushes.Brown)
-                    Call Device.Graphics.DrawingCOGColors(COGsColor,
-                                                           ref:=New Point(Margin, Device.Height - MaxIDLength * 3),
-                                                           legendFont:=New Font(FontFace.Ubuntu, 8),
-                                                           width:=Device.Width,
-                                                           margin:=Margin)
+                    Call g.DrawingCOGColors(
+                        COGsColor,
+                        ref:=New Point(Margin, g.Height - MaxIDLength * 3),
+                        legendFont:=New Font(FontFace.Ubuntu, 8),
+                        width:=g.Width,
+                        margin:=Margin)
                 End If
             End If
 
@@ -497,292 +534,298 @@ CONTINUTE:
         ''' <param name="alignment"></param>
         ''' <param name="refQuery"></param>
         ''' <param name="AlignmentColorSchema">bit_scores, identities</param>
+        ''' <param name="queryBrush">query基因组上面的基因的颜色画刷的来源，默认是使用内部的COG颜色</param>
+        ''' <param name="QueryNoColor">如果这个参数为真，那么query的基因箭头矩形对象将不会有任何颜色</param>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        <ExportAPI("invoke.drawing",
+        <ExportAPI("Map.drawing",
                    Info:="You can using the custom_order parameter to specific the order of the genome drawing on the visualized image. idType: 1 -> locusID; 2 -> geneName + id_number")>
-        Public Function InvokeDrawing(<Parameter("align.tab", "Blast result that you can download from NCBI blast website, or you also can generates from GCModeller.")> alignment As AlignmentTable,
-                                      <Parameter("query.info", "The genome brief information of the query species.")> refQuery As PTT,
-                                      <Parameter("custom.orders", "The custom order of the blast hits show on the graphics.")> Optional CustomOrder As String() = Nothing,
-                                      <Parameter("using.id.type.alt",
-                                                 "idType: 1 -> locusID; 2 -> geneName + id_number; 3 -> only display gene name, default value is 1 (locusID)")>
-                                      Optional idType As Integer = 1,
-                                      <Parameter("using.arrow.type.alt")> Optional ArrowAlternativeStyle As Boolean = False,
-                                      <Parameter("align.color.schema", "The alignment hit bar color.")> Optional AlignmentColorSchema As String = "bit_scores",
-                                      <Parameter("fasta.nt.query", "The genome sequence fasta object data of the query.")> Optional QueryNT As FASTA.FastaToken = Nothing,
-                                      <Parameter("using.id.anno.alt")> Optional AltIDAnnotation As Boolean = False,
-                                      <Parameter("query.color.none")> Optional QueryNoColor As Boolean = False,
-                                      <Parameter("identity.color.none")> Optional IdentityNoColor As Boolean = True,
-                                      <Parameter("hit.height.equals.to.query")> Optional HitHeightEqualsToQuery As Boolean = False,
-                                      <Parameter("using.cog.texture.mappings",
-                                                 "If this parameter is TRUE, then the texture will be using for the cog class value instead of ORF cog color.")>
-                                      Optional COGTextureMappings As Boolean = False,
-                                      <Parameter("mapping.texture.source", "This value is the directory which contains the texture image " &
-                                                                           "to mapping the cog, if this value is null then the default texture " &
-                                                                           "resource in this programs resource package will be using.")>
-                                      Optional TextureSource As String = "",
-                                      <Parameter("Mapping.Texture.ID")> Optional ResourceIDMapping As Boolean = True,
-                                      <Parameter("scale.factor")> Optional ScaleFactor As Double = 1.0R,
-                                      <Parameter("ref.Brush")> Optional queryBrush As ICOGsBrush = Nothing) As Image
+        Public Function PlotMap(<Parameter("align.tab", "Blast result that you can download from NCBI blast website, or you also can generates from GCModeller.")> alignment As AlignmentTable,
+                                <Parameter("query.info", "The genome brief information of the query species.")> refQuery As PTT,
+                                <Parameter("custom.orders", "The custom order of the blast hits show on the graphics.")> Optional CustomOrder$() = Nothing,
+                                <Parameter("using.id.type.alt", "idType: 1 -> locusID; 2 -> geneName + id_number; 3 -> only display gene name, default value is 1 (locusID)")> Optional idType% = 1,
+                                <Parameter("using.arrow.type.alt")> Optional ArrowAlternativeStyle As Boolean = False,
+                                <Parameter("align.color.schema", "The alignment hit bar color.")> Optional AlignmentColorSchema$ = "bit_scores",
+                                <Parameter("fasta.nt.query", "The genome sequence fasta object data of the query.")> Optional QueryNT As FastaToken = Nothing,
+                                <Parameter("using.id.anno.alt")> Optional AltIDAnnotation As Boolean = False,
+                                <Parameter("query.color.none")> Optional QueryNoColor As Boolean = False,
+                                <Parameter("identity.color.none")> Optional IdentityNoColor As Boolean = True,
+                                <Parameter("hit.height.equals.to.query")> Optional HitHeightEqualsToQuery As Boolean = False,
+                                <Parameter("using.cog.texture.mappings", "If this parameter is TRUE, then the texture will be using for the cog class value instead of ORF cog color.")> Optional COGTextureMappings As Boolean = False,
+                                <Parameter("mapping.texture.source", "This value is the directory which contains the texture image " &
+                                                                     "to mapping the cog, if this value is null then the default texture " &
+                                                                     "resource in this programs resource package will be using.")> Optional TextureSource$ = "",
+                                <Parameter("Mapping.Texture.ID")> Optional ResourceIDMapping As Boolean = True,
+                                <Parameter("scale.factor")> Optional ScaleFactor As Double = 1.0R,
+                                <Parameter("ref.Brush")> Optional queryBrush As ICOGsBrush = Nothing, Optional margin% = 200) As Image
 
             If ScaleFactor <= 0 Then
                 Call VBDebugger.Warning($"The page scale factor value ""{ScaleFactor}"" is Zero or negative, reset to normal scale_factor=1")
                 ScaleFactor = 1.0R
             End If
 
-            Dim QueryLength As Integer = refQuery.Size
+            Dim queryLength As Integer = refQuery.Size
             Dim spList = (From hitData As HitRecord
                           In alignment.Hits
                           Select hitData
                           Group By hitData.SubjectIDs Into Group).ToArray ' 为了保持原有的顺序，在这里不需要并行化拓展
-            Dim DrawingFont As Font = New Font(FontFace.Ubuntu, FontSize)
-            Dim MaxIDLength As Size = (From Species In spList Select Species.SubjectIDs Order By Len(SubjectIDs) Descending).First.MeasureString(DrawingFont, ScaleFactor, ScaleFactor)
-            Dim MappingLength As Integer = QueryLength * ConvertFactor
+            Dim drawingFont As Font = New Font(FontFace.Ubuntu, FontSize)
+            Dim MaxIDLength As Size = spList _
+                .MaxLengthString(Function(sp) sp.SubjectIDs) _
+                .MeasureString(drawingFont, ScaleFactor, ScaleFactor)
+            Dim MappingLength As Integer = queryLength * ConvertFactor
             Dim BlockSize As New Size(100, MaxIDLength.Height + 20)
-            Dim dSize As New Size((Margin * 2 + MappingLength + MaxIDLength.Width) * ScaleFactor,
-                                  (If(AltIDAnnotation, ("0".MeasureString(DrawingFont, ScaleFactor, ScaleFactor).Height + 3) * (spList.Length + 5), 0) +
-                                  Margin * 4 + spList.Length * (MaxIDLength.Height + 5) + 10 * (BlockSize.Height + 8)) * ScaleFactor)
-            Dim Device As GDIPlusDeviceHandle = dSize.CreateGDIDevice
-            '  Dim n As Integer = QueryLength / 10000 ' 这个长度是画标尺需要使用到的步移的长度
-            ' Dim dl As Integer = MappingLength / n
+            Dim dSize As New Size With {
+                .Width = (margin * 2 + MappingLength + MaxIDLength.Width) * ScaleFactor,
+                .Height = (If(AltIDAnnotation,
+                    ("0".MeasureString(drawingFont, ScaleFactor, ScaleFactor).Height + 3) * (spList.Length + 5), 0) + margin + spList.Length * (MaxIDLength.Height + 5) + 10 * (BlockSize.Height + 8)) * ScaleFactor
+            }
             Dim X, Y As Integer
-            Dim ColorSchema As RangeList(Of Double, TagValue(Of Color))
-            Dim GetScore As Func(Of HitRecord, Double)
-            Dim GetSubjectHitColorMethod As Func(Of Double, RangeList(Of Double, TagValue(Of Color)), Color) '比对结果的颜色渲染的方法
+            Dim ColorSchema As RangeList(Of Double, NamedValue(Of Color))
+            Dim getScore As Func(Of HitRecord, Double)
+            Dim getSubjectHitColor As Func(Of Double, RangeList(Of Double, NamedValue(Of Color)), Color) '比对结果的颜色渲染的方法
 
-            If ScaleFactor <> 1.0R Then Call Device.Graphics.ScaleTransform(ScaleFactor, ScaleFactor)
-
-            If String.IsNullOrEmpty(AlignmentColorSchema) OrElse
-                Not String.Equals(AlignmentColorSchema, "identities", StringComparison.OrdinalIgnoreCase) Then
+            If Not AlignmentColorSchema.TextEquals("identities") Then
                 ColorSchema = NCBIBlastResult.ColorSchema.BitScores
                 AlignmentColorSchema = "alignment bit scores"
-                GetScore = Function(item As HitRecord) item.BitScore
-                GetSubjectHitColorMethod = Function(p, Colors) Colors.GetColor(p)
+                getScore = Function(item As HitRecord) item.BitScore
+                getSubjectHitColor = Function(p, Colors) Colors.GetColor(p)
             Else
                 If IdentityNoColor Then
                     ColorSchema = NCBIBlastResult.ColorSchema.IdentitiesNonColors
                 Else
                     ColorSchema = NCBIBlastResult.ColorSchema.IdentitiesColors
                 End If
-                GetScore = Function(SubjectHit As HitRecord) SubjectHit.Identity
+
+                getScore = Function(subjectHit As HitRecord) subjectHit.Identity
+
                 If String.Equals(alignment.Program, "blastn", StringComparison.OrdinalIgnoreCase) Then
-                    GetSubjectHitColorMethod = Function(p, Colors) Colors.GetColor(p)
+                    getSubjectHitColor = Function(p, Colors) Colors.GetColor(p)
                 Else
-                    GetSubjectHitColorMethod = Function(p, Colors) Colors.GetColor(p)
+                    getSubjectHitColor = Function(p, Colors) Colors.GetColor(p)
                 End If
             End If
 
-            Y = Margin
-            X = Margin
+            Y = margin
+            X = margin
             Y += BlockSize.Height + 10
 
             Dim IDMethod As GetDrawingID = ModelAPI.GetMethod(idType)
 
-            If queryBrush Is Nothing Then
-                queryBrush = __COGsBrush(queryNoColor:=QueryNoColor,
-                                         COGTextureMappings:=COGTextureMappings,
-                                         Device:=Device,
-                                         MaxIDLength:=MaxIDLength.Height,
-                                         refQuery:=refQuery,
-                                         ResourceIDMapping:=ResourceIDMapping,
-                                         TextureSource:=TextureSource)
-            End If
+            Using device As Graphics2D = dSize.CreateGDIDevice
 
-            Dim Models As GenomeModel =
-                ModelAPI.CreateObject(refQuery.GeneObjects,
-                                      refQuery.Size,
-                                      alignment.ToString,
-                                      IDMethod,
-                                      DefaultWhite:=True,
-                                      COGsColor:=queryBrush)
+                If ScaleFactor <> 1.0R Then
+                    Call device.ScaleTransform(ScaleFactor, ScaleFactor)
+                End If
 
-            Dim Left As Integer = Margin,
-                Height As Integer = Margin + 20
-            Models.genes =
-                LinqAPI.Exec(Of GeneObject) <= From Ordered_GeneObj As GeneObject
-                                               In Models.genes
-                                               Select Ordered_GeneObj
-                                               Order By Ordered_GeneObj.Left Ascending
+                If queryBrush Is Nothing Then
 
-            Dim QueryGenomeDrawingLength As Integer = Device.Width - 2 * Margin - MaxIDLength.Width
-            Dim sz As New Size(QueryGenomeDrawingLength, GeneObjectDrawingHeight - 0.4 * GeneObjectDrawingHeight)
-            Dim rect As New Rectangle(New Point(Margin, Height + 0.2 * GeneObjectDrawingHeight), sz)
+                    ' 绘制COG分类的颜色legend
+                    queryBrush = __COGsBrush(
+                        queryNoColor:=QueryNoColor,
+                        COGTextureMappings:=COGTextureMappings,
+                        g:=device,
+                        MaxIDLength:=MaxIDLength.Height,
+                        refQuery:=refQuery,
+                        ResourceIDMapping:=ResourceIDMapping,
+                        TextureSource:=TextureSource)
+                End If
 
-            Call Device.Graphics.FillRectangle(New SolidBrush(Color.FromArgb(20, Color.LightGray)), rect)
+                Dim models As GenomeModel = ModelAPI.CreateObject(
+                    refQuery.GeneObjects,
+                    refQuery.Size,
+                    alignment.ToString,
+                    IDMethod,
+                    DefaultWhite:=False,
+                    COGsColor:=queryBrush)
 
-            Dim cF As Double = (Device.Width - 2 * Margin - MaxIDLength.Width) / Models.Length
-            Dim Font As Font = New Font(FontFace.Ubuntu, FontSize)
+                Dim Left As Integer = margin, Height As Integer = margin + 20
 
-            Left += Models.First.Left * cF
+                With models
+                    .genes = LinqAPI.Exec(Of GeneObject) <=
+ _
+                        From ordered_geneObj As GeneObject
+                        In .genes
+                        Select ordered_geneObj
+                        Order By ordered_geneObj.Left Ascending
 
-            ' Dim ORFDrawingY As Integer = Height
+                End With
 
-            Dim IDConflictedRegion As Rectangle
+                Dim QueryGenomeDrawingLength As Integer = device.Width - 2 * margin - MaxIDLength.Width
+                Dim sz As New Size(QueryGenomeDrawingLength, GeneObjectDrawingHeight - 0.4 * GeneObjectDrawingHeight)
+                Dim rect As New Rectangle(New Point(margin, Height + 0.2 * GeneObjectDrawingHeight), sz)
 
-            '绘制基本图形
-            For i As Integer = 0 To Models.Count - 2
-                Dim Gene As GeneObject = Models(i)
-                Gene.Height = GeneObjectDrawingHeight
-                Dim NextGene As GeneObject = Models(i + 1)
+                Call device.FillRectangle(New SolidBrush(Color.FromArgb(20, Color.LightGray)), rect)
 
+                Dim cfactor As Double = (device.Width - 2 * margin - MaxIDLength.Width) / models.Length
+                Dim Font As Font = New Font(FontFace.Ubuntu, FontSize)
+
+                Left += models.First.Left * cfactor
+
+                Dim IDConflictedRegion As MapLabelLayout
+
+                ' 绘制query对象的基因组的基因map的基本图形
+                For i As Integer = 0 To models.genes.Length - 2
+                    Dim gene As GeneObject = models(i)
+                    Dim next_gene As GeneObject = models(i + 1)
+
+                    With gene
+
+                        .Height = GeneObjectDrawingHeight
+
+                        If QueryNoColor Then
+                            .Color = Brushes.White
+                        End If
+
+                        Left = .InvokeDrawing(
+                            device.Graphics,
+                            New Point(Left, Height), NextLeft:=next_gene.Left, convertFactor:=cfactor,
+                            arrowRect:=Nothing,
+                            IdGrawingPositionDown:=False,
+                            Font:=Font,
+                            AlternativeArrowStyle:=ArrowAlternativeStyle,
+                            ID_conflictLayout:=IDConflictedRegion, drawConflictLine:=True)
+
+                    End With
+                Next
+
+                models.Last.Height = GeneObjectDrawingHeight
                 If QueryNoColor Then
-                    Gene.Color = Brushes.White
+                    models.Last.Color = Brushes.White
                 End If
-                Left = Gene.InvokeDrawing(Device.Graphics,
-                                          New Point(Left, Height),
-                                          NextLeft:=NextGene.Left,
-                                          ConvertFactor:=cF,
-                                          Region:=Nothing,
-                                          IdGrawingPositionDown:=False,
-                                          Font:=Font,
-                                          AlternativeArrowStyle:=ArrowAlternativeStyle,
-                                          IDConflictedRegion:=IDConflictedRegion)
-            Next
+                Call models.Last.InvokeDrawing(
+                    device.Graphics,
+                    New Point(Left, Height), NextLeft:=models.Length, convertFactor:=cfactor,
+                    arrowRect:=Nothing,
+                    IdGrawingPositionDown:=False,
+                    Font:=Font,
+                    AlternativeArrowStyle:=ArrowAlternativeStyle,
+                    ID_conflictLayout:=IDConflictedRegion, drawConflictLine:=True)
 
-            Models.Last.Height = GeneObjectDrawingHeight
-            If QueryNoColor Then
-                Models.Last.Color = Brushes.White
-            End If
-            Call Models.Last.InvokeDrawing(Device.Graphics,
-                                           New Point(Left, Height),
-                                           NextLeft:=Models.Length,
-                                           ConvertFactor:=cF,
-                                           Region:=Nothing,
-                                           IdGrawingPositionDown:=False,
-                                           Font:=Font,
-                                           AlternativeArrowStyle:=ArrowAlternativeStyle,
-                                           IDConflictedRegion:=IDConflictedRegion)
+                Dim titleDrawingFont As New Font("Microsoft YaHei", 20)
+                Dim titleFontSize = device.MeasureString(models.Title, titleDrawingFont)
 
-            Dim TitleDrawingFont As New Font("Microsoft YaHei", 20)
-            Dim TitleFontSize = Device.Graphics.MeasureString(Models.Title, TitleDrawingFont)
-            Call Device.Graphics.DrawString(Models.Title,
-                                             TitleDrawingFont,
-                                             Brushes.Black,
-                                             New Point((Device.Width - TitleFontSize.Width) / 2, 10))
+                Call device.DrawString(
+                    models.Title, titleDrawingFont,
+                    Brushes.Black,
+                    New Point((device.Width - titleFontSize.Width) / 2, 10))
 
-            Y += 10
-            Call Device.Graphics.DrawLine(Pens.Black, X, Y, X + MappingLength, Y)
+                Y += 10
+                Call device.DrawLine(Pens.Black, X, Y, X + MappingLength, Y)
 
-            'For i As Integer = 0 To n
-            '    Call Device.Gr_Device.DrawLine(Pens.Black, X, Y, X, Y + 5)
-            '    Call Device.Gr_Device.DrawString(i * 10 & "KB", DrawingFont, Brushes.Black, New Point(X, Y + 5))
-            '    X += dl
-            'Next
+                Y += MaxIDLength.Height + 5
 
-            Y += MaxIDLength.Height + 5
+                Dim BlockHeight As Integer = If(
+                    HitHeightEqualsToQuery,
+                    GeneObjectDrawingHeight * 1.2,
+                    MaxIDLength.Height * 0.8)
+                Dim LinePen As New Pen(New SolidBrush(Color.FromArgb(alpha:=100, baseColor:=Color.Brown)))
 
-            Dim BlockHeight As Integer = If(HitHeightEqualsToQuery, GeneObjectDrawingHeight * 1.2, MaxIDLength.Height * 0.8)
-            Dim LinePen As New Pen(New SolidBrush(Color.FromArgb(alpha:=100, baseColor:=Color.Brown)))
-
-            If Not CustomOrder.IsNullOrEmpty Then '使用自定义的排序
-                Dim ls = spList.ToList
-                Dim ls2 = spList.ToList
-                Dim InternalGetItem = Function(id As String) (From Gene
-                                                              In ls.AsParallel
-                                                              Where String.Equals(id, Gene.SubjectIDs, StringComparison.OrdinalIgnoreCase) OrElse
-                                                                  InStr(Gene.SubjectIDs, id, CompareMethod.Text) > 0
-                                                              Select Gene).FirstOrDefault
-                Call ls2.Clear() '复制匿名对象的信息并构建一个用于排序的空的列表
-
-                For Each ID As String In CustomOrder
-                    Dim selectedItem = InternalGetItem(ID)
-                    If Not selectedItem Is Nothing Then '由于是倒序的，故而将对象移动到最后一个元素即可
-                        Call ls2.Add(selectedItem)
-                        Call ls.Remove(selectedItem)
-                    End If
-                Next
-
-                Call ls2.AddRange(ls) '添加剩余的数据
-                spList = ls2.ToArray
-            End If
-
-            Dim InternalGetColor As Func(Of HitRecord, Color) =
-                Function(hit) GetSubjectHitColorMethod(arg1:=GetScore(hit), arg2:=ColorSchema)
-            Dim IDannos As New Dictionary(Of Integer, String)
-            Dim p_ID As Integer = 1
-            Dim proc As New ProgressBar("Drawing alignment hit regions...")
-            Dim pp As New ProgressProvider(spList.Length)
-
-            For Each hit In spList
-                Call proc.SetProgress(pp.StepProgress)
-
-                X = Margin
-                Y += BlockHeight + 4
-
-                Call Device.Graphics.DrawLine(LinePen, X, Y, X + MappingLength, Y)
-                If AltIDAnnotation Then '在hit的开始位置的前面使用数字进行标识，然后在最下面写上编号
-                    Call Device.Graphics.DrawString(p_ID, DrawingFont, Brushes.Black, x:=10, y:=Y - MaxIDLength.Height / 2)
-                    Call IDannos.Add(p_ID, hit.SubjectIDs)
-                    Call p_ID.MoveNext()
-                Else
-                    Call Device.Graphics.DrawString(hit.SubjectIDs,
-                                                     DrawingFont,
-                                                     Brushes.Black,
-                                                     X + MappingLength + 10,
-                                                     Y - MaxIDLength.Height / 2)
+                If Not CustomOrder.IsNullOrEmpty Then '使用自定义的排序
+                    spList = spList _
+                        .ReorderByKeys(Function(g) g.SubjectIDs, CustomOrder) _
+                        .ToArray
                 End If
 
-                For Each Segment As HitRecord In hit.Group
-                    Left = Segment.QueryStart
-                    Dim Right As Integer = Segment.QueryEnd
+                Dim internalGetColor = Function(hit As HitRecord) getSubjectHitColor(arg1:=getScore(hit), arg2:=ColorSchema)
+                Dim IDannos As New Dictionary(Of Integer, String)
 
-                    If Left > Right Then
-                        Call Left.SwapWith(Right)
-                    End If
+                Using proc As New ProgressBar("Drawing alignment hit regions...", cls:=True)
+                    Dim pp As New ProgressProvider(spList.Length)
+                    Dim p_ID As Integer = 1
 
-                    Dim Loci As Point = New Point(Margin + Left * ConvertFactor, Y)
-                    Dim Block As Size = New Size(ConvertFactor * (Right - Left), BlockHeight)
-                    Dim hitColor As New SolidBrush(InternalGetColor(Segment))
+                    For Each hit In spList
+                        Call proc.SetProgress(pp.StepProgress, details:=hit.SubjectIDs)
 
-                    Call Device.Graphics.FillRectangle(hitColor, New Rectangle(Loci, Block))
+                        X = margin
+                        Y += BlockHeight + 4
+
+                        Call device.DrawLine(LinePen, X, Y, X + MappingLength, Y)
+                        If AltIDAnnotation Then '在hit的开始位置的前面使用数字进行标识，然后在最下面写上编号
+                            Call device.DrawString(p_ID, drawingFont, Brushes.Black, x:=10, y:=Y - MaxIDLength.Height / 2)
+                            Call IDannos.Add(p_ID, hit.SubjectIDs)
+
+                            p_ID += 1
+                        Else
+                            Call device.DrawString(
+                                hit.SubjectIDs, drawingFont,
+                                Brushes.Black,
+                                X + MappingLength + 10,
+                                Y - MaxIDLength.Height / 2)
+                        End If
+
+                        For Each Segment As HitRecord In hit.Group
+                            Left = Segment.QueryStart
+                            Dim Right As Integer = Segment.QueryEnd
+
+                            If Left > Right Then
+                                Call Left.SwapWith(Right)
+                            End If
+
+                            Dim Loci As Point = New Point(margin + Left * ConvertFactor, Y)
+                            Dim Block As Size = New Size(ConvertFactor * (Right - Left), BlockHeight)
+                            Dim hitColor As New SolidBrush(internalGetColor(Segment))
+
+                            Call device.FillRectangle(hitColor, New Rectangle(Loci, Block))
+                        Next
+                    Next
+                End Using
+
+                X = margin + 30
+                Y += BlockHeight * 10
+                Dim YT = Y
+
+                Call device.DrawString("Color key for " & AlignmentColorSchema, drawingFont, Brushes.Black, New Point(margin, Y - MaxIDLength.Height * 2))
+
+                For Each Line As NamedValue(Of Color) In ColorSchema.Values
+                    Call device.FillRectangle(New SolidBrush(Line.Value), New Rectangle(New Point(X, Y), BlockSize))
+                    Call device.DrawString(Line.Name, drawingFont, Brushes.Black, X + BlockSize.Width + 10, Y + 3)
+                    Y += BlockSize.Height + 5
                 Next
-            Next
 
-            X = Margin + 30
-            Y += BlockHeight * 5
-            Dim YT = Y
+                Y += 3 * BlockSize.Height
 
-            Call Device.Graphics.DrawString("Color key for " & AlignmentColorSchema, DrawingFont, Brushes.Black, New Point(Margin, Y - MaxIDLength.Height * 2))
+                If Not QueryNT Is Nothing Then
+                    Call device.DrawString("Window Size   =   " & GCSkew.WindowSize, drawingFont, Brushes.Black, New Point(X, Y))
+                    Call device.DrawString("Steps         =   " & GCSkew.Steps, drawingFont, Brushes.Black, New Point(X, Y + 10 + "0".MeasureString(drawingFont, ScaleFactor, ScaleFactor).Height))
+                End If
 
-            For Each Line As TagValue(Of Color) In ColorSchema.Values
-                Call Device.Graphics.FillRectangle(New SolidBrush(Line.Value), New Rectangle(New Point(X, Y), BlockSize))
-                Call Device.Graphics.DrawString(Line.tag, DrawingFont, Brushes.Black, X + BlockSize.Width + 10, Y + 3)
-                Y += BlockSize.Height + 5
-            Next
+                Dim n As Integer
 
-            Y += 3 * BlockSize.Height
+                If AltIDAnnotation Then
 
-            Call Device.Graphics.DrawString("Window Size   =   " & GCSkew.WindowSize, DrawingFont, Brushes.Black, New Point(X, Y))
-            Call Device.Graphics.DrawString("Steps                =   " & GCSkew.Steps, DrawingFont, Brushes.Black, New Point(X, Y + 10 + "0".MeasureString(DrawingFont, ScaleFactor, ScaleFactor).Height))
+                    n = (IDannos.First.Value.MeasureString(drawingFont, ScaleFactor, ScaleFactor).Height + 2)
+                    X = device.Width - IDannos.MaxLengthString(Function(k) k.Value).MeasureString(drawingFont, ScaleFactor, ScaleFactor).Width * 3 - margin
+                    Y = YT
 
-            Dim n As Integer
+                    '在下面标出物种编号
+                    For Each ID In IDannos
+                        Call device.DrawString(String.Format("{0}.  {1}", ID.Key, ID.Value), drawingFont, Brushes.Black, New Point(X, Y))
+                        Y += n
+                    Next
+                End If
 
-            If AltIDAnnotation Then
+                If Not QueryNT Is Nothing Then
+                    Dim DeltaHeight% = 500
 
-                n = (IDannos.First.Value.MeasureString(DrawingFont, ScaleFactor, ScaleFactor).Height + 2)
-                X = Device.Width - (From ID In IDannos Select ID.Value Order By Len(Value) Descending).First.MeasureString(DrawingFont, ScaleFactor, ScaleFactor).Width * 3 - Margin
-                Y = YT
+                    ' 如果目标基因组序列存在的话，还会在顶端绘制GCSkew的histgram图表
+                    Using g As Graphics2D = New Size(device.Width, device.Height + DeltaHeight).CreateGDIDevice
+                        Dim hhh As Single = DeltaHeight + titleFontSize.Height + 30
 
-                '在下面标出物种编号
-                For Each ID In IDannos
-                    Call Device.Graphics.DrawString(String.Format("{0}.  {1}", ID.Key, ID.Value), DrawingFont, Brushes.Black, New Point(X, Y))
-                    Y += n
-                Next
-            End If
+                        Call g.DrawImage(device.ImageResource, 0, DeltaHeight, device.Width, device.Height)
+                        Call g.FillRectangle(Brushes.White, New Rectangle(New Point(), New Size(device.Width, hhh)))  ' 覆盖掉标题
 
-            If Not QueryNT Is Nothing Then
-                Dim DeltaHeight As Integer = 1000
-                Dim Gr As GDIPlusDeviceHandle = New Size(Device.Width, Device.Height + DeltaHeight).CreateGDIDevice
-                Dim hhh As Single = DeltaHeight + TitleFontSize.Height + 30
+                        ' 由于在绘图函数之中克隆了原来的图像，所以这里返回函数的结果，否则直接返回gdi设备之中的图形任然会缺失掉histogram图形的
+                        Return GCSkew.InvokeDrawingGCContent(
+                            g.ImageResource,
+                            QueryNT,
+                            New Point(margin, 0.95 * hhh),
+                            Width:=QueryGenomeDrawingLength)
+                    End Using
+                End If
 
-                Call Gr.Graphics.DrawImage(Device.ImageResource, 0, DeltaHeight, Device.Width, Device.Height)
-                Call Gr.Graphics.FillRectangle(Brushes.White, New Rectangle(New Point(), New Size(Device.Width, hhh)))       '覆盖掉标题
-                Call GCSkew.InvokeDrawingGCContent(Gr.ImageResource, QueryNT, New Point(Margin, 0.95 * hhh), Width:=QueryGenomeDrawingLength)
-
-                Return Gr.ImageResource
-            End If
-
-            Return Device.ImageResource
+                Return device.ImageResource
+            End Using
         End Function
 
         Private Function GetColor(score As Integer) As Color

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::5182abe6952d13b8d6a664b6d8b7f9f0, ..\GCModeller\analysis\PFSNet\PFSNet.vb"
+﻿#Region "Microsoft.VisualBasic::74229f915b453da7c6ae45fc807b75ed, ..\GCModeller\analysis\PFSNet\PFSNet.vb"
 
     ' Author:
     ' 
@@ -40,7 +40,7 @@ Imports SMRUCC.genomics.Analysis.PFSNet.R
 ''' </summary>
 ''' <remarks></remarks>
 ''' 
-<[PackageNamespace]("PfsNET.Parallel",
+<Package("PfsNET.Parallel",
                     Description:="PfsNET algorithm implments in VisualBasic language for large scale network high-performance calculation.",
                     Publisher:="xie.guigang@gcmodeller.org")>
 Public Module PFSNet
@@ -155,7 +155,7 @@ Public Module PFSNet
             Return 1
         ElseIf y >= q2 Then
             Return (y - q2) / delta_q12
-        ElseIf q1.Is_NA_UHandle OrElse q2.Is_NA_UHandle Then
+        ElseIf q1.IsNaNImaginary OrElse q2.IsNaNImaginary Then
             Return Double.NaN
         Else
             Return 0
@@ -181,7 +181,7 @@ Public Module PFSNet
     Public Function computegenelist(w As DataFrameRow(), beta As Double) As String()
         Dim list_mask = (From w_row As DataFrameRow In w.AsParallel
                          Let x As Double() = w_row.ExperimentValues
-                         Let d = x.Sum / (From n As Double In x Let b As Integer = If(n.Is_NA_UHandle, 0, 1) Select b).Sum
+                         Let d = x.Sum / (From n As Double In x Let b As Integer = If(n.IsNaNImaginary, 0, 1) Select b).Sum
                          Where d >= beta
                          Select w_row.Name, d).ToArray
         Return (From obj In list_mask Select obj.Name).ToArray
@@ -356,11 +356,13 @@ Public Module PFSNet
             Dim nscore = Internal_get_nscore(ccs, w1matrix1)
 
             Dim statistics As Double() = rep(False, ccs.Length)
+            Dim rand As New Random
+
             For p As Integer = 0 To ccs.Length - 1
                 Dim x = pscore(p), y = nscore(p)
                 Dim bt, lt, rt As Double
-                Dim lm As Integer = x.Length * RandomDouble()
-                Dim ln As Integer = y.Length * RandomDouble()
+                Dim lm As Integer = x.Length * rand.NextDouble()
+                Dim ln As Integer = y.Length * rand.NextDouble()
 
                 Call ALGLIB.alglib.studentttests.studentttest2(x, ln, y, lm, bt, lt, rt)
                 statistics(p) = bt

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::a207c2867fa8532841faab23d2125e44, ..\GCModeller\CLI_tools\ProteinInteraction\CLI\SwissTCS.vb"
+﻿#Region "Microsoft.VisualBasic::ef20e166ab1ebb46f9a012aaf935a834, ..\GCModeller\CLI_tools\ProteinInteraction\CLI\SwissTCS.vb"
 
     ' Author:
     ' 
@@ -56,10 +56,10 @@ Partial Module CLI
     Private Sub __downloads(inDIR As String)
         Dim Hisk As String() = FileIO.FileSystem.GetFiles(inDIR & "/HisK/",
                                                         FileIO.SearchOption.SearchTopLevelOnly,
-                                                        "*.csv").ToArray(Function(x) IO.Path.GetFileNameWithoutExtension(x))
+                                                        "*.csv").ToArray(Function(x) basename(x))
         Dim RR As String() = FileIO.FileSystem.GetFiles(inDIR & "/RR/",
                                                         FileIO.SearchOption.SearchTopLevelOnly,
-                                                        "*.csv").ToArray(Function(x) IO.Path.GetFileNameWithoutExtension(x))
+                                                        "*.csv").ToArray(Function(x) basename(x))
         Dim fa = SMRUCC.genomics.Assembly.KEGG.WebServices.DownloadsBatch(inDIR, Hisk)
         If Not fa Is Nothing Then Call fa.Save(inDIR & "/HisK.fasta")
         fa = SMRUCC.genomics.Assembly.KEGG.WebServices.DownloadsBatch(inDIR, RR)
@@ -99,17 +99,17 @@ Partial Module CLI
                         Let Hisk = SMRUCC.genomics.SequenceModel.FASTA.FastaFile.Read(DIR & "/HisK.fasta", False)
                         Let RR = SMRUCC.genomics.SequenceModel.FASTA.FastaFile.Read(DIR & "/RR.fasta", False)
                         Where Not (Hisk.IsNullOrEmpty OrElse RR.IsNullOrEmpty)  ' 必须要两个都同时存在的才会可以继续下去，只要有任何一个没有数据则抛弃掉
-                        Select Hisk.Join(RR)).ToArray.MatrixToList
+                        Select Hisk.Join(RR)).ToArray.Unlist
         Dim Merge As String = Temp & "/swissTCS.fasta"
         Dim MergeFasta As New SMRUCC.genomics.SequenceModel.FASTA.FastaFile(LoadProt)
         Call MergeFasta.Save(Merge)
 
-        Dim blast As New LocalBLAST.Programs.BLASTPlus(GCModeller.FileSystem.GetLocalBlast)
+        Dim blast As New LocalBLAST.Programs.BLASTPlus(GCModeller.FileSystem.GetLocalblast)
         Dim Pfam As String = GCModeller.FileSystem.CDD & "/Pfam.fasta"
         Dim out As String = Temp & "/Pfam.txt"
 
-        Call blast.FormatDb(Pfam, blast.MolTypeProtein).Start(WaitForExit:=True)
-        Call blast.Blastp(Merge, Pfam, out).Start(WaitForExit:=True)
+        Call blast.FormatDb(Pfam, blast.MolTypeProtein).Start(waitForExit:=True)
+        Call blast.Blastp(Merge, Pfam, out).Start(waitForExit:=True)
 
         Dim Logs = LocalBLAST.BLASTOutput.BlastPlus.Parser.TryParse(out)
         Dim PfamString = Xfam.Pfam.CreatePfamString(Logs, disableUltralarge:=True)
@@ -140,7 +140,7 @@ Partial Module CLI
                                           elementSelector:=Function(x) x.Group.First)
         Dim LQuery = (From dir As String In source
                       Select FileIO.FileSystem.GetFiles(dir, FileIO.SearchOption.SearchAllSubDirectories, "*.csv") _
-                          .ToArray(Function(x) x.LoadCsv(Of CrossTalks))).ToArray.MatrixToList.MatrixToList
+                          .ToArray(Function(x) x.LoadCsv(Of CrossTalks))).ToArray.Unlist.Unlist
         Dim CL = (From Ctk As CrossTalks In LQuery.AsParallel
                   Where swissTCS.ContainsKey(Ctk.Kinase) AndAlso
                       swissTCS.ContainsKey(Ctk.Regulator)
@@ -184,7 +184,7 @@ Partial Module CLI
         Next
 
         Call lst.AddRange(rDomains)
-        PfamString.PfamString = lst.ToArray(Function(x) $"{x.Identifier}({x.Position.Left}|{x.Position.Right})")
+        PfamString.PfamString = lst.ToArray(Function(x) $"{x.Name}({x.Position.Left}|{x.Position.Right})")
 
         Return PfamString
     End Function
@@ -206,7 +206,7 @@ Partial Module CLI
                                   .Regulator = reg,
                                   .Probability = -1
                               }
-                              Select __contactTrace(hkString, Pfam(reg), pretent)).ToArray).ToArray.MatrixToList
+                              Select __contactTrace(hkString, Pfam(reg), pretent)).ToArray).ToArray.Unlist
         Dim out As String = args.GetValue("/out", args("/pfam").TrimSuffix & ".swissTCS.csv")
         Return (From x In Combos Where Not x Is Nothing Select x).ToArray.SaveTo(out).CLICode
     End Function

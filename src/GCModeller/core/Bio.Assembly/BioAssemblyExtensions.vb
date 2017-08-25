@@ -1,50 +1,64 @@
-﻿#Region "Microsoft.VisualBasic::1d7a73d167772c93eae9d218d42f0d53, ..\GCModeller\core\Bio.Assembly\BioAssemblyExtensions.vb"
+﻿#Region "Microsoft.VisualBasic::8788f6af25db6ab0258c149a03d17967, ..\core\Bio.Assembly\BioAssemblyExtensions.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports System.Runtime.CompilerServices
-Imports System.Text
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq.Extensions
 Imports Microsoft.VisualBasic.Scripting.MetaData
+Imports SMRUCC.genomics.Assembly.KEGG.DBGET
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank
-Imports SMRUCC.genomics.Assembly.NCBI.GenBank.CsvExports
-Imports SMRUCC.genomics.Assembly.NCBI.GenBank.GBFF.Keywords.FEATURES
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
 Imports SMRUCC.genomics.ComponentModel.Loci
 Imports SMRUCC.genomics.SequenceModel
 Imports SMRUCC.genomics.SequenceModel.FASTA
 Imports SMRUCC.genomics.SequenceModel.NucleotideModels
 
-<PackageNamespace("Bio.Extensions", Publisher:="xie.guigang@gcmodeller.org")>
+''' <summary>
+''' Extension methods for some common operations
+''' </summary>
+<Package("Bio.Extensions", Publisher:="xie.guigang@gcmodeller.org")>
 Public Module BioAssemblyExtensions
+
+    <Extension> Public Function IsNullOrEmpty(compound As bGetObject.Compound) As Boolean
+        If compound Is Nothing Then
+            Return True
+        End If
+
+        With compound
+            Return .Entry.StringEmpty AndAlso
+                .CommonNames.IsEmptyStringVector AndAlso
+                .Formula.StringEmpty AndAlso
+                .MolWeight = 0R AndAlso
+                .ExactMass = 0R
+        End With
+    End Function
 
     ''' <summary>
     ''' Current nt base is a unknown base?
@@ -154,7 +168,7 @@ Public Module BioAssemblyExtensions
     ''' (请注意，这个只允许核酸序列)
     ''' </param>
     ''' <returns></returns>
-    <Extension> Public Function IsReversed(nt As I_PolymerSequenceModel) As Boolean
+    <Extension> Public Function IsReversed(nt As IPolymerSequenceModel) As Boolean
         If Not InStrAny(nt.SequenceData, "ATG", "GTG") = 1 Then
             Dim last As String = Mid(nt.SequenceData, Len(nt.SequenceData) - 3, 3)
             Return Not String.IsNullOrEmpty(last.EqualsAny("GTG", "GTA"))
@@ -180,9 +194,9 @@ Public Module BioAssemblyExtensions
                                          Optional offsets As Integer = 5) As Dictionary(Of Integer, Contig())
 
         Dim Groups As New Dictionary(Of Integer, List(Of Contig))
-        Dim idx As Integer = 1
+        Dim idx As int = 1
 
-        For Each loci As NucleotideModels.Contig In contigs
+        For Each loci As Contig In contigs
             Dim equalContig As Func(Of IEnumerable(Of Contig), Contig) =
                 Function(value) LinqAPI.DefaultFirst(Of Contig) <= From site As Contig
                                                                    In value
@@ -197,10 +211,10 @@ Public Module BioAssemblyExtensions
                                                     Where Not equal Is Nothing
                                                     Select x.Key
             If hash < 1 Then
-                Call Groups.Add(idx.MoveNext, New List(Of Contig) From {loci})      ' 新的分组
+                Call Groups.Add(++idx, New List(Of Contig) From {loci})      ' 新的分组
             Else
                 Dim lst As List(Of Contig) = Groups(hash)
-                Call lst.Add(loci)
+                Call lst.Add(item:=loci)
             End If
         Next
 

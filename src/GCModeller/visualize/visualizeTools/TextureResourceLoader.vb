@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::086567ee256a23de4529cb3166c602a1, ..\GCModeller\visualize\visualizeTools\TextureResourceLoader.vb"
+﻿#Region "Microsoft.VisualBasic::086567ee256a23de4529cb3166c602a1, ..\visualize\visualizeTools\TextureResourceLoader.vb"
 
     ' Author:
     ' 
@@ -32,7 +32,7 @@ Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.Imaging
 
-<PackageNamespace("Texture.Resource.Loader", Publisher:="xie.guigang@gmail.com")>
+<Package("Texture.Resource.Loader", Publisher:="xie.guigang@gmail.com")>
 Public Module TextureResourceLoader
 
     ''' <summary>

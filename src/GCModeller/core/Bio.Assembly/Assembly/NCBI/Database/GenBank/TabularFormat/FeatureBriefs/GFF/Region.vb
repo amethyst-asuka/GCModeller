@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::7562d6270e902c701fe1c1c6387ab46a, ..\GCModeller\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\TabularFormat\FeatureBriefs\GFF\Region.vb"
+﻿#Region "Microsoft.VisualBasic::b049e22b3b0ff87493e6766136bb3864, ..\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\TabularFormat\FeatureBriefs\GFF\Region.vb"
 
     ' Author:
     ' 
@@ -28,7 +28,7 @@
 
 Imports System.Xml.Serialization
 
-Namespace Assembly.NCBI.GenBank.TabularFormat
+Namespace Assembly.NCBI.GenBank.TabularFormat.GFF
 
     ''' <summary>
     ''' sequence-region  (##sequence-region &lt;seqname> &lt;start> &lt;end>)
@@ -37,6 +37,7 @@ Namespace Assembly.NCBI.GenBank.TabularFormat
     ''' [##sequence-region CP000050.1 1 5148708]
     ''' </summary>
     Public Class SeqRegion
+
         <XmlAttribute> Public Property AccessId As String
         <XmlAttribute> Public Property Start As Integer
         <XmlAttribute> Public Property Ends As Integer

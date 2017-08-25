@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::de8397269815a79f84c1ac85504b6771, ..\GCModeller\core\Bio.Assembly\Assembly\KEGG\Archives\Xml\XmlModel.vb"
+﻿#Region "Microsoft.VisualBasic::4bc043e77a35635e07cbfba968f4136c, ..\core\Bio.Assembly\Assembly\KEGG\Archives\Xml\XmlModel.vb"
 
     ' Author:
     ' 
@@ -132,7 +132,7 @@ Namespace Assembly.KEGG.Archives.Xml
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Function GetAllPathways() As bGetObject.Pathway()
-            Dim LQuery = Pathways.ToArray(Function(x) x.Pathways).MatrixToVector
+            Dim LQuery = Pathways.ToArray(Function(x) x.Pathways).ToVector
             Return LQuery
         End Function
 
@@ -145,7 +145,7 @@ Namespace Assembly.KEGG.Archives.Xml
         End Function
 
         Public Function Save(Optional Path As String = "", Optional encoding As Encodings = Encodings.UTF8) As Boolean Implements ISaveHandle.Save
-            Return Save(Path, encoding.GetEncodings)
+            Return Save(Path, encoding.CodePage)
         End Function
     End Class
 End Namespace

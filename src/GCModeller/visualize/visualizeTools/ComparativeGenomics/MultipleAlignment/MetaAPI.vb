@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::f1b793e21ba471ea9646009c1983f9d6, ..\GCModeller\visualize\visualizeTools\ComparativeGenomics\MultipleAlignment\MetaAPI.vb"
+﻿#Region "Microsoft.VisualBasic::98147eaa5211f226518d97b050d2102a, ..\visualize\visualizeTools\ComparativeGenomics\MultipleAlignment\MetaAPI.vb"
 
     ' Author:
     ' 
@@ -29,6 +29,7 @@
 Imports System.Runtime.CompilerServices
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel
+Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports SMRUCC.genomics.Assembly.KEGG.DBGET.bGetObject.Organism
@@ -49,12 +50,12 @@ Namespace ComparativeAlignment
                                                                       Select hit.tag
             Dim PTTHash As Dictionary(Of String, String) = lst.ToDictionary(Function(x) x.BaseName.ToLower.Trim)
             Dim names As Dictionary(Of String, String) =
-                LinqAPI.BuildHash(Of String, String, TagValue(Of String))(Function(x) x.tag, Function(x) x.Value) <=
+                LinqAPI.BuildHash(Of String, String, NamedValue(Of String))(Function(x) x.Name, Function(x) x.Value) <=
                     From name As String
                     In allSp.Distinct
                     Let sp = EntryAPI.GetValue(name)
                     Where Not sp Is Nothing
-                    Select New TagValue(Of String)(name, sp.Species.ToLower.Trim)
+                    Select New NamedValue(Of String)(name, sp.Species.ToLower.Trim)
 
             Dim files = (From x In names
                          Where PTTHash.ContainsKey(x.Value)

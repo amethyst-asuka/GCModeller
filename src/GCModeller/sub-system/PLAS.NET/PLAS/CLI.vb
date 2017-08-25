@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::698ac817ea8b59f1b0eac86555a35758, ..\GCModeller\sub-system\PLAS.NET\PLAS\CLI.vb"
+﻿#Region "Microsoft.VisualBasic::a0d5f078ccc3a11df354afcb55d70e31, ..\GCModeller\sub-system\PLAS.NET\PLAS\CLI.vb"
 
     ' Author:
     ' 
@@ -33,7 +33,7 @@ Imports Microsoft.VisualBasic.Terminal.STDIO
 Imports SMRUCC.genomics.Analysis.SSystem
 Imports SMRUCC.genomics.Analysis.SSystem.Script
 
-<PackageNamespace("PLAS.CLI", Category:=APICategories.CLI_MAN, Publisher:="xie.guigang@gmail.com")>
+<Package("PLAS.CLI", Category:=APICategories.CLI_MAN, Publisher:="xie.guigang@gmail.com")>
 Public Module CLI
 
     <ExportAPI("Run", Info:="run a model file of the biochemical network system.",

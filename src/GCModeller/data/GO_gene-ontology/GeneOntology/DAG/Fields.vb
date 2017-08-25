@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::7b7b816c15e27770a186522c14f2110c, ..\GCModeller\data\GO_gene-ontology\GeneOntology\DAG\Fields.vb"
+﻿#Region "Microsoft.VisualBasic::d15f8b29876a081ae1f5956172c3f121, ..\GCModeller\data\GO_gene-ontology\GeneOntology\DAG\Fields.vb"
 
     ' Author:
     ' 
@@ -51,7 +51,7 @@ Namespace DAG
         End Sub
 
         Public Overrides Function ToString() As String
-            Dim refs As String = ref.ToArray(Function(x) $"{x.Name}:{x.x}").JoinBy(", ")
+            Dim refs As String = ref.ToArray(Function(x) $"{x.Name}:{x.Value}").JoinBy(", ")
             Return $"def: ""{def}"" [{refs}]"
         End Function
     End Structure
@@ -70,7 +70,7 @@ Namespace DAG
         End Sub
 
         Public Overrides Function ToString() As String
-            Return $"synonym: ""{name}"" {type} [{synonym.Name}:{synonym.x}]"
+            Return $"synonym: ""{name}"" {type} [{synonym.Name}:{synonym.Value}]"
         End Function
     End Structure
 End Namespace

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::a64a9781890dec0c57864a0bdd2fd2af, ..\GCModeller\core\Bio.InteractionModel\Interaction.vb"
+﻿#Region "Microsoft.VisualBasic::d0731f62dc8596bdb9282c8a3bee9b9c, ..\core\Bio.InteractionModel\Interaction.vb"
 
     ' Author:
     ' 
@@ -26,36 +26,61 @@
 
 #End Region
 
-Imports System.Text
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
+Imports Microsoft.VisualBasic.Data.visualize.Network.Graph.Abstract
+Imports Microsoft.VisualBasic.Linq
 
 ''' <summary>
 ''' 默认的的相互作用的方向为从A到B
 ''' </summary>
 ''' <remarks></remarks>
-Public Class Interaction(Of T As sIdEnumerable)
+Public Class Interaction(Of T As INamedValue)
+    Implements IInteraction
 
-    Public Property ObjectA As T
+    Public Property A As T
     Public Property Interaction As String
-    Public Property ObjectB As T
+    Public Property B As T
 
+    ''' <summary>
+    ''' Is part of the interator is nothing?
+    ''' </summary>
+    ''' <returns></returns>
     Public ReadOnly Property Broken As Boolean
         Get
-            Return ObjectB Is Nothing OrElse ObjectA Is Nothing
+            Return B Is Nothing OrElse A Is Nothing
         End Get
+    End Property
+
+    Public Property source As String Implements IInteraction.source
+        Get
+            Return A.Key
+        End Get
+        Set(value As String)
+            A.Key = value
+        End Set
+    End Property
+
+    Public Property target As String Implements IInteraction.target
+        Get
+            Return B.Key
+        End Get
+        Set(value As String)
+            B.Key = value
+        End Set
     End Property
 
     Public Overrides Function ToString() As String
         If Broken Then
-            If ObjectA Is Nothing AndAlso ObjectB Is Nothing Then
+            If A Is Nothing AndAlso B Is Nothing Then
                 Return ""
-            ElseIf ObjectA Is Nothing Then
-                Return ObjectB.Identifier
+            ElseIf A Is Nothing Then
+                Return B.Key
             Else
-                Return ObjectA.Identifier
+                Return A.Key
             End If
         End If
-        Return String.Format("{0}" & vbTab & "{1}" & vbTab & "{2}", ObjectA.Identifier, Interaction, ObjectB.Identifier)
+
+        Return {source, Interaction, target}.JoinBy(vbTab)
     End Function
 
     ''' <summary>
@@ -65,12 +90,15 @@ Public Class Interaction(Of T As sIdEnumerable)
     ''' <param name="objB"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Overloads Function Equals(objA As T, objB As T, Optional Direction As Boolean = False) As Boolean
-        If Not Direction Then
-            Return (String.Equals(objA.Identifier, ObjectA.Identifier) AndAlso String.Equals(objB.Identifier, ObjectB.Identifier)) OrElse
-                       (String.Equals(objB.Identifier, ObjectA.Identifier) AndAlso String.Equals(objA.Identifier, ObjectB.Identifier))
+    Public Overloads Function Equals(objA As T, objB As T, Optional directed? As Boolean = False) As Boolean
+        If Not directed Then
+            Return (String.Equals(objA.Key, A.Key) AndAlso
+                String.Equals(objB.Key, B.Key)) OrElse
+                (String.Equals(objB.Key, A.Key) AndAlso
+                String.Equals(objA.Key, B.Key))
         Else
-            Return String.Equals(objA.Identifier, ObjectA.Identifier) AndAlso String.Equals(objB.Identifier, ObjectB.Identifier)
+            Return String.Equals(objA.Key, A.Key) AndAlso
+                String.Equals(objB.Key, B.Key)
         End If
     End Function
 
@@ -79,19 +107,20 @@ Public Class Interaction(Of T As sIdEnumerable)
     ''' </summary>
     ''' <param name="objA"></param>
     ''' <param name="objB"></param>
+    ''' <param name="directed">是否是具备有方向的？</param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Overloads Function Equals(objA As String, objB As String, Optional Direction As Boolean = False) As Boolean
-        If Not Direction Then
-            Return (String.Equals(objA, ObjectA.Identifier) AndAlso String.Equals(objB, ObjectB.Identifier)) OrElse
-                       (String.Equals(objB, ObjectA.Identifier) AndAlso String.Equals(objA, ObjectB.Identifier))
+    Public Overloads Function Equals(objA As String, objB As String, Optional directed? As Boolean = False) As Boolean
+        If Not directed Then
+            Return (String.Equals(objA, A.Key) AndAlso String.Equals(objB, B.Key)) OrElse
+                       (String.Equals(objB, A.Key) AndAlso String.Equals(objA, B.Key))
         Else
-            Return String.Equals(objA, ObjectA.Identifier) AndAlso String.Equals(objB, ObjectB.Identifier)
+            Return String.Equals(objA, A.Key) AndAlso String.Equals(objB, B.Key)
         End If
     End Function
 
-    Public Shared Function Generate(Data As Interaction(Of T)()) As String()
-        Dim result = (From item In Data Let iter = Function() item.ToString Select iter()).ToArray
+    Public Shared Function Generate(data As IEnumerable(Of Interaction(Of T))) As String()
+        Dim result$() = data.ToArray(Function(iter) iter.ToString)
         Return result
     End Function
 End Class

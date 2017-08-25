@@ -28,11 +28,11 @@
 
 Imports System.Runtime.CompilerServices
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
+Imports Microsoft.VisualBasic.CommandLine.InteropService.SharedORM
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.FileIO
+Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports Microsoft.VisualBasic.Linq.Extensions
 Imports Microsoft.VisualBasic.Scripting.MetaData
@@ -50,10 +50,11 @@ Imports Entry = System.Collections.Generic.KeyValuePair(Of
     SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BatchParallel.AlignEntry)
 
 <ExceptionHelp(Documentation:="http://docs.gcmodeller.org", Debugging:="https://github.com/SMRUCC/GCModeller/wiki", EMailLink:="xie.guigang@gcmodeller.org")>
-<PackageNamespace("NCBI.LocalBlast", Category:=APICategories.CLI_MAN,
-                  Description:="Wrapper tools for the ncbi blast+ program and the blast output data analysis program.",
+<Package("NCBI.LocalBlast", Category:=APICategories.CLI_MAN,
+                  Description:="Wrapper tools for the ncbi blast+ program and the blast output data analysis program. 
+                  For running a large scale parallel alignment task, using ``/venn.BlastAll`` command for ``blastp`` and ``/blastn.Query.All`` command for ``blastn``.",
                   Publisher:="amethyst.asuka@gcmodeller.org")>
-Module CLI
+<CLI> Module CLI
 
     <ExportAPI("/Bash.Venn", Usage:="/Bash.Venn /blast <blastDIR> /inDIR <fasta.DIR> /inRef <inRefAs.DIR> [/out <outDIR> /evalue <evalue:10>]")>
     Public Function BashShell(args As CommandLine) As Integer
@@ -83,7 +84,7 @@ Module CLI
         Dim MergeList As New List(Of BestHit)
 
         For Each inXml As String In FileIO.FileSystem.GetFiles(inDIR, FileIO.SearchOption.SearchTopLevelOnly, "*.xml")
-            Dim outCsv As String = out & "/" & IO.Path.GetFileNameWithoutExtension(inXml) & ".Csv"
+            Dim outCsv As String = out & "/" & BaseName(inXml) & ".Csv"
             Dim blastOut = inXml.LoadXml(Of XmlFile.BlastOutput)
             Dim hits = blastOut.ExportOverview.GetExcelData
             Call hits.SaveTo(outCsv)
@@ -91,7 +92,7 @@ Module CLI
         Next
 
         If Merge Then
-            MergeList = (From x In MergeList Select x Order By x.evalue Ascending).ToList
+            MergeList = (From x In MergeList Select x Order By x.evalue Ascending).AsList
             Call MergeList.SaveTo(out & "/" & FileIO.FileSystem.GetDirectoryInfo(inDIR).Name & ".Merge.Csv")
         End If
 
@@ -117,7 +118,7 @@ Module CLI
                                  outDIR As String) As Integer
         Dim Parser As __bbhParser = [If](Of __bbhParser)(isAll, AddressOf ParseAllbbhhits, AddressOf ParsebbhBesthit)  ' 导出方法
         Dim ParsingTask = (From entry As Entry
-                           In entries.AsParallel
+                           In entries
                            Let fileEntry As KeyValuePair(Of String, String) = __orderEntry(entry, singleQuery)
                            Select entry,
                                bbh = Parser(fileEntry.Key, fileEntry.Value, coverage, identities)).ToArray
@@ -128,7 +129,7 @@ Module CLI
         Next
 
         Dim Allbbh = (From hitPair As BiDirectionalBesthit
-                      In ParsingTask.ToArray(Function(sp) sp.bbh).MatrixAsIterator.AsParallel
+                      In ParsingTask.ToArray(Function(sp) sp.bbh).IteratesALL.AsParallel
                       Where hitPair.Matched
                       Select hitPair).ToArray  ' 最后将所有的结果进行合并然后保存
         Dim inDIR As String = FileIO.FileSystem.GetParentPath(entries.First.Key.FilePath)
@@ -251,7 +252,9 @@ Module CLI
         Call Settings.Session.Initialize()
     End Sub
 
-    <ExportAPI("--blast.self", Usage:="--blast.self /query <query.fasta> [/blast <blast_HOME> /out <out.csv>]")>
+    <ExportAPI("--blast.self",
+               Info:="Query fasta query against itself for paralogs.",
+               Usage:="--blast.self /query <query.fasta> [/blast <blast_HOME> /out <out.csv>]")>
     Public Function SelfBlast(args As CommandLine) As Integer
         Dim query As String = args("/query")
         Dim blast As String = args("/blast")
@@ -263,8 +266,8 @@ Module CLI
         Dim out As String = query.TrimSuffix & ".BlastSelf.txt"
         Dim localblast As New Programs.BLASTPlus(blast)
 
-        Call localblast.FormatDb(query, localblast.MolTypeProtein).Start(WaitForExit:=True)
-        Call localblast.Blastp(query, query, out, "1e-3").Start(WaitForExit:=True)
+        Call localblast.FormatDb(query, localblast.MolTypeProtein).Start(waitForExit:=True)
+        Call localblast.Blastp(query, query, out, "1e-3").Start(waitForExit:=True)
 
         Dim outLog As BlastPlus.v228 = BlastPlus.Parser.TryParse(out)
         Dim hits As BestHit() = outLog.ExportOverview.GetExcelData
@@ -274,20 +277,24 @@ Module CLI
         Return hits.SaveTo(out).CLICode
     End Function
 
-    <ExportAPI("/export.prot", Usage:="/export.prot /gb <genome.gbk> [/out <out.fasta>]")>
+    <ExportAPI("/Export.Protein",
+               Info:="Export all of the protein sequence from the genbank database file.",
+               Usage:="/Export.Protein /gb <genome.gb> [/out <out.fasta>]")>
+    <Group(CLIGrouping.GenbankTools)>
     Public Function ExportProt(args As CommandLine) As Integer
         Dim gb As String = args("/gb")
-        Dim out As String = args.GetValue("/out", gb.TrimSuffix & "_prot.fasta")
+        Dim out As String = args.GetValue("/out", gb.TrimSuffix & "-protein.fasta")
         Dim gbk As GBFF.File = GBFF.File.Load(gb)
         Dim prot As FASTA.FastaFile = gbk.ExportProteins_Short
         Return prot.Save(out).CLICode
     End Function
 
     <ExportAPI("/Copys", Usage:="/Copys /imports <DIR> [/out <outDIR>]")>
+    <Group(CLIGrouping.GenbankTools)>
     Public Function Copys(args As CommandLine) As Integer
         Dim inDIR As String = args("/imports")
         Dim gbs = FileIO.FileSystem.GetFiles(inDIR, FileIO.SearchOption.SearchAllSubDirectories, "*.gbk", "*.gb") _
-            .ToArray(Function(s) GBFF.File.LoadDatabase(s), parallel:=True).MatrixAsIterator
+            .ToArray(Function(s) GBFF.File.LoadDatabase(s), parallel:=True).IteratesALL
         Dim out As String = args.GetValue("/out", inDIR & ".fasta/")
 
         For Each gb As GBFF.File In gbs
@@ -304,7 +311,7 @@ Module CLI
             Call prot.Save(path)
         Next
 
-        For Each fasta As String In ls - l - r - wildcards("*.fasta", "*.fsa", "*.faa", "*.fa") <= inDIR
+        For Each fasta As String In ls - l - R - wildcards("*.fasta", "*.fsa", "*.faa", "*.fa") <= inDIR
             Dim fa As FastaFile = FastaFile.Read(fasta, True)
             fa = New FastaFile((From x As FastaToken
                                 In fa

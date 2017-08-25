@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::f693a64e4758b35fb358e83e7448a8ba, ..\GCModeller\data\RegulonDatabase\Regprecise\RegpreciseAPI.vb"
+﻿#Region "Microsoft.VisualBasic::13d11cc609bae3fd1ef6483ac7b2a0bd, ..\GCModeller\data\RegulonDatabase\Regprecise\RegpreciseAPI.vb"
 
     ' Author:
     ' 
@@ -40,7 +40,7 @@ Imports SMRUCC.genomics.SequenceModel
 
 Namespace Regprecise
 
-    <[PackageNamespace]("Regprecise", Description:="[Regprecise database] [Collections of regulogs classified by transcription factors]",
+    <Package("Regprecise", Description:="[Regprecise database] [Collections of regulogs classified by transcription factors]",
                         Cites:="Novichkov, P. S., et al. (2013). ""RegPrecise 3.0--a resource For genome-scale exploration Of transcriptional regulation In bacteria."" BMC Genomics 14: 745.
 <p>BACKGROUND: Genome-scale prediction of gene regulation and reconstruction of transcriptional regulatory networks in prokaryotes is one of the critical tasks of modern genomics. Bacteria from different taxonomic groups, whose lifestyles and natural environments are substantially different, possess highly diverged transcriptional regulatory networks. The comparative genomics approaches are useful for in silico reconstruction of bacterial regulons and networks operated by both transcription factors (TFs) and RNA regulatory elements (riboswitches). DESCRIPTION: RegPrecise (http://regprecise.lbl.gov) is a web resource for collection, visualization and analysis of transcriptional regulons reconstructed by comparative genomics. We significantly expanded a reference collection of manually curated regulons we introduced earlier. RegPrecise 3.0 provides access to inferred regulatory interactions organized by phylogenetic, structural and functional properties. Taxonomy-specific collections include 781 TF regulogs inferred in more than 160 genomes representing 14 taxonomic groups of Bacteria. TF-specific collections include regulogs for a selected subset of 40 TFs reconstructed across more than 30 taxonomic lineages. Novel collections of regulons operated by RNA regulatory elements (riboswitches) include near 400 regulogs inferred in 24 bacterial lineages. RegPrecise 3.0 provides four classifications of the reference regulons implemented as controlled vocabularies: 55 TF protein families; 43 RNA motif families; ~150 biological processes or metabolic pathways; and ~200 effectors or environmental signals. Genome-wide visualization of regulatory networks and metabolic pathways covered by the reference regulons are available for all studied genomes. A separate section of RegPrecise 3.0 contains draft regulatory networks in 640 genomes obtained by an conservative propagation of the reference regulons to closely related genomes. 
                         <p>CONCLUSIONS: RegPrecise 3.0 gives access to the transcriptional regulons reconstructed in bacterial genomes. Analytical capabilities include exploration of: regulon content, structure and function; TF binding site motifs; conservation and variations in genome-wide regulatory networks across all taxonomic groups of Bacteria. RegPrecise 3.0 was selected as a core resource on transcriptional regulation of the Department of Energy Systems Biology Knowledgebase, an emerging software and data environment designed to enable researchers to collaboratively generate, test and share new hypotheses about gene and protein functions, perform large-scale analyses, and model interactions in microbes, plants, and their communities.          ",
@@ -129,7 +129,7 @@ Rodionov, D. A.", Volume:=14)>
                                                      Where String.Equals(reg.LocusTag.Key, sId)
                                                      Select reg).ToArray).ToArray
             Dim LQuery = (From Line In DistinctedRegulators
-                          Let Sites = (From item In Line.ddata Select item.RegulatorySites).MatrixToVector
+                          Let Sites = (From item In Line.ddata Select item.RegulatorySites).ToVector
                           Let DistinctedSites = (From SiteId As String In (From item In Sites Select item.UniqueId Distinct).ToArray Let site = Sites.GetItem(SiteId) Select site).ToArray
                           Select Regulator = Line.ddata.First,
                               DistinctedSites).ToArray
@@ -186,7 +186,7 @@ Rodionov, D. A.", Volume:=14)>
         Public Function RegpreciseRegulatorMatch(Regprecise As TranscriptionFactors, bbh As IEnumerable(Of BiDirectionalBesthit)) As Matches()
             Dim LQuery = (From BacteriaGenome As BacteriaGenome In Regprecise.BacteriaGenomes.AsParallel
                           Select BacteriaGenome.__matches(bbh)).ToArray
-            Return LQuery.MatrixToVector
+            Return LQuery.ToVector
         End Function
 
         <Extension>
@@ -223,14 +223,14 @@ Rodionov, D. A.", Volume:=14)>
         End Function
 
         <ExportAPI("Family.Statics")>
-        Public Function FamilyStatics(Matches As IEnumerable(Of IRegulatorMatched)) As DocumentStream.File
+        Public Function FamilyStatics(Matches As IEnumerable(Of IRegulatorMatched)) As IO.File
             Dim LQuery = (From item As KeyValuePair(Of String, String()) In FamilyStatics2(Matches)
                           Let Family As String = item.Key
                           Let Counts As String = item.Value.Count
                           Let Regulators As String = String.Join("; ", item.Value)
-                          Select New DocumentStream.RowObject From {Family, Counts, Regulators}).ToArray
-            Dim array = New DocumentStream.RowObject From {"Family", "Regulator Counts"}.Join(LQuery)
-            Return New DocumentStream.File(array)
+                          Select New IO.RowObject From {Family, Counts, Regulators}).ToArray
+            Dim array = New IO.RowObject From {"Family", "Regulator Counts"}.Join(LQuery)
+            Return New IO.File(array)
         End Function
 
         Public Function FamilyStatics2(Matches As Generic.IEnumerable(Of IRegulatorMatched)) As KeyValuePair(Of String, String())()
@@ -397,7 +397,7 @@ Rodionov, D. A.", Volume:=14)>
                 Dim FastaFile = item.Value
                 For i As Integer = 0 To FastaFile.Count - 1
                     Dim FastaObject = FastaFile(i)
-                    Dim attrs = FastaObject.Attributes.ToList
+                    Dim attrs = FastaObject.Attributes.AsList
                     attrs(0) = String.Format("lcl_{0} ", i) & attrs.First
                     FastaObject.Attributes = attrs.ToArray
                 Next

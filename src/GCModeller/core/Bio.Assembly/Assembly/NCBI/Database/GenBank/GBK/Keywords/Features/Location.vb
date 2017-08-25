@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::2fa0d0fdd5438daf1e8788c406c6a28d, ..\GCModeller\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\GBK\Keywords\Features\Location.vb"
+﻿#Region "Microsoft.VisualBasic::6b7c4125f598a037d51f9a0942db2ed0, ..\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\GBK\Keywords\Features\Location.vb"
 
     ' Author:
     ' 
@@ -30,10 +30,12 @@ Imports System.Text
 Imports System.Text.RegularExpressions
 Imports System.Xml.Serialization
 Imports Microsoft.VisualBasic
+Imports SMRUCC.genomics.ComponentModel.Loci
+Imports SMRUCC.genomics.ComponentModel.Loci.Abstract
 
 Namespace Assembly.NCBI.GenBank.GBFF.Keywords.FEATURES
 
-    Public Class Location : Implements ComponentModel.Loci.Abstract.ILocationSegment
+    Public Class Location : Implements ILocationSegment
 
         ''' <summary>
         ''' 对于环状的DNA分子，当某一个特性位点跨越了终点的时候，会有一个这个属性，本属性此时不会为空值
@@ -50,23 +52,19 @@ Namespace Assembly.NCBI.GenBank.GBFF.Keywords.FEATURES
         <XmlAttribute> Public Property Complement As Boolean
         <XmlAttribute> Public Property Locations As RegionSegment()
             Get
-                Return lstLocis
+                Return _locis
             End Get
             Set(value As RegionSegment())
-                lstLocis = value
+                _locis = value
 
                 If Not value.IsNullOrEmpty Then
-                    _left = (From loc As RegionSegment
-                             In value
-                             Select loc.Left).ToArray.Min
-                    _right = (From loc As RegionSegment
-                              In value
-                              Select loc.Right).ToArray.Max
+                    _left = value.Select(Function(l) l.Left).Min
+                    _right = value.Select(Function(l) l.Right).Max
                 End If
             End Set
         End Property
 
-        Dim lstLocis As RegionSegment()
+        Dim _locis As RegionSegment()
         Dim _left, _right As Long
 
         ''' <summary>
@@ -75,9 +73,9 @@ Namespace Assembly.NCBI.GenBank.GBFF.Keywords.FEATURES
         ''' <value></value>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Public ReadOnly Property ContiguousRegion As ComponentModel.Loci.NucleotideLocation
+        Public ReadOnly Property ContiguousRegion As NucleotideLocation
             Get
-                Return New ComponentModel.Loci.NucleotideLocation(_left, _right, Complement)
+                Return New NucleotideLocation(_left, _right, Complement)
             End Get
         End Property
 
@@ -92,7 +90,7 @@ Namespace Assembly.NCBI.GenBank.GBFF.Keywords.FEATURES
                      .Left = Val(Tokens.First),
                      .Right = Val(Tokens.Last)
                  }
-                 Select Segment).ToList
+                 Select Segment).AsList
 
             If LQuery.IsNullOrEmpty Then
                 Call $"Location is empty!   ""{strData}""".__DEBUG_ECHO
@@ -112,7 +110,7 @@ Namespace Assembly.NCBI.GenBank.GBFF.Keywords.FEATURES
                 Call $"Join location at {JoinLocation.ToString}".__DEBUG_ECHO
             End If
 
-            Dim Location As Location = New Location With {
+            Dim Location As New Location With {
                 .Locations = LQuery.ToArray,
                 .Complement = LocationComplement,
                 .JoinLocation = JoinLocation
@@ -144,13 +142,13 @@ Namespace Assembly.NCBI.GenBank.GBFF.Keywords.FEATURES
             Return sBuilder
         End Function
 
-        Public ReadOnly Property Location As ComponentModel.Loci.Location Implements ComponentModel.Loci.Abstract.ILocationSegment.Location
+        Public ReadOnly Property Location As ComponentModel.Loci.Location Implements ILocationSegment.Location
             Get
                 Return ContiguousRegion
             End Get
         End Property
 
-        Public ReadOnly Property UniqueId As String Implements ComponentModel.Loci.Abstract.ILocationSegment.UniqueId
+        Public ReadOnly Property UniqueId As String Implements ILocationSegment.UniqueId
             Get
                 Return ToString()
             End Get

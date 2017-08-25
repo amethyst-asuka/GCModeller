@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::d10cda7899db25c7784d5d112a6ec421, ..\GCModeller\visualize\visualizeTools\ExpressionMatrix\ShellScriptAPI.vb"
+﻿#Region "Microsoft.VisualBasic::52d5cc51c820e854de27a7c86a5f4fdf, ..\visualize\visualizeTools\ExpressionMatrix\ShellScriptAPI.vb"
 
     ' Author:
     ' 
@@ -37,21 +37,21 @@ Namespace ExpressionMatrix
 
         <ExportAPI("mat.invoke_drawing")>
         Public Function DrawingImage(data As SerialsData()) As Image
-            Return MatrixDrawing.InvokeDrawing(data, Nothing)
+            Return MatrixDrawing.InvokeDrawing(data)
         End Function
 
         <ExportAPI("mat.load")>
-        Public Function LoadData(data As DocumentStream.File) As SerialsData()
+        Public Function LoadData(data As IO.File) As SerialsData()
             Return DataServicesExtension.LoadCsv(data)
         End Function
 
         <ExportAPI("mat.invoke_drawing")>
-        Public Function DrawingMatrix(MAT As DocumentStream.File) As Image
+        Public Function DrawingMatrix(MAT As IO.File) As Image
             Return MatrixDrawing.NormalMatrix(MAT)
         End Function
 
         <ExportAPI("mat.Triangular_drawing")>
-        Public Function DrawingMatrixTr(MAT As DocumentStream.File) As Image
+        Public Function DrawingMatrixTr(MAT As IO.File) As Image
             Return MatrixDrawing.NormalMatrixTriangular(MAT)
         End Function
     End Module

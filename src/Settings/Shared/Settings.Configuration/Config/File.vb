@@ -50,6 +50,10 @@ Namespace Settings
         <XmlElement,
             ProfileItem(Name:="blastdb", Description:="The directory which contains the fasta sequence database files.", Type:=ValueTypes.Directory)>
         Public Property BlastDb As String
+
+        <XmlElement, ProfileItem(Name:="cog2003-2014", Description:="The prot2003-2014.fasta NCBI cog fasta database for the COG annotation.", Type:=ValueTypes.File)>
+        Public Property COG2003_2014 As String
+
         ''' <summary>
         ''' The R program install location on your computer. This property value is the directory path value like: D:\R\bin or C:\Program Files\R\bin
         ''' </summary>
@@ -138,7 +142,18 @@ GCModeller Dev-Team</README>.SaveTo(_repositoryRoot & "/readme.txt")
             Return Settings.Programs.MPAlignment.GetValue(Me)
         End Function
 
-        Public Shared ReadOnly Property DefaultXmlFile As String = My.Application.Info.DirectoryPath & "\Settings\Settings.xml"
+        ''' <summary>
+        ''' 配置文件的默认文件位置为AppData文件夹之中
+        ''' </summary>
+        ''' <returns></returns>
+        ''' <remarks>
+        ''' 2017-1-26
+        ''' 
+        ''' 配置文件数据原来是放置在应用程序的根目录之下的，但是考虑到将程序拷贝到不同的计算机之上，
+        ''' 环境已经变化了，则放置于应用程序的根目录之中的话，会覆盖掉其他计算机的环境配置，所以
+        ''' 最终决定放置于AppData之中
+        ''' </remarks>
+        Public Shared ReadOnly Property DefaultXmlFile As String = App.ProductProgramData & "/.settings/Settings.xml"
 
         Public Overrides Function Save(Optional FilePath As String = "", Optional Encoding As Text.Encoding = Nothing) As Boolean
             If String.IsNullOrEmpty(FilePath) Then

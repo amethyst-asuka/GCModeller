@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::a4222fbb6520cd25a2bacadc2e8cd1bc, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Parser\ObjectModel.vb"
+﻿#Region "Microsoft.VisualBasic::71c7bcbc198e3c2f245e053313fc1259, ..\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Parser\ObjectModel.vb"
 
     ' Author:
     ' 
@@ -31,6 +31,7 @@ Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.Linq
 Imports SMRUCC.genomics.Assembly.MetaCyc.File.DataFiles
+Imports Microsoft.VisualBasic.Language
 
 Namespace Assembly.MetaCyc.File
 
@@ -38,9 +39,9 @@ Namespace Assembly.MetaCyc.File
     ''' 每一个数据文件里面的每一个对象的模型
     ''' </summary>
     Public Class ObjectModel : Inherits DynamicPropertyBase(Of String())
-        Implements sIdEnumerable
+        Implements INamedValue
 
-        Public Property uid As String Implements sIdEnumerable.Identifier
+        Public Property uid As String Implements INamedValue.Key
 
         Const UNIQUE_ID As String = "UNIQUE-ID"
 

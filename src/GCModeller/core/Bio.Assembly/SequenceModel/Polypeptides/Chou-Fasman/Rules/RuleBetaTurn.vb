@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::199ba12f85c417c6828d2cf322d79dbf, ..\GCModeller\core\Bio.Assembly\SequenceModel\Polypeptides\Chou-Fasman\Rules\RuleBetaTurn.vb"
+﻿#Region "Microsoft.VisualBasic::199ba12f85c417c6828d2cf322d79dbf, ..\core\Bio.Assembly\SequenceModel\Polypeptides\Chou-Fasman\Rules\RuleBetaTurn.vb"
 
     ' Author:
     ' 
@@ -38,8 +38,8 @@ Namespace SequenceModel.Polypeptides.SecondaryStructure.ChouFasmanRules
         ''' <param name="SequenceData"></param>
         ''' <remarks></remarks>
         Public Function Invoke(SequenceData As AminoAcid()) As Integer
-            Dim SequenceEnums As SequenceModel.Polypeptides.Polypeptides.AminoAcid() = (From token In SequenceData Select token.AminoAcid).ToArray
-            Dim ChunkBuffer As SequenceModel.Polypeptides.Polypeptides.AminoAcid() = New SequenceModel.Polypeptides.Polypeptides.AminoAcid(4 - 1) {}
+            Dim SequenceEnums As SequenceModel.Polypeptides.AminoAcid() = (From token In SequenceData Select token.AminoAcid).ToArray
+            Dim ChunkBuffer As SequenceModel.Polypeptides.AminoAcid() = New SequenceModel.Polypeptides.AminoAcid(4 - 1) {}
             Dim Count_bt As Integer = 0
 
             For i As Integer = 0 To SequenceEnums.Count - (4 + 1)

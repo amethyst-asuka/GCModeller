@@ -28,7 +28,6 @@
 
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv.Extensions
-Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.CsvExports
@@ -37,7 +36,7 @@ Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH
 
 Namespace NCBIBlastResult
 
-    <[PackageNamespace]("SBH_Tabular",
+    <Package("SBH_Tabular",
                         Publisher:="xie.guigang@gmail.com",
                         Category:=APICategories.UtilityTools)>
     Public Module SBH_Tabular

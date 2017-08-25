@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::d6531a498ce6239e46f368cbdcd0f8ae, ..\GCModeller\core\Bio.Assembly\SequenceModel\FASTA\Reflection\FastaTools.vb"
+﻿#Region "Microsoft.VisualBasic::8bf55d9a6368d02a26731f9eb11e1b73, ..\core\Bio.Assembly\SequenceModel\FASTA\Reflection\FastaTools.vb"
 
     ' Author:
     ' 
@@ -42,7 +42,7 @@ Namespace SequenceModel.FASTA.Reflection
     ''' </summary>
     ''' <remarks></remarks>
     ''' 
-    <PackageNamespace("Fasta.Tools")>
+    <Package("Fasta.Tools")>
     Public Module FastaExportMethods
 
         ''' <summary>
@@ -261,7 +261,7 @@ REDO:           seq = Mid(seq, i)
                                    Select If(String.IsNullOrEmpty(pairItem.Key.Precursor), New String() {value}, New String() {pairItem.Key.Precursor, value})).ToArray
                 Dim Fsa As FastaToken = New FastaToken With {
                     .SequenceData = objItem.GetSequenceData,
-                    .Attributes = stringItems.MatrixToVector
+                    .Attributes = stringItems.ToVector
                 }
                 Return Fsa
             Else

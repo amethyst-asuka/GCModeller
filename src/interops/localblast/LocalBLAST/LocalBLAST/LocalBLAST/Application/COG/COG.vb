@@ -30,9 +30,9 @@ Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports Microsoft.VisualBasic.Linq.Extensions
-Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
 Imports SMRUCC.genomics.ComponentModel
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH
+Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH.Abstract
 
 Namespace LocalBLAST.Application.RpsBLAST
 
@@ -40,9 +40,9 @@ Namespace LocalBLAST.Application.RpsBLAST
     ''' COG output data from http://weizhong-lab.ucsd.edu/metagenomic-analysis/server/
     ''' </summary>
     Public Class MGACOG
-        Implements sIdEnumerable, ICOGDigest, IQueryHits
+        Implements INamedValue, ICOGDigest, IQueryHits
 
-        <Column("#Query")> Public Property QueryName As String Implements IBlastHit.locusId, sIdEnumerable.Identifier
+        <Column("#Query")> Public Property QueryName As String Implements IBlastHit.locusId, INamedValue.Key
         Public Property Hit As String Implements IBlastHit.Address, ICOGDigest.COG
         <Column("E-value")> Public Property Evalue As Double
         Public Property Score As Double
@@ -79,7 +79,7 @@ Namespace LocalBLAST.Application.RpsBLAST
             Return DataImports.Imports(Of MGACOG)(path, vbTab)
         End Function
 
-        Public Shared Function ToMyvaCOG(source As Generic.IEnumerable(Of MGACOG)) As MyvaCOG()
+        Public Shared Function ToMyvaCOG(source As IEnumerable(Of MGACOG)) As MyvaCOG()
             Return source.ToArray(Function(x) x.ToMyvaCOG)
         End Function
     End Class
@@ -89,9 +89,9 @@ Namespace LocalBLAST.Application.RpsBLAST
     ''' </summary>
     ''' <remarks></remarks>
     Public Class MyvaCOG
-        Implements sIdEnumerable, ICOGDigest, IQueryHits
+        Implements INamedValue, ICOGDigest, IQueryHits, ICOGCatalog
 
-        <Column("query_name")> Public Property QueryName As String Implements sIdEnumerable.Identifier, IBlastHit.locusId
+        <Column("query_name")> Public Property QueryName As String Implements INamedValue.Key, IBlastHit.locusId
         Public Property Length As Integer Implements ICOGDigest.Length
         <Column("cog_myva")> Public Property MyvaCOG As String
 
@@ -101,8 +101,8 @@ Namespace LocalBLAST.Application.RpsBLAST
         ''' <value></value>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        <Column("COG_category")> Public Property Category As String
-        <Column("COG")> Public Property COG As String Implements ICOGDigest.COG, IBlastHit.Address
+        <Column("COG_category")> Public Property Category As String Implements ICOGCatalog.Catalog
+        <Column("COG")> Public Property COG As String Implements ICOGDigest.COG, IBlastHit.Address, ICOGCatalog.COG
         <Column("description")> Public Property Description As String Implements ICOGDigest.Product
 
         Public Property Evalue As Double
@@ -110,10 +110,20 @@ Namespace LocalBLAST.Application.RpsBLAST
         Public Property QueryLength As Integer
         Public Property LengthQuery As Integer
 
+        Public Property Data As Dictionary(Of String, String)
+
         Public Overrides Function ToString() As String
             Return String.Format("[{0}] {1}", COG, QueryName)
         End Function
 
+        ''' <summary>
+        ''' ```
+        ''' query   -> <see cref="BestHit.QueryName"/>
+        ''' myvaCOG -> <see cref="BestHit.HitName"/>
+        ''' ```
+        ''' </summary>
+        ''' <param name="besthit"></param>
+        ''' <returns></returns>
         Public Shared Function CreateObject(besthit As BestHit) As MyvaCOG
             Return New MyvaCOG With {
                 .QueryName = besthit.QueryName,

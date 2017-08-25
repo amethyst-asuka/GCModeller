@@ -1,35 +1,34 @@
-﻿#Region "Microsoft.VisualBasic::a6cb8d8463bf2d774e4e18953848069f, ..\GCModeller\analysis\RNA-Seq\Toolkits.RNA-Seq.RTools\PfsNET\PfsNETModuleAPI.vb"
+﻿#Region "Microsoft.VisualBasic::8c66d7cd4da935aa44b19c90b9c11b1b, ..\GCModeller\analysis\RNA-Seq\Toolkits.RNA-Seq.RTools\PfsNET\PfsNETModuleAPI.vb"
 
-' Author:
-' 
-'       asuka (amethyst.asuka@gcmodeller.org)
-'       xieguigang (xie.guigang@live.com)
-'       xie (genetics@smrucc.org)
-' 
-' Copyright (c) 2016 GPL3 Licensed
-' 
-' 
-' GNU GENERAL PUBLIC LICENSE (GPL3)
-' 
-' This program is free software: you can redistribute it and/or modify
-' it under the terms of the GNU General Public License as published by
-' the Free Software Foundation, either version 3 of the License, or
-' (at your option) any later version.
-' 
-' This program is distributed in the hope that it will be useful,
-' but WITHOUT ANY WARRANTY; without even the implied warranty of
-' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-' GNU General Public License for more details.
-' 
-' You should have received a copy of the GNU General Public License
-' along with this program. If not, see <http://www.gnu.org/licenses/>.
+    ' Author:
+    ' 
+    '       asuka (amethyst.asuka@gcmodeller.org)
+    '       xieguigang (xie.guigang@live.com)
+    '       xie (genetics@smrucc.org)
+    ' 
+    ' Copyright (c) 2016 GPL3 Licensed
+    ' 
+    ' 
+    ' GNU GENERAL PUBLIC LICENSE (GPL3)
+    ' 
+    ' This program is free software: you can redistribute it and/or modify
+    ' it under the terms of the GNU General Public License as published by
+    ' the Free Software Foundation, either version 3 of the License, or
+    ' (at your option) any later version.
+    ' 
+    ' This program is distributed in the hope that it will be useful,
+    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
+    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    ' GNU General Public License for more details.
+    ' 
+    ' You should have received a copy of the GNU General Public License
+    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports System.Text
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine.Reflection
-Imports Microsoft.VisualBasic.ComponentModel
+Imports Microsoft.VisualBasic.ComponentModel.Algorithm.base
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports Microsoft.VisualBasic.Data.csv.Extensions
@@ -37,10 +36,9 @@ Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports Microsoft.VisualBasic.Linq
+Imports Microsoft.VisualBasic.ListExtensions
 Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports Microsoft.VisualBasic.Text
-Imports RDotNET
-Imports SMRUCC.genomics.Analysis
 Imports SMRUCC.genomics.Analysis.PFSNet.PFSNet
 Imports SMRUCC.genomics.Analysis.RNA_Seq.dataExprMAT
 Imports SMRUCC.genomics.Analysis.RNA_Seq.RTools.PfsNET.TabularArchives
@@ -56,7 +54,7 @@ Namespace PfsNET
     ''' 文件1,2之中所放着的基因是自身所感兴趣的基因突变体的转录组表达值，文件三则是文件1,2之中的两两组合的基因的关系
     ''' </summary>
     ''' <remarks></remarks>
-    <[PackageNamespace]("PfsNET",
+    <Package("PfsNET",
                  Description:="PFSNet computes signifiance of subnetworks generated through a process that selects genes in a pathway based on fuzzy scoring and a majority voting procedure.",
                         Cites:="Lim, K. and L. Wong (2014). ""Finding consistent disease subnetworks Using PFSNet."" Bioinformatics 30(2): 189-196.
 <p> MOTIVATION: Microarray data analysis is often applied to characterize disease populations by identifying individual genes linked to the disease. In recent years, efforts have shifted to focus on sets of genes known to perform related biological functions (i.e. in the same pathways). Evaluating gene sets reduces the need to correct for false positives in multiple hypothesis testing. However, pathways are often large, and genes in the same pathway that do not contribute to the disease can cause a method to miss the pathway. In addition, large pathways may not give much insight to the cause of the disease. Moreover, when such a method is applied independently to two datasets of the same disease phenotypes, the two resulting lists of significant pathways often have low agreement. RESULTS: We present a powerful method, PFSNet, that identifies smaller parts of pathways (which we call subnetworks), and show that significant subnetworks (and the genes therein) discovered by PFSNet are up to 51% (64%) more consistent across independent datasets of the same disease phenotypes, even for datasets based on different platforms, than previously published methods. We further show that those methods which initially declared some large pathways to be insignificant would declare subnetworks detected by PFSNet in those large pathways to be significant, if they were given those subnetworks as input instead of the entire large pathways. AVAILABILITY: http://compbio.ddns.comp.nus.edu.sg:8080/pfsnet/
@@ -133,10 +131,10 @@ Availability: http://compbio.ddns.comp.nus.edu.sg:8080/pfsnet/", AuthorAddress:=
                 Dim Combo As Comb(Of String) = Comb(Of String).CreateObject(PathwayInfo.GetPathwayGenes)
 
                 For Each Line In Combo.CombList
-                    bufs += From pair As KeyValuePair(Of String, String)
+                    bufs += From pair As Tuple(Of String, String)
                             In Line
                             Let strPair As String() = (From strId As String
-                                                       In New String() {pair.Key, pair.Value}
+                                                       In pair.Iterates
                                                        Select strId
                                                        Order By strId Ascending).ToArray
                             Select String.Join(vbTab, PathwayInfo.EntryId, strPair(0), strPair(1))
@@ -161,8 +159,7 @@ Availability: http://compbio.ddns.comp.nus.edu.sg:8080/pfsnet/", AuthorAddress:=
 
         Private Function __getPath(path As String, prefix As String) As String
             If String.IsNullOrEmpty(path) Then
-                Call VBMath.Randomize()
-                path = String.Format("./{0}_pid_{1}_{2}.tmp", prefix, Process.GetCurrentProcess.Id, RandomDouble)
+                path = $"./{prefix}_pid_{App.PID}_{App.NextTempName}.tmp"
             End If
 
             Return FileIO.FileSystem.GetFileInfo(path).FullName
@@ -179,7 +176,7 @@ Availability: http://compbio.ddns.comp.nus.edu.sg:8080/pfsnet/", AuthorAddress:=
             For Each Line In Repressions
                 Call ChunkBuffer.AddRange(Line)
             Next
-            ChunkBuffer = (From strLine As String In ChunkBuffer Select strLine Distinct).ToList
+            ChunkBuffer = New List(Of String)(ChunkBuffer.Distinct)
             '  Dim RemovedLines As String() = (From strLine As String In ChunkBuffer Where (From GeneId As String In _RemovedList Where InStr(strLine, GeneId) > 0 Select 1).ToArray.Count > 0 Select strLine).ToArray
             '  For Each strLine As String In RemovedLines
             'Call ChunkBuffer.Remove(strLine)
@@ -205,7 +202,7 @@ Availability: http://compbio.ddns.comp.nus.edu.sg:8080/pfsnet/", AuthorAddress:=
         <ExportAPI("get.gene_idlist")>
         Public Function GetRegulationGeneIdlist(regulations As PfsNETModuleAPI.Regulation()) As String()
             Dim gIds As List(Of String) =
-                regulations.Select(Function(r) r.TF).ToList +
+                regulations.Select(Function(r) r.TF).AsList +
                 regulations.Select(Function(x) x.SequenceId)
 
             Return LinqAPI.Exec(Of String) <= From strId As String
@@ -305,14 +302,14 @@ Availability: http://compbio.ddns.comp.nus.edu.sg:8080/pfsnet/", AuthorAddress:=
                     In lstLocus
                     Select New NamedValue(Of List(Of Double)) With {
                         .Name = strId,
-                        .x = New List(Of Double)
+                        .Value = New List(Of Double)
                     }
 
             For Each experimentId As String In expIds
                 Call Chipdata.SetColumnAuto(experimentId)
 
                 For Each item In exprs
-                    Call item.x.Add(Chipdata.GetValue(locusTag:=item.Name, DEBUGInfo:=DEBUG))
+                    Call item.Value.Add(Chipdata.GetValue(locusTag:=item.Name, DEBUGInfo:=DEBUG))
                 Next
             Next
 
@@ -330,7 +327,7 @@ Availability: http://compbio.ddns.comp.nus.edu.sg:8080/pfsnet/", AuthorAddress:=
             Dim sb As New StringBuilder(1024)
 
             For Each strLine In exprs
-                Call sb.AppendLine(String.Join(vbTab, strLine.Name, String.Join(vbTab, strLine.x.ToArray)))
+                Call sb.AppendLine(String.Join(vbTab, strLine.Name, String.Join(vbTab, strLine.Value.ToArray)))
             Next
 
             Call sb.Remove(sb.Length - 2, 2)
@@ -394,14 +391,14 @@ Availability: http://compbio.ddns.comp.nus.edu.sg:8080/pfsnet/", AuthorAddress:=
 
             For Each Comb In ComboList.CombList
                 For Each item In Comb
-                    Dim p1 = CreateMatrix(chipdata, GeneList, item.Key.Split(CChar(",")))
-                    Dim p2 = CreateMatrix(chipdata, GeneList, item.Value.Split(CChar(",")))
+                    Dim p1 = CreateMatrix(chipdata, GeneList, item.Item1.Split(CChar(",")))
+                    Dim p2 = CreateMatrix(chipdata, GeneList, item.Item2.Split(CChar(",")))
 
                     If String.IsNullOrEmpty(file3) Then
                         file3 = PathwayGeneRelationship(pathways)
                     End If
 
-                    Dim savePath As String = String.Format("{0}/{1}_{2}.xml", export, item.Key, item.Value)
+                    Dim savePath As String = String.Format("{0}/{1}_{2}.xml", export, item.Item1, item.Item2)
                     Try
                         Dim result = PfsNETRInvoke.Evaluate(p1, p2, file3, 0.5, 0.8, 0.8)
                         Call SavePfsNET(result, saveCsv:=savePath)
@@ -469,7 +466,7 @@ Availability: http://compbio.ddns.comp.nus.edu.sg:8080/pfsnet/", AuthorAddress:=
                                                                 Let p2 As String = pName & ".Class2"
                                                                 Let a = TabularArchives.SubNetTable.CreateObject(dataParsed.Key, p1, DictPathwayBriefs)
                                                                 Let b = TabularArchives.SubNetTable.CreateObject(dataParsed.Value, p2, DictPathwayBriefs)
-                                                                Select {a, b}.MatrixAsIterator
+                                                                Select {a, b}.IteratesALL
             Return LQuery
         End Function
 
@@ -500,7 +497,7 @@ Availability: http://compbio.ddns.comp.nus.edu.sg:8080/pfsnet/", AuthorAddress:=
         <ExportAPI("write.pfsnet_collection", Info:="parameter export is the directory of the pfsnet data will be saved.")>
         Public Function SavePFSNet(data As IEnumerable(Of PFSNetResultOut), EXPORT As String) As Boolean
             For Each i As SeqValue(Of PFSNetResultOut) In data.SeqIterator
-                Dim net As PFSNetResultOut = i.obj
+                Dim net As PFSNetResultOut = i.value
                 Dim name As String = If(String.IsNullOrEmpty(net.DataTag), i.i, net.DataTag)
                 Dim path As String = $"{EXPORT}/{name}.xml"
 
@@ -514,17 +511,17 @@ Availability: http://compbio.ddns.comp.nus.edu.sg:8080/pfsnet/", AuthorAddress:=
         Public Function BatchScript(phenlist As String, scriptfile As String, saveto As String, shell As String) As Integer
             Dim clist As Comb(Of String) =
                 Comb(Of String).CreateObject(IO.File.ReadAllLines(phenlist))
-            Dim sBuilder As New StringBuilder(1024)
+            Dim CMD As New StringBuilder(1024)
             Dim parentDir As String = FileIO.FileSystem.GetParentPath(saveto)
 
             For Each Comb In clist.CombList
                 For Each item In Comb
-                    Dim saveFile As String = String.Format("{0}/PfsNET.OUT/{1}_____{2}.xml", parentDir, item.Key, item.Value)
-                    Call sBuilder.AppendLine(String.Format("start /b {0} ""{1}"" p1 ""{2}"" p2 ""{3}"" save ""{4}""", shell, scriptfile, item.Key, item.Value, saveFile))
+                    Dim saveFile As String = String.Format("{0}/PfsNET.OUT/{1}_____{2}.xml", parentDir, item.Item1, item.Item2)
+                    Call CMD.AppendLine(String.Format("start /b {0} ""{1}"" p1 ""{2}"" p2 ""{3}"" save ""{4}""", shell, scriptfile, item.Item1, item.Item2, saveFile))
                 Next
             Next
 
-            Return sBuilder.SaveTo(saveto, Encoding.ASCII)
+            Return CMD.SaveTo(saveto, Encoding.ASCII)
         End Function
 
         ''' <summary>
@@ -537,7 +534,7 @@ Availability: http://compbio.ddns.comp.nus.edu.sg:8080/pfsnet/", AuthorAddress:=
         Public Function LoadResult(testfile As String) As PfsNET()
             Dim strLines As String() = IO.File.ReadAllLines(testfile)
             Dim result = SubnetParser.TryParse(strLines)
-            Dim data = {result.Key, result.Value}.MatrixToVector
+            Dim data = {result.Key, result.Value}.ToVector
             Return data
         End Function
 

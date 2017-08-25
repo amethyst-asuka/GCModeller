@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::2851e4fdc477d821b5215d59c0cb1a5c, ..\GCModeller\models\Networks\Network.Regulons\RegulatesGraph\RegulatesGraph.vb"
+﻿#Region "Microsoft.VisualBasic::b732d5f042359d586093513e95688045, ..\GCModeller\models\Networks\Network.Regulons\RegulatesGraph\RegulatesGraph.vb"
 
     ' Author:
     ' 
@@ -27,19 +27,18 @@
 #End Region
 
 Imports Microsoft.VisualBasic.CommandLine.Reflection
-Imports Microsoft.VisualBasic.Data.visualize.Network
 Imports Microsoft.VisualBasic.Data.csv
+Imports Microsoft.VisualBasic.Data.visualize.Network
 Imports Microsoft.VisualBasic.Linq.Extensions
 Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports SMRUCC.genomics.Assembly.KEGG.DBGET
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.ComponentModel
-Imports SMRUCC.genomics.Visualize.Cytoscape.CytoscapeGraphView
 Imports SMRUCC.genomics.Visualize.Cytoscape.CytoscapeGraphView.Serialization
 Imports SMRUCC.genomics.Visualize.Cytoscape.CytoscapeGraphView.XGMML
 
 Namespace RegulatesGraph
 
-    <PackageNamespace("MEME.RegulatesGraph", Category:=APICategories.ResearchTools, Publisher:="xie.guigang@gcmodeller.org")>
+    <Package("MEME.RegulatesGraph", Category:=APICategories.ResearchTools, Publisher:="xie.guigang@gcmodeller.org")>
     Public Module GraphAPI
 
         <ExportAPI("Create.Doc")>
@@ -71,7 +70,7 @@ Namespace RegulatesGraph
                                                                              Function(gg) gg.Group.ToArray(Function(ggg) ggg.Locus_tag)))
             Dim Edges As PathwayRegulates() = LQuery.ToArray(
                 Function(site) site.Value.ToArray(
-                Function(obj, target) __regulates(site.Key, obj, target))).MatrixToVector
+                Function(obj, target) __regulates(site.Key, obj, target))).ToVector
             Dim Nodes = LQuery.ToArray(AddressOf __node).Join(modDetails.ToArray(AddressOf __node))
             Dim doc = ExportToFile.Export(Nodes, Edges)
             Return doc
@@ -82,22 +81,22 @@ Namespace RegulatesGraph
                 .FromNode = obj,
                 .Regulates = target.Distinct.ToArray.JoinBy(", "),
                 .ToNode = obj,
-                .Confidence = target.Length,
-                .InteractionType = "regulates"
+                .value = target.Length,
+                .Interaction = "regulates"
             }
         End Function
 
         Private Function __node(Id As String, modX As bGetObject.Module) As Entity
             Return New Entity With {
                 .NodeType = "Module",
-                .Identifier = Id,
+                .ID = Id,
                 .Size = modX.GetPathwayGenes.Length
             }
         End Function
 
         Private Function __node(Id As String, hash As Dictionary(Of String, String())) As Entity
             Return New Entity With {
-                .Identifier = Id,
+                .ID = Id,
                 .NodeType = "Motif Family",
                 .Size = hash.Count
             }

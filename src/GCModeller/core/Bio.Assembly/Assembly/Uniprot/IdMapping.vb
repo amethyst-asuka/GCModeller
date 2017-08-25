@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::db39888535065ed18e18a34277b12471, ..\GCModeller\core\Bio.Assembly\Assembly\Uniprot\IdMapping.vb"
+﻿#Region "Microsoft.VisualBasic::33b5391a48f1ee7b35248ff2c438e0c1, ..\core\Bio.Assembly\Assembly\Uniprot\IdMapping.vb"
 
     ' Author:
     ' 
@@ -26,7 +26,9 @@
 
 #End Region
 
+Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
+Imports Microsoft.VisualBasic.Text
 
 Namespace Assembly.Uniprot
 
@@ -84,7 +86,7 @@ Namespace Assembly.Uniprot
         Public Property Additional_PubMed As String
 
         Public Shared Function LoadDoc(path As String) As LinkedList(Of IdMapping)
-            Dim Reader As New Microsoft.VisualBasic.PartitionedStream(path, 1024)
+            Dim Reader As New PartitionedStream(path, 1024)
             Dim list As New LinkedList(Of IdMapping)
 
             Do While Not Reader.EOF
@@ -101,32 +103,32 @@ Namespace Assembly.Uniprot
 
         Private Shared Function __createObject(line As String) As IdMapping
             Dim Tokens As String() = Strings.Split(line, vbTab)
-            Dim p As Integer = 0
+            Dim p As int = 0
             Dim Maps As New IdMapping
 
             With Maps
-                .UniProtKB_AC = Tokens.Get(p.MoveNext)
-                .UniProtKB_ID = Tokens.Get(p.MoveNext)
-                .GeneID_EntrezGene = Tokens.Get(p.MoveNext)
-                .RefSeq = Tokens.Get(p.MoveNext)
-                .GI = Tokens.Get(p.MoveNext)
-                .PDB = Tokens.Get(p.MoveNext)
-                .GO = Tokens.Get(p.MoveNext)
-                .UniRef100 = Tokens.Get(p.MoveNext)
-                .UniRef90 = Tokens.Get(p.MoveNext)
-                .UniRef50 = Tokens.Get(p.MoveNext)
-                .UniParc = Tokens.Get(p.MoveNext)
-                .PIR = Tokens.Get(p.MoveNext)
-                .NCBI_Taxon = Tokens.Get(p.MoveNext)
-                .MIM = Tokens.Get(p.MoveNext)
-                .UniGene = Tokens.Get(p.MoveNext)
-                .PubMed = Tokens.Get(p.MoveNext)
-                .EMBL = Tokens.Get(p.MoveNext)
-                .EMBL_CDS = Tokens.Get(p.MoveNext)
-                .Ensembl = Tokens.Get(p.MoveNext)
-                .Ensembl_TRS = Tokens.Get(p.MoveNext)
-                .Ensembl_PRO = Tokens.Get(p.MoveNext)
-                .Additional_PubMed = Tokens.Get(p.MoveNext)
+                .UniProtKB_AC = Tokens.Get(++p)
+                .UniProtKB_ID = Tokens.Get(++p)
+                .GeneID_EntrezGene = Tokens.Get(++p)
+                .RefSeq = Tokens.Get(++p)
+                .GI = Tokens.Get(++p)
+                .PDB = Tokens.Get(++p)
+                .GO = Tokens.Get(++p)
+                .UniRef100 = Tokens.Get(++p)
+                .UniRef90 = Tokens.Get(++p)
+                .UniRef50 = Tokens.Get(++p)
+                .UniParc = Tokens.Get(++p)
+                .PIR = Tokens.Get(++p)
+                .NCBI_Taxon = Tokens.Get(++p)
+                .MIM = Tokens.Get(++p)
+                .UniGene = Tokens.Get(++p)
+                .PubMed = Tokens.Get(++p)
+                .EMBL = Tokens.Get(++p)
+                .EMBL_CDS = Tokens.Get(++p)
+                .Ensembl = Tokens.Get(++p)
+                .Ensembl_TRS = Tokens.Get(++p)
+                .Ensembl_PRO = Tokens.Get(++p)
+                .Additional_PubMed = Tokens.Get(++p)
             End With
 
             Return Maps

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::bb9396caf519b887cbcebf0e97242a6f, ..\GCModeller\analysis\RNA-Seq\Toolkits.RNA-Seq\Correlations\GenesCOExpr.vb"
+﻿#Region "Microsoft.VisualBasic::589233e8d1be58bd7c4572dda7216447, ..\GCModeller\analysis\RNA-Seq\Toolkits.RNA-Seq\Correlations\GenesCOExpr.vb"
 
     ' Author:
     ' 
@@ -29,11 +29,12 @@
 Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.DataMining.AprioriAlgorithm
 Imports Microsoft.VisualBasic.DataMining.AprioriAlgorithm.Entities
 Imports Microsoft.VisualBasic.Linq.Extensions
-Imports Microsoft.VisualBasic.Mathematical
+Imports Microsoft.VisualBasic.Math
+Imports Microsoft.VisualBasic.Math.Correlations.Correlations
 Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports SMRUCC.genomics.Analysis.RNA_Seq.dataExprMAT
 Imports SMRUCC.genomics.InteractionModel
@@ -43,7 +44,7 @@ Imports SMRUCC.genomics.InteractionModel
 ''' </summary>
 ''' <remarks></remarks>
 ''' 
-<[PackageNamespace]("Gene.CO-Expression", Publisher:="xie.guigang@gmail.com")>
+<Package("Gene.CO-Expression", Publisher:="xie.guigang@gmail.com")>
 Public Module GenesCOExpr
 
     ''' <summary>
@@ -53,7 +54,7 @@ Public Module GenesCOExpr
     ''' <remarks></remarks>
     ''' 
     <ExportAPI("Regulation.Calculate")>
-    Public Function CalculateRegulations(RPKM As DocumentStream.File, Optional Level As Integer = 2) As Rule()
+    Public Function CalculateRegulations(RPKM As IO.File, Optional Level As Integer = 2) As Rule()
         '在这里因为要保持顺序，所以在编码的阶段不可以使用并行化拓展
         '获取基因列表，在第一列
         Dim GeneExpressions = DataServicesExtension.LoadCsv(RPKM.Skip(1))
@@ -71,7 +72,7 @@ Public Module GenesCOExpr
                             Select TransID = ExperimentsTag(idx),
                                 EachGeneLevels = GenerateMapping(Level:=Level, data:=(From GeneSample In GeneExpressions Select GeneSample.ChunkBuffer(idx)).ToArray)).ToArray
         Call Console.WriteLine("Encodings.....")
-        Dim Encodes = New EncodingServices(GeneIDList, Levels:=(From obj In Transactions Select obj.EachGeneLevels).ToArray.MatrixToList.Distinct.ToArray)
+        Dim Encodes = New EncodingServices(GeneIDList, Levels:=(From obj In Transactions Select obj.EachGeneLevels).ToArray.Unlist.Distinct.ToArray)
         Call Console.WriteLine("There are {0} transaction tokens!", Encodes.CodeMappings.Count)
         Call Console.WriteLine("Encoding transactions....")
         Dim EncodesTransaction = Encodes.TransactionEncoding((From Trans In Transactions Select New Transaction With {.TransactionName = Trans.TransID, .Values = Trans.EachGeneLevels}).ToArray)
@@ -94,7 +95,7 @@ Public Module GenesCOExpr
     ''' <remarks></remarks>
     ''' 
     <ExportAPI("regulation.calculation.bi")>
-    Public Function CalculateRegulations(ChipData As DocumentStream.File) As Rule()
+    Public Function CalculateRegulations(ChipData As IO.File) As Rule()
         '在这里因为要保持顺序，所以在编码的阶段不可以使用并行化拓展
         '获取基因列表，在第一列
         Dim GeneExpressions = DataServicesExtension.LoadCsv(ChipData.Skip(1))
@@ -134,7 +135,7 @@ Public Module GenesCOExpr
     ''' <param name="ChipData">基因芯片数据</param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function Calculate(ChipData As DocumentStream.File) As ExprSamples()
+    Public Function Calculate(ChipData As IO.File) As ExprSamples()
         Dim DataSet As ExprSamples() = ToSamples(ChipData, True)
         Dim result = CalculatePccMatrix(DataSet)
         Return result
@@ -171,7 +172,7 @@ Public Module GenesCOExpr
     End Function
 
     Public Function Load(csvFile As String) As ExprSamples()
-        Dim Data = IO.File.ReadAllLines(csvFile).Skip(1)
+        Dim Data = csvFile.ReadAllLines().Skip(1)
         Dim LQuery = (From line As String
                       In Data
                       Let tokens = line.Split(CChar(","))
@@ -237,15 +238,15 @@ Public Module GenesCOExpr
     ''' <param name="ExprDataCols"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function MergeChipData(FileList As String(), IdCol As Integer, ExprDataCols As Integer()) As DocumentStream.File
+    Public Function MergeChipData(FileList As String(), IdCol As Integer, ExprDataCols As Integer()) As IO.File
         Dim DataFiles = (From File As String
                          In FileList
-                         Select DocumentStream.File.Load(File)).ToArray
+                         Select IO.File.Load(File)).ToArray
         Dim IdList = New List(Of String)
         For Each File As File In DataFiles
             Call IdList.AddRange((From row In File.Skip(1) Select row(IdCol)).ToArray)
         Next
-        IdList = IdList.Distinct.ToList()
+        IdList = IdList.Distinct.AsList()
         Call IdList.Sort()
 
         Dim Table = New RowObject(IdList.Count) {}
@@ -257,8 +258,8 @@ Public Module GenesCOExpr
 
         For i As Integer = 0 To IdList.Count - 1
             Dim Id As String = IdList(i)
-            Dim row As DocumentStream.RowObject = New DocumentStream.RowObject From {Id}
-            Dim DataRows = (From File As DocumentStream.File In DataFiles
+            Dim row As IO.RowObject = New IO.RowObject From {Id}
+            Dim DataRows = (From File As IO.File In DataFiles
                             Let search_result = File.FindAtColumn(Id, IdCol)
                             Where Not search_result.IsNullOrEmpty
                             Let result As String() = search_result.First.Takes(ExprDataCols, )
@@ -286,11 +287,11 @@ Public Module GenesCOExpr
             End If
         Next
 
-        Table(0) = New DocumentStream.RowObject From {"Id"}
+        Table(0) = New IO.RowObject From {"Id"}
         Table(0).AddRange(TitleCollection)
 
-        Dim CsvFile As DocumentStream.File = Table
-        Call CsvFile.Remove(Function(row As DocumentStream.RowObject) row Is Nothing)
+        Dim CsvFile As IO.File = Table
+        Call CsvFile.Remove(Function(row As IO.RowObject) row Is Nothing)
 
         Return CsvFile
     End Function
@@ -303,7 +304,7 @@ Public Module GenesCOExpr
     ''' <param name="ExprDataCols"></param>
     ''' <returns></returns>
     ''' <remarks></remarks>
-    Public Function MergeChipData2(FileList As String(), IdCol As Integer, ExprDataCols As Integer()) As DocumentStream.File
+    Public Function MergeChipData2(FileList As String(), IdCol As Integer, ExprDataCols As Integer()) As IO.File
         Dim File As File = MergeChipData(FileList, IdCol, ExprDataCols).Skip(1).ToArray
         Dim IdRow As RowObject = (From row In File Select row.First()).ToArray
         Dim retFile As New File
@@ -343,8 +344,8 @@ Public Module GenesCOExpr
                         Let regulation = If(val < 0, "repression", "activation")
                         Select New Interaction(Of ExprSamples) With {
                             .Interaction = regulation,
-                            .ObjectA = item,
-                            .ObjectB = Data(i)}).ToArray
+                            .A = item,
+                            .B = Data(i)}).ToArray
             Call RegulationList.AddRange(list)
         Next
 

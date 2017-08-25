@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::c6b70181c4548012a1445dcecca29478, ..\GCModeller\CLI_tools\S.M.A.R.T\DomainArchitecture\CompileDomains.vb"
+﻿#Region "Microsoft.VisualBasic::b7291a9fefc74c0ec36bd811a7e2f3c7, ..\GCModeller\CLI_tools\S.M.A.R.T\DomainArchitecture\CompileDomains.vb"
 
     ' Author:
     ' 
@@ -30,7 +30,7 @@ Imports System.Text
 Imports System.Text.RegularExpressions
 Imports System.Xml.Serialization
 Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Text
 Imports SMRUCC.genomics.Assembly.NCBI
 Imports SMRUCC.genomics.Assembly.NCBI.CDD
@@ -67,12 +67,12 @@ Public Class CompileDomains
     Public Function Performance(QueryInput As String, GrepScript As String, Cache As String, Optional DbName As String = "Pfam") As String
         Dim SubjectDbPath As String = CDD.GetFastaUrl(DbName)
 
-        Call LocalBLAST.FormatDb(QueryInput, LocalBLAST.MolTypeProtein).Start(WaitForExit:=True)
-        Call LocalBLAST.FormatDb(SubjectDbPath, LocalBLAST.MolTypeProtein).Start(WaitForExit:=True)
+        Call LocalBLAST.FormatDb(QueryInput, LocalBLAST.MolTypeProtein).Start(waitForExit:=True)
+        Call LocalBLAST.FormatDb(SubjectDbPath, LocalBLAST.MolTypeProtein).Start(waitForExit:=True)
         Call LocalBLAST.Blastp(TargetSubjectDb:=QueryInput,
                                InputQuery:=SubjectDbPath,
                                Output:=String.Format("{0}/{1}-${2}.xml", TempWorkspace, FileIO.FileSystem.GetName(QueryInput), DbName),
-                               e:="1e-3").Start(WaitForExit:=True)
+                               e:="1e-3").Start(waitForExit:=True)
 
         Dim SubjectDb = CDD.LoadFASTA(DbName)
         Dim CddDb = CDD.Load(DbName)
@@ -97,8 +97,8 @@ Public Class CompileDomains
         Dim Db = CDD.Load(DbName)
         Dim LQuery = From item In Db.SmpData
                      Select New RowObject From {
-                         item.Identifier,
-                         item.Id,
+                         item.Name,
+                         item.ID,
                          item.CommonName,
                          item.Title,
                          item.Describes,
@@ -192,13 +192,13 @@ Public Class SMARTDB
         End If
 
         Dim Row As RowObject = New RowObject
-        Dim Tokens As List(Of String) = Protein.Identifier.Split(CChar("|")).ToList
+        Dim Tokens As List(Of String) = Protein.Identifier.Split(CChar("|")).AsList
 
         Call Tokens.AddRange(FilledEmptys)
         Call Row.Add(Tokens(0))
         Call Row.Add(Tokens(1))
         Call Row.Add(Tokens(2))
-        Call Row.Add(String.Join("; ", (From pd In Protein.Domains Select pd.Identifier).ToArray))
+        Call Row.Add(String.Join("; ", (From pd In Protein.Domains Select pd.Name).ToArray))
         Call Row.Add(Protein.SequenceData)
 
         Return Row

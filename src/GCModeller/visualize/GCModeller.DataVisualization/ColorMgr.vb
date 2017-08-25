@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::3ac5641b87481bf6773b4137f25f807b, ..\GCModeller\visualize\GCModeller.DataVisualization\ColorMgr.vb"
+﻿#Region "Microsoft.VisualBasic::e63f8b609f96e3871724b23c80f69661, ..\visualize\GCModeller.DataVisualization\ColorMgr.vb"
 
     ' Author:
     ' 
@@ -32,6 +32,9 @@ Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Microsoft.VisualBasic.Serialization
 Imports Microsoft.VisualBasic.Serialization.JSON
 
+''' <summary>
+''' The color manager
+''' </summary>
 Public Class ColorMgr
 
     ''' <summary>
@@ -87,9 +90,12 @@ Public Class ColorMgr
     End Function
 End Class
 
-Public Class ClMap : Implements sIdEnumerable
+''' <summary>
+''' Entity to color mapper
+''' </summary>
+Public Class ClMap : Implements INamedValue
 
-    Public Property Identifier As String Implements sIdEnumerable.Identifier
+    Public Property Identifier As String Implements INamedValue.Key
     Public Property map As String
 
     Public Overrides Function ToString() As String

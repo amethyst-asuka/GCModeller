@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::f97b90035acaed79d558ebe11d73a22e, ..\GCModeller\core\Bio.Assembly\Assembly\KEGG\DBGET\LinkDB\Module.vb"
+﻿#Region "Microsoft.VisualBasic::cd1371de55c63cab009b7db9052c7144, ..\core\Bio.Assembly\Assembly\KEGG\DBGET\LinkDB\Module.vb"
 
     ' Author:
     ' 
@@ -27,13 +27,11 @@
 #End Region
 
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Text.HtmlParser
 Imports SMRUCC.genomics.Assembly.KEGG.DBGET.bGetObject
-Imports SMRUCC.genomics.Assembly.KEGG.WebServices.InternalWebFormParsers
-Imports SMRUCC.genomics.ComponentModel
 
 Namespace Assembly.KEGG.DBGET.LinkDB
 
@@ -52,7 +50,7 @@ Namespace Assembly.KEGG.DBGET.LinkDB
 
             For i As Integer = 0 To Modules.Length - 1
                 Dim url = "http://www.genome.jp" & Entries(i).href
-                Modules(i) = [Module].Download(url)
+                Modules(i) = [ModuleDBGet].Download(url)
             Next
 
             Return Modules
@@ -88,7 +86,7 @@ Namespace Assembly.KEGG.DBGET.LinkDB
                     Dim SaveFile As String = String.Format("{0}/Webpages/{1}.html", EXPORT, Entry)
 
                     Call ObjUrl.GET.SaveTo(SaveFile)
-                    Call ModuleList.Add([Module].Download(SaveFile))
+                    Call ModuleList.Add([ModuleDBGet].Download(SaveFile))
                     Call ModuleList.Last.GetXml.SaveTo(String.Format("{0}/{1}.xml", EXPORT, Entry))
                     Call Downloader.DownloadFile(ImageUrl, String.Format("{0}/{1}.png", EXPORT, Entry))
                 Catch ex As Exception

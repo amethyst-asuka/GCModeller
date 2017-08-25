@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::0542946e93a72fa4906f738cd2648fc2, ..\GCModeller\analysis\RNA-Seq\Toolkits.RNA-Seq\Correlations\MatrixAPI.vb"
+﻿#Region "Microsoft.VisualBasic::a2ae1bf9a44dd82961d65e7d255df99f, ..\GCModeller\analysis\RNA-Seq\Toolkits.RNA-Seq\Correlations\MatrixAPI.vb"
 
     ' Author:
     ' 
@@ -33,11 +33,12 @@ Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Linq.Extensions
 Imports Microsoft.VisualBasic.Parallel.Linq
 Imports Microsoft.VisualBasic.Scripting.MetaData
-Imports Microsoft.VisualBasic.Mathematical
+Imports Microsoft.VisualBasic.Math
 Imports SMRUCC.genomics.Analysis.RNA_Seq.dataExprMAT
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
+Imports System.Text
 
-<[PackageNamespace]("PCC.Matrix", Publisher:="xie.guigang@gmail.com", Category:=APICategories.UtilityTools)>
+<Package("PCC.Matrix", Publisher:="xie.guigang@gmail.com", Category:=APICategories.UtilityTools)>
 Public Module MatrixAPI
 
     ''' <summary>
@@ -49,7 +50,7 @@ Public Module MatrixAPI
     ''' <remarks></remarks>
     ''' 
     <ExportAPI("Get.ChipdataSamples")>
-    Public Function ToSamples(Data As DocumentStream.File, FirstRowTitle As Boolean) As ExprSamples()
+    Public Function ToSamples(Data As IO.File, FirstRowTitle As Boolean) As ExprSamples()
         Dim ds = Data.ToArray
 
         If FirstRowTitle Then
@@ -59,7 +60,7 @@ Public Module MatrixAPI
         Call "Start parsing samples data from the raw matrix...".__DEBUG_ECHO
 
         Dim sw As Stopwatch = Stopwatch.StartNew
-        Dim lstId As String() = ds.ToArray(Function(row) row.First, Parallel:=False)
+        Dim lstId As String() = ds.ToArray(Function(row) row.First, parallel:=False)
         Dim LQuery = (From row As RowObject
                       In ds.AsParallel   ' 在后面通过查字典的方式保证一一对应关系，所以这里可以使用并行化
                       Let sample As ExprSamples = ExprSamples.ConvertObject(row)
@@ -98,7 +99,7 @@ Public Module MatrixAPI
     ''' <returns></returns>
     ''' <remarks></remarks>
     <ExportAPI("Matrix.Create")>
-    Public Function CreatePccMAT(rawExpr As DocumentStream.File, Optional FirstLineTitle As Boolean = True) As PccMatrix
+    Public Function CreatePccMAT(rawExpr As IO.File, Optional FirstLineTitle As Boolean = True) As PccMatrix
         Call "Start to create the pcc matrix!".__DEBUG_ECHO
 
         Dim PccValues = GenesCOExpr.CalculatePccMatrix(DataSet:=ToSamples(rawExpr, FirstLineTitle))
@@ -144,7 +145,7 @@ Public Module MatrixAPI
     ''' <returns></returns>
     ''' <remarks></remarks>
     <ExportAPI("sPcc_Matrix.Create", Info:="Create a spearman correlation matrix.")>
-    Public Function CreateSPccMAT(ChipData As DocumentStream.File,
+    Public Function CreateSPccMAT(ChipData As IO.File,
                                   Optional FirstLineTitle As Boolean = True) As PccMatrix
         Call "Start to create the spcc matrix!".__DEBUG_ECHO
 
@@ -168,7 +169,7 @@ Public Module MatrixAPI
     <ExportAPI("Correlation.Calculate",
                Info:="Calculates the pcc and spcc mix matrix, if the calculated pcc value is too low than the threshold then the function will try using the spcc value to replace it. 
                All of the factor which is not satisfied with pcc and spcc threshold will be set as ZERO.")>
-    Public Function CreateCorrelationMatrix(ChipData As DocumentStream.File,
+    Public Function CreateCorrelationMatrix(ChipData As IO.File,
                                             Optional pcc_th1 As Double = 0.85,
                                             Optional pcc_th2 As Double = -0.65,
                                             Optional spcc_th1 As Double = 0.75,
@@ -187,7 +188,7 @@ Public Module MatrixAPI
                           Select i,
                               SPccVector = SPcc.PccValues(i)
         Dim LQuery As IEnumerable(Of ExprSamples) =
-            LQuerySchedule.LQuery(LQueryCache, Function(x) __checkThreshold(x.i.obj, x.SPccVector, pcc_th1, pcc_th2, spcc_th1, spcc_th2), 20000)
+            LQuerySchedule.LQuery(LQueryCache, Function(x) __checkThreshold(x.i.value, x.SPccVector, pcc_th1, pcc_th2, spcc_th1, spcc_th2), 20000)
 
         Return New PccMatrix(lstId:=Pcc.lstGenes, samples:=LQuery.ToDictionary(Function(x) x.locusId)) With {
             .PCC_SPCC_MixedType = True
@@ -227,7 +228,7 @@ Public Module MatrixAPI
     ''' <remarks></remarks>
     ''' 
     <ExportAPI("Similarity.Calculate")>
-    Public Function Similarity(BenchmarkQuery As PccMatrix, VcellValidate As PccMatrix) As DocumentStream.File
+    Public Function Similarity(BenchmarkQuery As PccMatrix, VcellValidate As PccMatrix) As IO.File
         Dim BenchmarkId As String() = New String()() {BenchmarkQuery.lstGenes, VcellValidate.lstGenes}.Intersection   '从基准数据之中移除在校正数据之中缺失的数据
         Dim NewMatrix As List(Of ExprSamples) = New List(Of ExprSamples)
 
@@ -307,9 +308,9 @@ Public Module MatrixAPI
     ''' <remarks></remarks>
     <ExportAPI("Write.Csv.PccMatrix")>
     Public Function SavePccMatrix(Pccmatrix As PccMatrix,
-                                  <Parameter("Path.Save")> SaveTo As String) As DocumentStream.File
-        Dim CsvResult As DocumentStream.File = ExprSamples.CreateFile(Pccmatrix.PccValues)
-        Call CsvResult.Save(SaveTo, True, System.Text.Encoding.ASCII)
+                                  <Parameter("Path.Save")> SaveTo As String) As IO.File
+        Dim CsvResult As IO.File = ExprSamples.CreateFile(Pccmatrix.PccValues)
+        Call CsvResult.Save(SaveTo, Encoding.ASCII)
         Return CsvResult
     End Function
 
@@ -323,13 +324,13 @@ Public Module MatrixAPI
     ''' <remarks></remarks>
     ''' 
     <ExportAPI("Sampling")>
-    Public Function Sampling(datas As String, TimeId As Integer, Optional FirstLineTitle As Boolean = False) As DocumentStream.File
+    Public Function Sampling(datas As String, TimeId As Integer, Optional FirstLineTitle As Boolean = False) As IO.File
         Dim CsvBuffer = (From path As String
                          In FileIO.FileSystem.GetFiles(datas, FileIO.SearchOption.SearchTopLevelOnly, "*.csv")
-                         Select DocumentStream.File.Load(path)).ToArray
-        Dim idBufs As String() = (From file As DocumentStream.File In CsvBuffer Select (From row In If(FirstLineTitle, file.Skip(1).ToArray, file.ToArray) Select row.First).ToArray).Intersection
-        Dim CsvResult As New DocumentStream.File
-        Dim RowBuffer As New DocumentStream.RowObject
+                         Select IO.File.Load(path)).ToArray
+        Dim idBufs As String() = (From file As IO.File In CsvBuffer Select (From row In If(FirstLineTitle, file.Skip(1).ToArray, file.ToArray) Select row.First).ToArray).Intersection
+        Dim CsvResult As New IO.File
+        Dim RowBuffer As New IO.RowObject
         Call RowBuffer.Add("GeneId")
         Call RowBuffer.AddRange((From file In CsvBuffer Select file.FilePath.BaseName).ToArray)
         Call CsvResult.AppendLine(RowBuffer)
@@ -338,7 +339,7 @@ Public Module MatrixAPI
 
         For Each sId As String In idBufs
             Dim RowCollection = (From file In CsvBuffer Select file.FindAtColumn(sId, 0).First).ToArray
-            RowBuffer = New DocumentStream.RowObject From {sId}
+            RowBuffer = New IO.RowObject From {sId}
             Call RowBuffer.AddRange((From fileLine In RowCollection Select fileLine(TimeId)).ToArray)
             Call CsvResult.AppendLine(RowBuffer)
         Next
@@ -347,16 +348,16 @@ Public Module MatrixAPI
     End Function
 
     <ExportAPI("Get.Sample")>
-    Public Function Sampling(from_csv As String, start As Integer, ends As Integer, Optional FirstLineTitle As Boolean = False) As DocumentStream.File
-        Dim CsvData As DocumentStream.File = DocumentStream.File.Load(from_csv)
+    Public Function Sampling(from_csv As String, start As Integer, ends As Integer, Optional FirstLineTitle As Boolean = False) As IO.File
+        Dim CsvData As IO.File = IO.File.Load(from_csv)
         Dim d As Integer = ends - start
-        Dim LQuery = (From row As DocumentStream.RowObject
+        Dim LQuery = (From row As IO.RowObject
                       In If(FirstLineTitle, CsvData.Skip(1).ToArray, CsvData.ToArray)
-                      Select CType(__getData(row, start, d:=d), DocumentStream.RowObject)).ToArray
+                      Select CType(__getData(row, start, d:=d), IO.RowObject)).ToArray
         Return LQuery
     End Function
 
-    Private Function __getData(row As DocumentStream.RowObject, start As Integer, d As Integer) As String()
+    Private Function __getData(row As IO.RowObject, start As Integer, d As Integer) As String()
         Dim Chunkbuffer As List(Of String) = New List(Of String) From {row.First}
         Dim data As String() = row.Skip(start).ToArray
         Call Chunkbuffer.AddRange(data.Take(d).ToArray)

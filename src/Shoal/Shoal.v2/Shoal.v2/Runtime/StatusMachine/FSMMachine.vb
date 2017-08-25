@@ -1,4 +1,5 @@
-﻿Imports Microsoft.VisualBasic.Scripting.ShoalShell.Interpreter.LDM
+﻿Imports Microsoft.VisualBasic.Scripting.Runtime
+Imports Microsoft.VisualBasic.Scripting.ShoalShell.Interpreter.LDM
 Imports Microsoft.VisualBasic.Scripting.ShoalShell.Interpreter.LDM.Expressions
 Imports Microsoft.VisualBasic.Scripting.ShoalShell.Runtime.SCOM
 
@@ -60,7 +61,7 @@ Namespace Runtime
                 If __executeReturn Then
                     Exit Do
                 Else
-                    Call p.MoveNext  '移动到下一行代码执行
+                    p += 1  '移动到下一行代码执行
                 End If
             Loop
 

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::6579b887f58256d5c0003fa52df6acdb, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\ObjectBase.vb"
+﻿#Region "Microsoft.VisualBasic::6579b887f58256d5c0003fa52df6acdb, ..\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\ObjectBase.vb"
 
     ' Author:
     ' 
@@ -88,7 +88,7 @@
 '                          Let Value As String = Mid(strData, Len(PropertyName) + 4)
 '                          Let Item = New KeyValuePair(Of String, String)(PropertyName, Value)
 '                          Select Item
-'                          Order By Item.Key Ascending).ToList
+'                          Order By Item.Key Ascending).AsList
 '            Return LQuery
 '        End Function
 

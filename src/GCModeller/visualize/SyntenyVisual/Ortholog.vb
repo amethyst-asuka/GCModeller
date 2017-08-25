@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::788390bbc36bc5459de150d6634e78b0, ..\GCModeller\visualize\SyntenyVisual\Ortholog.vb"
+﻿#Region "Microsoft.VisualBasic::ebae8067d87f3277eeb4bdf8150b06ad, ..\visualize\SyntenyVisual\Ortholog.vb"
 
     ' Author:
     ' 
@@ -27,11 +27,10 @@
 #End Region
 
 Imports System.Drawing
-Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.Imaging
+Imports Microsoft.VisualBasic.Language
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
-Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH
+Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH.Abstract
 
 ''' <summary>
 ''' 直系同源的绘图数据模型

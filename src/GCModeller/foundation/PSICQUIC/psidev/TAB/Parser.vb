@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::a52c8135359c8ecfbd72e53f2ea82123, ..\GCModeller\foundation\PSICQUIC\psidev\TAB\Parser.vb"
+﻿#Region "Microsoft.VisualBasic::22e5be5f815630600b195677ffe376dd, ..\GCModeller\foundation\PSICQUIC\psidev\TAB\Parser.vb"
 
     ' Author:
     ' 
@@ -40,7 +40,7 @@ Namespace TAB
             Dim header As String() = path.ReadFirstLine.Split(Text.ASCII.TAB)
             Dim index As Dictionary(Of String, Integer) = header _
                 .SeqIterator _
-                .ToDictionary(Function(x) x.obj,
+                .ToDictionary(Function(x) x.value,
                               Function(x) x.i)
 
             For Each line As String In path.IterateAllLines.Skip(1)

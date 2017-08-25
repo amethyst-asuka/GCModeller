@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::7a20363a9f784879d04fbf50e8ead6d7, ..\GCModeller\data\GO_gene-ontology\GeneOntology\DAG\Term.vb"
+﻿#Region "Microsoft.VisualBasic::a87c414f1cbb36fba312a9e73b70f7b4, ..\GCModeller\data\GO_gene-ontology\GeneOntology\DAG\Term.vb"
 
     ' Author:
     ' 
@@ -32,7 +32,7 @@ Imports Microsoft.VisualBasic.Serialization.JSON
 
 Namespace DAG
 
-    Public Class Term : Implements sIdEnumerable
+    Public Class Term : Implements INamedValue
 
         Public Property xref As NamedValue(Of String)()
         ''' <summary>
@@ -42,7 +42,7 @@ Namespace DAG
         Public Property is_a As is_a()
         Public Property synonym As synonym()
         Public Property relationship As Relationship()
-        Public Property id As String Implements sIdEnumerable.Identifier
+        Public Property id As String Implements INamedValue.Key
         Public Property [namespace] As String
 
         Public Overrides Function ToString() As String

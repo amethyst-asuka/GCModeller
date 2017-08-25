@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::5247c6c93a830a1e7ccb703b5bf187f8, ..\GCModeller\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\GBK\Keywords\DBLINK.vb"
+﻿#Region "Microsoft.VisualBasic::9ebc8cdf3947c182ff49fc3b80ec65ce, ..\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\GBK\Keywords\DBLINK.vb"
 
     ' Author:
     ' 
@@ -26,28 +26,54 @@
 
 #End Region
 
+Imports System.Text
+Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
+Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Linq
+Imports Microsoft.VisualBasic.Text
+
 Namespace Assembly.NCBI.GenBank.GBFF.Keywords
 
+    ''' <summary>
+    ''' 数据库之间的相互链接的列表
+    ''' </summary>
     Public Class DBLINK : Inherits KeyWord
 
-        Public Property Db As String
-        Public Property Id As String
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <returns></returns>
+        Public Property Links As NamedValue(Of String)()
 
+        ''' <summary>
+        ''' 返回的是genbank的这部分的文本数据，用于生成genbank文件
+        ''' </summary>
+        ''' <returns></returns>
         Public Overrides Function ToString() As String
-            Return $"DBLINK      {Db}: {Id}"
+            Dim links$() = Me.Links.ToArray(Function(x) $"{x.Name}: {x.Value}")
+            Dim sb As New StringBuilder("DBLINK      " & links(Scan0))
+
+            For Each l$ In links.Skip(1)
+                Call sb.AppendLine("            " & l)
+            Next
+
+            Return sb.ToString.Trim(ASCII.LF, ASCII.CR)
         End Function
 
-        Friend Shared Function Parser(sList As String()) As DBLINK
-            Dim s As String = If(sList.IsNullOrEmpty, "", sList.FirstOrDefault)
+        Friend Shared Function Parser(list As String()) As DBLINK
+            Dim links As New List(Of NamedValue(Of String))
 
-            If String.IsNullOrEmpty(s) Then
-                Return New DBLINK With {.Db = "unknown"}
+            If Not list.IsNullOrEmpty Then
+                Dim line As String = list(Scan0) ' 第一行会有些特殊
+
+                links += Mid(line, 13).Trim.GetTagValue(":", trim:=True)
+                For Each line In list.Skip(1)
+                    links += Trim(line).GetTagValue(":", trim:=True)
+                Next
             End If
 
-            Dim tokens As String() = Mid(s, 13).Trim.Split(":"c)
             Return New DBLINK With {
-                .Db = tokens.Get(Scan0).Trim,
-                .Id = tokens.Get(1).Trim
+                .Links = links
             }
         End Function
     End Class

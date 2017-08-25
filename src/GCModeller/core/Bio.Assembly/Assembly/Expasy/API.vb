@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::9d5b27a067904b1f755c15473eed1759, ..\GCModeller\core\Bio.Assembly\Assembly\Expasy\API.vb"
+﻿#Region "Microsoft.VisualBasic::7f6c74aa76d15da3d3d3dec96025b855, ..\core\Bio.Assembly\Assembly\Expasy\API.vb"
 
     ' Author:
     ' 
@@ -27,6 +27,7 @@
 #End Region
 
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
+Imports Microsoft.VisualBasic.Language
 
 Namespace Assembly.Expasy.AnnotationsTool
 
@@ -35,19 +36,20 @@ Namespace Assembly.Expasy.AnnotationsTool
         ''' <summary>
         ''' 从Expasy数据库之中创建基本的数据
         ''' </summary>
-        ''' <param name="Enzymes"></param>
+        ''' <param name="enzymes"></param>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Public Function GenerateBasicDocument(Enzymes As Expasy.Database.Enzyme()) As T_EnzymeClass_BLAST_OUT()
-            Dim LQuery = (From Enzyme As Expasy.Database.Enzyme
-                          In Enzymes
-                          Select (From id As String
-                                  In Enzyme.SwissProt
-                                  Select New T_EnzymeClass_BLAST_OUT With {
-                                      .UniprotMatched = id,
-                                      .Class = Enzyme.Identification}).ToArray).ToArray
-            Dim ChunkBuffer As T_EnzymeClass_BLAST_OUT() = LQuery.MatrixToVector
-            Return ChunkBuffer
+        Public Function GenerateBasicDocument(enzymes As Expasy.Database.Enzyme()) As T_EnzymeClass_BLAST_OUT()
+            Dim LQuery = LinqAPI.Exec(Of T_EnzymeClass_BLAST_OUT) <=
+                From x As Expasy.Database.Enzyme
+                In enzymes
+                Select From id As String
+                       In x.SwissProt
+                       Select New T_EnzymeClass_BLAST_OUT With {
+                           .uniprot = id,
+                           .Class = x.Identification
+                       }
+            Return LQuery
         End Function
 
         Public Function EnzymeClassification(data As Generic.IEnumerable(Of T_EnzymeClass_BLAST_OUT)) As T_EnzymeClass_BLAST_OUT()
@@ -84,7 +86,7 @@ Namespace Assembly.Expasy.AnnotationsTool
                 Return New T_EnzymeClass_BLAST_OUT With {
                     .ProteinId = data.First.ProteinId,
                     .Class = ECList.First,
-                    .UniprotMatched = MaxIdentitiesItem.UniprotMatched,
+                    .uniprot = MaxIdentitiesItem.uniprot,
                     .Identity = MaxIdentitiesItem.Identity,
                     .EValue = MaxIdentitiesItem.EValue
                 }
@@ -151,7 +153,7 @@ Namespace Assembly.Expasy.AnnotationsTool
                                            In QueryProteins
                                            Select New EnzymeClass With {
                                                .ProteinId = item.Key,
-                                               .Hits = (From n In item.Value Select n.UniprotMatched).ToArray,
+                                               .Hits = (From n In item.Value Select n.uniprot).ToArray,
                                                .EC_Class = (From n As T_EnzymeClass_BLAST_OUT
                                                             In item.Value
                                                             Select n.Class
@@ -166,8 +168,9 @@ Namespace Assembly.Expasy.AnnotationsTool
         End Function
 
         Public Function InvokeKEGGAnnotations(dat As IEnumerable(Of EnzymeClass), KEGGReactions As IEnumerable(Of KEGG.DBGET.bGetObject.Reaction)) As EnzymeClass()
-            Dim LQuery = (From item As EnzymeClass In dat.AsParallel
-                          Let KEGG_Annotationed As EnzymeClass = __getKEGGReaction(item, KEGGReactions)
+            Dim LQuery = (From x As EnzymeClass
+                          In dat.AsParallel
+                          Let KEGG_Annotationed As EnzymeClass = __getKEGGReaction(x, KEGGReactions)
                           Select KEGG_Annotationed).ToArray
             Return LQuery
         End Function
@@ -191,7 +194,7 @@ Namespace Assembly.Expasy.AnnotationsTool
                              In Annotations
                              Select (From nn As String
                                      In item.CatalyticActivity
-                                     Select String.Format("[{0}] {1}", item.Identification, nn)).ToArray).MatrixToVector
+                                     Select String.Format("[{0}] {1}", item.Identification, nn)).ToArray).ToVector
             Return raw
         End Function
     End Module

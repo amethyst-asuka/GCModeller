@@ -42,6 +42,7 @@ Imports Microsoft.VisualBasic.Text
 Partial Module CLI
 
     <ExportAPI("--graph.regulates", Usage:="--graph.regulates /footprint <footprints.csv> [/trim]")>
+    <Group(CLIGrouping.RegulationNetwork)>
     Public Function SimpleRegulation(args As CommandLine) As Integer
         Dim input As String = args("/footprint")
         Dim footprints = input.LoadCsv(Of PredictedRegulationFootprint)
@@ -51,7 +52,7 @@ Partial Module CLI
             footprints = (From x As PredictedRegulationFootprint
                           In footprints.AsParallel
                           Where Not String.IsNullOrEmpty(x.Regulator)
-                          Select x).ToList
+                          Select x).AsList
         End If
 
         Dim cytoscape = CytoscapeGraphView.Serialization.Export(__getNodes(footprints), footprints.ToArray)
@@ -60,7 +61,7 @@ Partial Module CLI
     End Function
 
     Private Function __getNodes(footprints As List(Of PredictedRegulationFootprint)) As FileStream.Node()
-        Dim ORF = footprints.ToArray(Function(x) x.ORF).Distinct.ToList
+        Dim ORF = footprints.ToArray(Function(x) x.ORF).Distinct.AsList
         Dim TFs As List(Of String) =
             LinqAPI.MakeList(Of String) <= From x As PredictedRegulationFootprint
                                            In footprints
@@ -73,9 +74,9 @@ Partial Module CLI
             Call TFs.Remove(sId)
         Next
 
-        Dim Nodes = ORF.ToArray(Function(sId) New FileStream.Node With {.Identifier = sId, .NodeType = "ORF"}).ToList
-        Nodes += TFs.ToArray(Function(sId) New FileStream.Node With {.Identifier = sId, .NodeType = "Regulator"})
-        Nodes += Hybrids.ToArray(Function(sId) New FileStream.Node With {.Identifier = sId, .NodeType = "ORF+TF"})
+        Dim Nodes = ORF.ToArray(Function(sId) New FileStream.Node With {.ID = sId, .NodeType = "ORF"}).AsList
+        Nodes += TFs.ToArray(Function(sId) New FileStream.Node With {.ID = sId, .NodeType = "Regulator"})
+        Nodes += Hybrids.ToArray(Function(sId) New FileStream.Node With {.ID = sId, .NodeType = "ORF+TF"})
         Return Nodes
     End Function
 
@@ -88,11 +89,12 @@ Partial Module CLI
     <ExportAPI("/NetModel.TF_regulates",
                Info:="Builds the regulation network between the TF.",
                Usage:="/NetModel.TF_regulates /in <footprints.csv> [/out <outDIR> /cut 0.45]")>
+    <Group(CLIGrouping.RegulationNetwork)>
     Public Function TFNet(args As CommandLine) As Integer
         Dim inFile As String = args("/in")
         Dim footprints = inFile.LoadCsv(Of PredictedRegulationFootprint)
         Dim cut As Double = args.GetValue("/cut", 0.45)
-        Dim net As FileStream.Network = footprints.BuildNetwork(cut)
+        Dim net As FileStream.NetworkTables = footprints.BuildNetwork(cut)
         Dim out As String = args.GetValue("/out", inFile.TrimSuffix & $".regulates-TF_NET,cut={cut}/")
         Return net.Save(out, Encodings.ASCII).CLICode
     End Function

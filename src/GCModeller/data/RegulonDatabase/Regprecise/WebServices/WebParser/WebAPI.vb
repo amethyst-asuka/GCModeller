@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::1322cfd0affc475ee90246ce88d24f11, ..\GCModeller\data\RegulonDatabase\Regprecise\WebServices\WebParser\WebAPI.vb"
+﻿#Region "Microsoft.VisualBasic::5176456a523811986e8137d8d95b660f, ..\GCModeller\data\RegulonDatabase\Regprecise\WebServices\WebParser\WebAPI.vb"
 
     ' Author:
     ' 
@@ -33,10 +33,11 @@ Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports SMRUCC.genomics.Data.Regprecise.Regulator
 Imports SMRUCC.genomics.SequenceModel
+Imports Microsoft.VisualBasic.Text.HtmlParser
 
 Namespace Regprecise
 
-    <PackageNamespace("Regprecise.WebAPI",
+    <Package("Regprecise.WebAPI",
                       Category:=APICategories.UtilityTools,
                       Description:="Tools API for download and search RegPrecise database.",
                       Publisher:="")>

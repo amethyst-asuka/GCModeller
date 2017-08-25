@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::cbe9e56e155e7dc464a81d654fc1e409, ..\GCModeller\data\RegulonDatabase\Regprecise\Compiler.vb"
+﻿#Region "Microsoft.VisualBasic::460fa5bd1b71aa0c61546fcd1a4f40e3, ..\GCModeller\data\RegulonDatabase\Regprecise\Compiler.vb"
 
     ' Author:
     ' 
@@ -35,7 +35,7 @@ Imports SMRUCC.genomics.SequenceModel.FASTA
 
 Namespace Regprecise
 
-    <PackageNamespace("Regprecise.Compiler", Publisher:="xie.guigang@gcmodeller.org")>
+    <Package("Regprecise.Compiler", Publisher:="xie.guigang@gcmodeller.org")>
     Public Module Compiler
 
         <ExportAPI("Load.Xml.Regulon")>
@@ -112,15 +112,15 @@ Namespace Regprecise
             Call SitesFamilyCategory(repository)
             Dim regulations = (From genome As WebServices.JSONLDM.genome
                                In Regprecise.AsParallel
-                               Select CompileRegulations(genome, repository)).ToArray.MatrixToVector
+                               Select CompileRegulations(genome, repository)).ToArray.ToVector
             Return New WebServices.Regulations With {
                 .Regulations = regulations,
                 .Regulators = (From file As String
                                    In FileIO.FileSystem.GetFiles($"{repository}/regulators/", FileIO.SearchOption.SearchAllSubDirectories, "*.xml").AsParallel
-                               Select file.LoadXml(Of Regprecise.WebServices.JSONLDM.regulator())).ToArray.MatrixToVector.TrimNull,
+                               Select file.LoadXml(Of Regprecise.WebServices.JSONLDM.regulator())).ToArray.ToVector.TrimNull,
                 .Sites = (From file As String
                               In FileIO.FileSystem.GetFiles($"{repository}/sites/", FileIO.SearchOption.SearchAllSubDirectories, "*.xml").AsParallel
-                          Select file.LoadXml(Of Regprecise.WebServices.JSONLDM.site())).ToArray.MatrixToVector.TrimNull
+                          Select file.LoadXml(Of Regprecise.WebServices.JSONLDM.site())).ToArray.ToVector.TrimNull
             }
         End Function
 
@@ -128,17 +128,17 @@ Namespace Regprecise
         Public Function CompileRegulations(genome As Regprecise.WebServices.JSONLDM.genome, repository As String) As Regprecise.WebServices.Regulation()
             Dim regulators = (From file As String
                               In FileIO.FileSystem.GetFiles($"{repository}/regulators/{genome.name.NormalizePathString}/", FileIO.SearchOption.SearchTopLevelOnly, "*.xml")
-                              Select id = IO.Path.GetFileNameWithoutExtension(file),
+                              Select id = basename(file),
                                   regulator = file.LoadXml(Of Regprecise.WebServices.JSONLDM.regulator())).ToDictionary(Function(obj) obj.id, elementSelector:=Function(obj) obj.regulator)
             Dim sites = (From file As String
                          In FileIO.FileSystem.GetFiles($"{repository}/sites/{genome.name.NormalizePathString}/", FileIO.SearchOption.SearchTopLevelOnly, "*.xml")
-                         Select id = IO.Path.GetFileNameWithoutExtension(file),
+                         Select id = basename(file),
                              site = file.LoadXml(Of Regprecise.WebServices.JSONLDM.site())).ToDictionary(Function(obj) obj.id, elementSelector:=Function(obj) obj.site)
             Dim regulons = $"{repository}/regulons/{genome.genomeId}.{genome.name.NormalizePathString}.xml".LoadXml(Of Regprecise.WebServices.JSONLDM.regulon()).ToDictionary(Function(obj) obj.regulonId)
             Dim regulations = (From regulator In regulators
                                Where Not regulator.Value.IsNullOrEmpty AndAlso sites.ContainsKey(regulator.Key)
                                Let sitesValue = sites(regulator.Key)
-                               Select __createRegulations(regulator.Value, regulons, sitesValue)).ToArray.MatrixToList.MatrixToList.ToArray
+                               Select __createRegulations(regulator.Value, regulons, sitesValue)).ToArray.Unlist.Unlist.ToArray
             Return regulations
         End Function
 
@@ -205,7 +205,7 @@ Namespace Regprecise
         Public Sub SitesFamilyCategory(repositoryDIR As String, Optional genomePartitioning As Boolean = False)
             Dim Regulons = (From xmlFile As String
                             In FileIO.FileSystem.GetFiles(repositoryDIR & "/regulons/", FileIO.SearchOption.SearchTopLevelOnly, "*.xml")
-                            Select xmlFile.LoadXml(Of WebServices.JSONLDM.regulon())).ToArray.MatrixToList  ' 读取数据源
+                            Select xmlFile.LoadXml(Of WebServices.JSONLDM.regulon())).ToArray.Unlist  ' 读取数据源
             Dim Familys = (From regulon As WebServices.JSONLDM.regulon
                            In Regulons.AsParallel
                            Where String.Equals(TF, regulon.regulationType, StringComparison.OrdinalIgnoreCase)
@@ -215,7 +215,7 @@ Namespace Regprecise
             Dim FamilyFasta = (From family In Familys.AsParallel
                                Let sites As List(Of FastaReaders.Site) = (From regulon As WebServices.JSONLDM.regulon
                                                                           In family.Group
-                                                                          Select FetchSites(regulon, repositoryDIR)).ToArray.MatrixToList
+                                                                          Select FetchSites(regulon, repositoryDIR)).ToArray.Unlist
                                Select family, sites).ToArray
 
             For Each family In FamilyFasta
@@ -249,7 +249,7 @@ Namespace Regprecise
             Dim genomes = (From site As FastaReaders.Site
                            In sites
                            Select site
-                           Group site By site.Bacteria Into Group).ToList
+                           Group site By site.Bacteria Into Group).AsList
 
             Do While genomes.Count > 0
                 i += 1

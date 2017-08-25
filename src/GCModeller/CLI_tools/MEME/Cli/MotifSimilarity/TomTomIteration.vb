@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::4b55c57413868d630a4c3da12ccd137b, ..\GCModeller\CLI_tools\MEME\Cli\MotifSimilarity\TomTomIteration.vb"
+﻿#Region "Microsoft.VisualBasic::66087ea0235a85b90b053e19990d0eb6, ..\GCModeller\CLI_tools\MEME\Cli\MotifSimilarity\TomTomIteration.vb"
 
     ' Author:
     ' 
@@ -27,19 +27,20 @@
 #End Region
 
 Imports System.Text.RegularExpressions
+Imports Microsoft.VisualBasic
+Imports Microsoft.VisualBasic.CommandLine
+Imports Microsoft.VisualBasic.CommandLine.Reflection
+Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
+Imports Microsoft.VisualBasic.Data.csv
+Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Language.UnixBash
+Imports Microsoft.VisualBasic.Linq
+Imports Microsoft.VisualBasic.Serialization.JSON
+Imports Microsoft.VisualBasic.Text
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MEME
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MEME.Text
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Programs
 Imports SMRUCC.genomics.SequenceModel
-Imports Microsoft.VisualBasic.CommandLine
-Imports Microsoft.VisualBasic.CommandLine.Reflection
-Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Language.UnixBash
-Imports Microsoft.VisualBasic.Linq
-Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.Serialization.JSON
-Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
-Imports Microsoft.VisualBasic.Text
 
 Partial Module CLI
 
@@ -60,7 +61,7 @@ Partial Module CLI
                         In memeText.Select(AddressOf MEME_TEXT.SafelyLoad)
                         Where Not x.IsNullOrEmpty
                         Select x) _
-                              .MatrixAsIterator _
+                              .IteratesALL _
                               .OrderBy(Function(x) x.uid) _
                               .ToDictionary(Function(x) trimName(x.uid) & "." & x.Id)
 #If DEBUG Then
@@ -80,7 +81,7 @@ Partial Module CLI
         Next
 
         Dim getUids = (From x In sites
-                       Let array As String() = x.x.Select(Function(o) o.Attributes(Scan0)).OrderBy(Function(s) s).ToArray
+                       Let array As String() = x.Value.Select(Function(o) o.Attributes(Scan0)).OrderBy(Function(s) s).ToArray
                        Let uid As String = String.Join("+", array)
                        Select uid,
                            x
@@ -88,7 +89,7 @@ Partial Module CLI
 
         For Each Group In getUids
             Dim unique = Group.Group.First
-            Dim fasta As FASTA.FastaFile = unique.x.x
+            Dim fasta As FASTA.FastaFile = unique.x.Value
             Call fasta.Save(unique.x.Name, Encodings.ASCII)
         Next
 
@@ -106,7 +107,7 @@ Partial Module CLI
                        Let uid As String = grep(hit.Family) & "." & hit.Target
                        Where memeHash.ContainsKey(uid)
                        Select memeHash(uid).Sites.Select(Function(x) x.ToFasta(uid))
-        Dim fasta As New FASTA.FastaFile(query.ToList + hitSites.MatrixAsIterator)
+        Dim fasta As New FASTA.FastaFile(query.AsList + hitSites.IteratesALL)
         Return fasta
     End Function
 End Module

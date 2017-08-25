@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::300116c02345bd139010cbd9721aa8c7, ..\GCModeller\analysis\SequenceToolkit\SequencePatterns\Topologically\Similarity\Repeats.vb"
+﻿#Region "Microsoft.VisualBasic::211341d275dff1bcdc97789c26f7eb38, ..\GCModeller\analysis\SequenceToolkit\SequencePatterns\Topologically\Similarity\Repeats.vb"
 
     ' Author:
     ' 
@@ -46,7 +46,7 @@ Namespace Topologically.SimilarityMatches
     ''' </summary>
     ''' <remarks></remarks>
     ''' 
-    <[PackageNamespace]("Seqtools.Repeats.Search", Publisher:="xie.guigang@gmail.com", Url:="http://gcmodeller.org")>
+    <Package("Seqtools.Repeats.Search", Publisher:="xie.guigang@gmail.com", Url:="http://gcmodeller.org")>
     Public Module Repeats
 
         ''' <summary>
@@ -79,9 +79,9 @@ Namespace Topologically.SimilarityMatches
                              Group By obj.Name Into Group)
             Dim SeedsData = (From seed In initSeeds
                              Select seed.Name,
-                                 seed.Group.First.x) _
+                                 seed.Group.First.Value) _
                                    .ToDictionary(Function(obj) obj.Name,
-                                                 Function(obj) obj.x)
+                                                 Function(obj) obj.Value)
             Dim Seeds = (From obj In SeedsData Select obj.Key).ToArray
             Dim setValue As New SetValue(Of LociMatchedResult)
             Dim Repeats As LociMatchedResult() =
@@ -119,17 +119,17 @@ Namespace Topologically.SimilarityMatches
                 cutoff = 0.3
             End If
 
-            Dim seeds As List(Of String) = Topologically.InitializeSeeds(chars, min)
+            Dim seeds As List(Of String) = Seeding.InitializeSeeds(chars, min)
             Dim source = (From s As String In seeds
                           Let Score As Double = LevenshteinEvaluate(s, loci)
                           Where Score >= cutoff
                           Select s,
-                              Score).ToList '生成初始长度的种子
+                              Score).AsList '生成初始长度的种子
             Dim buf As List(Of String)
-            'Seeds = (From obj In SeedsCollection Select obj.s).ToList
+            'Seeds = (From obj In SeedsCollection Select obj.s).AsList
 
             For i As Integer = min + 1 To max   '种子延伸至长度的上限
-                buf = Topologically.ExtendSequence(seeds, chars)
+                buf = Seeding.ExtendSequence(seeds, chars)
                 Dim tmp = (From s As String
                            In buf.AsParallel
                            Let Score As Double = LevenshteinEvaluate(loci, s)
@@ -200,7 +200,7 @@ Namespace Topologically.SimilarityMatches
                                                 Select obj
                                                 Group By obj.Name Into Group) _
                                                     .ToDictionary(Function(obj) obj.Name,
-                                                                  Function(obj) obj.Group.First.x)
+                                                                  Function(obj) obj.Group.First.Value)
                            Let InternalSeedsSegment As String() = (From obj In InternalSeeds Select obj.Key).ToArray
                            Select InternalSeeds,
                                Loci,
@@ -227,7 +227,7 @@ Namespace Topologically.SimilarityMatches
         End Function
 
         <ExportAPI("invoke.search.similarity")>
-        Public Function InvokeSearch(Sequence As I_PolymerSequenceModel, Min As Integer, Max As Integer, Optional cutoff As Double = 0.65) As LociMatchedResult()
+        Public Function InvokeSearch(Sequence As IPolymerSequenceModel, Min As Integer, Max As Integer, Optional cutoff As Double = 0.65) As LociMatchedResult()
             Return InvokeSearch(Sequence.SequenceData, Min, Max, cutoff)
         End Function
 
@@ -261,7 +261,7 @@ Namespace Topologically.SimilarityMatches
                                                 Select obj
                                                 Group By obj.Name Into Group) _
                                                       .ToDictionary(Function(obj) obj.Name,
-                                                                    Function(obj) obj.Group.First.x)
+                                                                    Function(obj) obj.Group.First.Value)
                            Let InternalSeedsSegment As String() = (From obj In InternalSeeds Select obj.Key).ToArray
                            Select InternalSeeds,
                                Loci,

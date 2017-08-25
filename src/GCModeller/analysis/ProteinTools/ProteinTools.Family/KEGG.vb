@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::1fd145ca037b7a1dbee7d729135f72a9, ..\GCModeller\analysis\ProteinTools\ProteinTools.Family\KEGG.vb"
+﻿#Region "Microsoft.VisualBasic::895b2a5db6fff87317fa38a4ff4b2e6a, ..\GCModeller\analysis\ProteinTools\ProteinTools.Family\KEGG.vb"
 
     ' Author:
     ' 
@@ -34,7 +34,7 @@ Imports SMRUCC.genomics.Analysis.ProteinTools.Family.FileSystem
 Imports SMRUCC.genomics.Assembly.KEGG.Archives
 Imports SMRUCC.genomics.Data
 
-<PackageNamespace("KEGG.Prot.Family", Category:=APICategories.UtilityTools)>
+<Package("KEGG.Prot.Family", Category:=APICategories.UtilityTools)>
 Public Module KEGG
 
     ''' <summary>
@@ -49,7 +49,7 @@ Public Module KEGG
         Pfam = (From x As Xfam.Pfam.PfamString.PfamString
                 In Pfam.AsParallel
                 Where Not StringHelpers.IsNullOrEmpty(x.PfamString)
-                Select x).ToList
+                Select x).AsList
         Dim dict As Dictionary(Of String, String) = KEGG.ToArray(Function(x) SequenceDump.TitleParser(x.Title)) _
             .ToDictionary(Function(x) x.Key,
                           Function(x) SequenceDump.KEGGFamily(x.Value))
@@ -62,7 +62,7 @@ Public Module KEGG
                               In family
                               Select stringPfam = PfamString.CreateObject(x),'.InvokeSet(NameOf(PfamString.SequenceData), seqDict(x.ProteinId)),
                                   subX.ToLower,
-                                  subX).ToArray).MatrixToVector _
+                                  subX).ToArray).ToVector _
                      .GroupBy(Function(x) x.ToLower) _
                      .ToArray(Function(x) Family.FileSystem.Family.CreateObject(x.First.subX, x.ToArray(Function(xx) xx.stringPfam))) _
                      .OrderBy(Function(x) x.Family).ToArray

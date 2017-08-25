@@ -59,7 +59,7 @@ Sequence Analysis, Protein
 Sequence Analysis, RNA
 *Software",
       PubMed:=20007740)>
-<[PackageNamespace]("Tools.Tmod",
+<Package("Tools.Tmod",
                     Description:="Tmod: toolbox of motif discovery
                     
 <br />
@@ -223,7 +223,7 @@ Public Module TMod
         Dim LQuery = (From i As Integer In Counts.Sequence.AsParallel
                       Select i,
                           fasta = source.__subSample(n)).ToArray
-        Dim ID As String = IO.Path.GetFileNameWithoutExtension(source.FilePath)
+        Dim ID As String = basename(source.FilePath)
         Dim ASCII As System.Text.Encoding = System.Text.Encoding.ASCII
 
         If String.IsNullOrEmpty(EXPORT) Then
@@ -247,7 +247,7 @@ Public Module TMod
 
         '可能还有一些没有被覆盖掉，则在这里讲这些对象取出来进行subsample
         Dim Sampled = (From fa As FASTA.FastaToken
-                       In (From item In LQuery Select item.fasta.ToArray).MatrixAsIterator
+                       In (From item In LQuery Select item.fasta.ToArray).IteratesALL
                        Select fa.Title Distinct).ToArray
         Dim UnSampled = (From fa As FASTA.FastaToken
                          In source.AsParallel

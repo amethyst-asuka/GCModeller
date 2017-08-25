@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::e3fe227aed8c8a6acd26bb1fc365bf68, ..\GCModeller\models\SBML\SBML\Level2\Elements\Specie.vb"
+﻿#Region "Microsoft.VisualBasic::016baf5d4b497ed4a952f7c5ec2c8278, ..\GCModeller\models\SBML\SBML\Level2\Elements\Specie.vb"
 
     ' Author:
     ' 
@@ -45,7 +45,7 @@ Namespace Level2.Elements
         ''' <remarks></remarks>
         <Escaped>
         <XmlAttribute("id")>
-        Public Overrides Property ID As String Implements IMetabolite.Identifier
+        Public Overrides Property ID As String Implements IMetabolite.Key
         <XmlAttribute("initialAmount")>
         Public Property InitialAmount As Double Implements IMetabolite.InitializeAmount
         <Escaped>

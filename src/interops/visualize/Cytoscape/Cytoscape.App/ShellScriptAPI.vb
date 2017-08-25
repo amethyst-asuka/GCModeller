@@ -37,7 +37,7 @@ Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite
 Imports SMRUCC.genomics.Visualize.Cytoscape.CytoscapeGraphView
 Imports SMRUCC.genomics.Visualize.Cytoscape.CytoscapeGraphView.XGMML
 
-<[PackageNamespace]("Cytoscape",
+<Package("Cytoscape",
                     Cites:="Shannon, P., et al. (2003). ""Cytoscape: a software environment For integrated models Of biomolecular interaction networks."" Genome Res 13(11): 2498-2504.
 <p>Cytoscape is an open source software project for integrating biomolecular interaction networks with high-throughput expression data and other molecular states into a unified 
                     conceptual framework. Although applicable to any system of molecular components and interactions, Cytoscape is most powerful when used in conjunction 
@@ -126,7 +126,7 @@ Public Module ShellScriptAPI
                                 Select ID = String.Format("[{0}] {1}", xId, refRxn.Entry),
                                     DataModel = refRxn.ReactionModel,
                                     refRxnX = refRxn,
-                                    EcNum = xId)).MatrixAsIterator
+                                    EcNum = xId)).IteratesALL
 
         Dim Graph As Graph = Graph.CreateObject(RefMap.Name.Replace("<br>", ""), "KEGG reference map data", RefMap.Description.Replace("<br>", ""))
         Graph.ID = RefMap.EntryId
@@ -162,19 +162,19 @@ Public Module ShellScriptAPI
                        Select New XGMML.Node With {
                            .label = rxn.ID,
                            .Attributes = InternalAttr
-                           }).ToArray.AddHandle
+                           }).ToArray.WriteAddress
 
         Graph.Edges = (From rxn In Reaction
                        Let Edges = (From target In Reaction
                                     Let Compound As String() = (From source In rxn.DataModel.Products
-                                                                Where target.DataModel.GetCoEfficient(source.Identifier) < 0
-                                                                Select source.Identifier).ToArray
+                                                                Where target.DataModel.GetCoEfficient(source.ID) < 0
+                                                                Select source.ID).ToArray
                                     Where Not Compound.IsNullOrEmpty
                                     Select New XGMML.Edge With {
                                         .source = Graph.GetNode(rxn.ID).id,
                                         .target = Graph.GetNode(target.ID).id,
                                         .Label = Compound.First}).ToArray
-                       Select Edges).ToArray.MatrixToVector.AddHandle '从rxn的右边到target的左边形成一条边
+                       Select Edges).ToArray.ToVector.WriteAddress '从rxn的右边到target的左边形成一条边
         Return Graph
     End Function
 

@@ -1,53 +1,60 @@
 ---
 title: Settings
 tags: [maunal, tools]
-date: 7/27/2016 6:40:25 PM
+date: 11/24/2016 2:54:22 AM
 ---
 # Settings [version 1.0.0.0]
-**Module AssemblyName**: file:///G:/GCModeller/manual/bin/Settings.exe
-**Root namespace**: GCModeller.Configuration.CLI
+> GCModeller configuration console.
+
+<!--more-->
+
+**SMRUCC genomics GCModeller Programs Profiles Manager**<br/>
+_SMRUCC genomics GCModeller Programs Profiles Manager_<br/>
+Copyright © SMRUCC genomics. 2014
+
+**Module AssemblyName**: file:///G:/GCModeller/GCModeller/bin/Settings.exe<br/>
+**Root namespace**: ``GCModeller.Configuration.CLI``<br/>
 
 
 All of the command that available in this program has been list below:
 
+##### Generic function API list
 |Function API|Info|
 |------------|----|
-|Set|Setting up the configuration data node.|
-|var|Gets the settings value.|
+|[Set](#Set)|Setting up the configuration data node.|
+|[var](#var)|Gets the settings value.|
 
-## Commands
+## CLI API list
 --------------------------
-##### Help for command 'Set':
+<h3 id="Set"> 1. Set</h3>
 
-**Prototype**: GCModeller.Configuration.CLI::Int32 Set(Microsoft.VisualBasic.CommandLine.CommandLine)
+Setting up the configuration data node.
+**Prototype**: ``GCModeller.Configuration.CLI::Int32 Set(args As Microsoft.VisualBasic.CommandLine.CommandLine)``
 
+###### Usage
+```bash
+Settings Set <varName> <value>
 ```
-  Information:  Setting up the configuration data node.
-  Usage:        G:\GCModeller\manual\bin\Settings.exe Set <varName> <value>
-  Example:      Settings Set Set java /usr/lib/java/java.bin
+###### Example
+```bash
+Settings Set java /usr/lib/java/java.bin
 ```
+<h3 id="var"> 2. var</h3>
 
-##### Help for command 'var':
+Gets the settings value.
+**Prototype**: ``GCModeller.Configuration.CLI::Int32 Var(args As Microsoft.VisualBasic.CommandLine.CommandLine)``
 
-**Prototype**: GCModeller.Configuration.CLI::Int32 Var(Microsoft.VisualBasic.CommandLine.CommandLine)
-
-```
-  Information:  Gets the settings value.
-  Usage:        G:\GCModeller\manual\bin\Settings.exe var [varName]
-  Example:      Settings var 
-```
-
-
-
-  Parameters information:
-```
-       [[VarName]]
-    Description:  If this value is null, then the program will prints all of the variables in the gcmodeller config file or when the variable is presents in the database, only the config value of the specific variable will be display.
-
-    Example:      [VarName] ""
-
-
+###### Usage
+```bash
+Settings var [varName]
 ```
 
-#### Accepted Types
-##### [VarName]
+
+#### Arguments
+##### [[VarName]]
+If this value is null, then the program will prints all of the variables in the gcmodeller config file or when the variable is presents in the database, only the config value of the specific variable will be display.
+
+###### Example
+```bash
+[VarName] <term_string>
+```

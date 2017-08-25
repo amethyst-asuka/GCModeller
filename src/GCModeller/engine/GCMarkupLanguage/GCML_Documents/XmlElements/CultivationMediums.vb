@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::a1bbaf49594ec0abb610ab687afec34a, ..\GCModeller\engine\GCMarkupLanguage\GCML_Documents\XmlElements\CultivationMediums.vb"
+﻿#Region "Microsoft.VisualBasic::73174065388fb8b864e8863a1c78978b, ..\GCModeller\engine\GCMarkupLanguage\GCML_Documents\XmlElements\CultivationMediums.vb"
 
     ' Author:
     ' 
@@ -30,10 +30,10 @@ Imports System.Xml.Serialization
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Microsoft.VisualBasic.Serialization
 
-Public Class I_SubstrateRefx : Implements sIdEnumerable
+Public Class I_SubstrateRefx : Implements INamedValue
 
     <DumpNode> <XmlAttribute>
-    Public Property Identifier As String Implements sIdEnumerable.Identifier
+    Public Property Identifier As String Implements INamedValue.Key
 
     <DumpNode> <XmlAttribute>
     Public Property InitialQuantity As Double

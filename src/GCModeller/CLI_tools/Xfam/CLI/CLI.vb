@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::66b267cfe9c3a6f05d76e6215e46f3c7, ..\GCModeller\CLI_tools\Xfam\CLI\CLI.vb"
+﻿#Region "Microsoft.VisualBasic::ee71aa1b0fee36bec50a2db49e0dc301, ..\GCModeller\CLI_tools\Xfam\CLI\CLI.vb"
 
     ' Author:
     ' 
@@ -30,7 +30,7 @@ Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream.Linq
+Imports Microsoft.VisualBasic.Data.csv.IO.Linq
 Imports Microsoft.VisualBasic.Linq.Extensions
 Imports Microsoft.VisualBasic.Parallel
 Imports Microsoft.VisualBasic.Parallel.Threads
@@ -40,7 +40,7 @@ Imports SMRUCC.genomics.Data.Xfam
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.BLASTOutput
 
-<PackageNamespace("Xfam.CLI",
+<Package("Xfam.CLI",
                   Description:="Xfam Tools (Pfam, Rfam, iPfam)",
                   Category:=APICategories.CLI_MAN,
                   Url:="http://xfam.org")>
@@ -59,7 +59,7 @@ Module CLI
             rFam = Global.Xfam.GCModeller.FileSystem.Xfam.Rfam.RfamFasta
         End If
 
-        Dim blastbin As String = GCModeller.FileSystem.GetLocalBlast
+        Dim blastbin As String = GCModeller.FileSystem.GetLocalblast
         Dim blast As New SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Programs.BLASTPlus(blastbin)
         Dim num_threads As Integer = args.GetValue("/num_threads", -1)
         Dim ticks As Integer = args.GetValue("/ticks", 1000)
@@ -137,11 +137,11 @@ TEST:       Call $"{inFile.ToFileURL} is in ultra large size, start lazy loading
             Dim noParallel As Boolean = args.GetBoolean("/no_parallel")
 
             If noParallel Then
-                Call lstFiles.ToArray(Function(x) __batchExportOpr(inFile:=x.x))
+                Call lstFiles.ToArray(Function(x) __batchExportOpr(inFile:=x.Value))
             Else
                 Call BatchTask(lstFiles,
                                getExe:=getThis,
-                               getCLI:=Function(x) $"/Export.Blastn /in {x.x.CLIPath}",
+                               getCLI:=Function(x) $"/Export.Blastn /in {x.Value.CLIPath}",
                                numThreads:=num_threads,
                                TimeInterval:=100)
             End If
@@ -149,7 +149,7 @@ TEST:       Call $"{inFile.ToFileURL} is in ultra large size, start lazy loading
             Dim LQuery = From file As NamedValue(Of String)
                          In lstFiles
                          Select Id = file.Name,
-                             blastn = BlastPlus.Parser.TryParse(file.x)
+                             blastn = BlastPlus.Parser.TryParse(file.Value)
             Dim Exports = (From file In LQuery.AsParallel
                            Let exportData = MapsAPI.Export(file.blastn)
                            Let path As String = $"{out}/{file.Id}.csv"

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::82dc6a08bb1c563f700e74c3c1c5945e, ..\R.Bioconductor\Bioconductor\Bioconductor\Web\WebService.vb"
+﻿#Region "Microsoft.VisualBasic::a2f514d240656e622abd4ed2245a97a8, ..\R.Bioconductor\Bioconductor\Bioconductor\Web\WebService.vb"
 
     ' Author:
     ' 
@@ -29,6 +29,7 @@
 Imports System.Text.RegularExpressions
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Terminal.STDIO
+Imports Microsoft.VisualBasic.Text
 Imports SMRUCC.R.CRAN.Bioconductor.Web.Packages
 
 Namespace Web
@@ -94,16 +95,16 @@ Namespace Web
         End Sub
 
         Private Function __init(inits As Action) As Integer
-            Printf("Initialize Bioconductor web api.....")
-            Printf("Retrieve package information for biocLite.R....")
+            printf("Initialize Bioconductor web api.....")
+            printf("Retrieve package information for biocLite.R....")
 
             If Not inits Is Nothing Then
                 Call inits()
             End If
 
-            Printf("Get %s biocLite packages...", Softwares.Length)
-            Printf("Get %s annotation data packages...", AnnotationData.Length)
-            Printf("Get %s experiment data packages...", ExperimentData.Length)
+            printf("Get %s biocLite packages...", Softwares.Length)
+            printf("Get %s annotation data packages...", AnnotationData.Length)
+            printf("Get %s experiment data packages...", ExperimentData.Length)
 
             Return 0
         End Function

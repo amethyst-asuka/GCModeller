@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::5770591594a1c5b946f5ee14c582b42e, ..\GCModeller\core\Bio.Assembly\Assembly\KEGG\Archives\Csv\Pathway.vb"
+﻿#Region "Microsoft.VisualBasic::62854119f32156a1be2b647e63a5cdd1, ..\core\Bio.Assembly\Assembly\KEGG\Archives\Csv\Pathway.vb"
 
     ' Author:
     ' 
@@ -28,8 +28,9 @@
 
 Imports System.Data.Linq.Mapping
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Microsoft.VisualBasic
+Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
+Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports Microsoft.VisualBasic.Linq
 Imports SMRUCC.genomics.Assembly.KEGG.DBGET
@@ -53,7 +54,7 @@ Namespace Assembly.KEGG.Archives.Csv
         ''' <value></value>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Public Overrides Property EntryId As String Implements IKeyValuePairObject(Of String, String()).Identifier
+        Public Overrides Property EntryId As String Implements IKeyValuePairObject(Of String, String()).Key
             Get
                 Return MyBase.EntryId
             End Get

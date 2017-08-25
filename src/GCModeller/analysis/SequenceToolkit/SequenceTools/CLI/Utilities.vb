@@ -1,42 +1,45 @@
-﻿#Region "Microsoft.VisualBasic::586889bbbbbad92c78217c8c9348137f, ..\GCModeller\analysis\SequenceToolkit\SequenceTools\CLI\Utilities.vb"
+﻿#Region "Microsoft.VisualBasic::ce364ad5b9c42e1511174f353e216e8b, ..\GCModeller\analysis\SequenceToolkit\SequenceTools\CLI\Utilities.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports System.Drawing
-Imports System.IO
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
+Imports Microsoft.VisualBasic.CommandLine.InteropService.SharedORM
 Imports Microsoft.VisualBasic.CommandLine.Reflection
+Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Imaging
 Imports Microsoft.VisualBasic.Scripting.MetaData
+Imports Microsoft.VisualBasic.Text
 Imports SMRUCC.genomics.Analysis.SequenceTools
 Imports SMRUCC.genomics.Analysis.SequenceTools.SequencePatterns
+Imports SMRUCC.genomics.Assembly
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.Extensions
+Imports SMRUCC.genomics.ContextModel
 Imports SMRUCC.genomics.SequenceModel
 Imports SMRUCC.genomics.SequenceModel.FASTA
 Imports SMRUCC.genomics.SequenceModel.FASTA.Reflection
@@ -46,14 +49,16 @@ Imports SMRUCC.genomics.SequenceModel.FASTA.Reflection
 ''' </summary>
 ''' <remarks></remarks>
 ''' 
-<PackageNamespace("Seqtools.Utilities.CLI",
+<Package("Seqtools.Utilities.CLI",
                   Category:=APICategories.CLI_MAN,
                   Description:="Sequence operation utilities",
                   Publisher:="xie.guigang@gmail.com")>
 <ExceptionHelp(Documentation:="https://github.com/smrucc/gcmodeller/src/analysis/",
                EMailLink:="xie.guigang@gcmodeller.org",
                Debugging:="http://gcmodeller.org")>
-Public Module Utilities
+<GroupingDefine(CLIGrouping.FastaTools, Description:=CLIGrouping.FastaToolsDescription)>
+<GroupingDefine(CLIGrouping.PalindromeTools, Description:=CLIGrouping.PalindromeToolsDescription)>
+<CLI> Public Module Utilities
 
     <ExportAPI("-321",
                Info:="Polypeptide sequence 3 letters to 1 lettes sequence.",
@@ -156,11 +161,11 @@ Public Module Utilities
         If String.IsNullOrEmpty(Format) OrElse String.Equals("fsa", Format, StringComparison.OrdinalIgnoreCase) Then 'fasta sequence
             FASTA = FastaFile.Read(File:=Input)
         Else 'gbk format
-            Dim GbkFile As GBFF.File = GBFF.File.Read(Path:=Input)
+            Dim GbkFile As GBFF.File = GBFF.File.Load(Path:=Input)
             FASTA = GbkFile.ExportProteins
         End If
 
-        Dim File As String = IO.Path.GetFileNameWithoutExtension(Input)
+        Dim File As String = BaseName(Input)
         Dim Csv = SequencePatterns.Pattern.PatternSearch.Match(Seq:=FASTA, pattern:=pattern)
         Dim Complement = SequencePatterns.Pattern.PatternSearch.Match(Seq:=FASTA.Complement, pattern:=pattern)
         Dim Reverse = SequencePatterns.Pattern.PatternSearch.Match(Seq:=FASTA.Reverse, pattern:=pattern)
@@ -209,5 +214,34 @@ Public Module Utilities
         Call ClustalVisual.SetDotSize(args.GetValue("/dot.size", 10))
         Dim res As Image = ClustalVisual.InvokeDrawing(aln)
         Return res.SaveAs(out, ImageFormats.Png)
+    End Function
+
+    ''' <summary>
+    ''' 
+    ''' </summary>
+    ''' <param name="args"></param>
+    ''' <returns></returns>
+    ''' <remarks>
+    ''' 2017-2-9 经过KEGG测试，sequence cut功能没有问题
+    ''' </remarks>
+    <ExportAPI("/Promoter.Regions.Parser.gb",
+               Usage:="/Promoter.Regions.Parser.gb /gb <genbank.gb> [/out <out.DIR>]")>
+    Public Function PromoterRegionParser_gb(args As CommandLine) As Integer
+        Dim gb As String = args <= "/gb"
+        Dim gbff As GBFF.File = NCBI.GenBank.GBFF.File.Load(gb)
+        Dim nt As FastaToken = gbff.Origin.ToFasta
+        Dim genes = gbff.ExportGeneFeatures
+        Dim out As String = args.GetValue("/out", gb.TrimSuffix)
+        Dim PTT = gbff.GbkffExportToPTT
+        Dim parser As New PromoterRegionParser(nt, PTT)
+
+        Call genes.SaveTo(out & "-genes.csv", nonParallel:=True)
+
+        For Each l In parser.PromoterRegions
+            Dim save$ = $"{out}-promoter-regions/-{l.Tag}bp.fasta"
+            Call New FastaFile(l.value.Values).Save(120, save, Encodings.ASCII)
+        Next
+
+        Return 0
     End Function
 End Module

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::5ab7378f31347d0a706716f5e669295d, ..\GCModeller\sub-system\FBA_DP\FBA\Models\SBML.vb"
+﻿#Region "Microsoft.VisualBasic::7e2d135e0cb51c09bc3331314173385c, ..\GCModeller\sub-system\FBA_DP\FBA\Models\SBML.vb"
 
     ' Author:
     ' 
@@ -61,7 +61,7 @@ Namespace Models
             Me.fluxColumns = New ReadOnlyCollection(Of String)(_fluxs.Keys.ToArray)
             Me.allCompounds = New ReadOnlyCollection(Of String)((From x As Reaction In _fluxs.Values.AsParallel
                                                                  Select x.GetMetabolites.ToArray(
-                                                                     Function(m) m.species)).MatrixAsIterator.Distinct.ToArray)
+                                                                     Function(m) m.species)).IteratesALL.Distinct.ToArray)
             If forceEnzymeRev Then
                 For Each x In Me._fluxs.Values
                     Dim props As New FluxPropReader(x.Notes)

@@ -1,28 +1,28 @@
-﻿#Region "Microsoft.VisualBasic::436db9180ad23f9f3b554709d092127a, ..\GCModeller\core\Bio.Assembly\Assembly\NCBI\Database\CDD\SmpFile.vb"
+﻿#Region "Microsoft.VisualBasic::bddc325f5dbd23994e97736860f1df2f, ..\core\Bio.Assembly\Assembly\NCBI\Database\CDD\SmpFile.vb"
 
-' Author:
-' 
-'       asuka (amethyst.asuka@gcmodeller.org)
-'       xieguigang (xie.guigang@live.com)
-'       xie (genetics@smrucc.org)
-' 
-' Copyright (c) 2016 GPL3 Licensed
-' 
-' 
-' GNU GENERAL PUBLIC LICENSE (GPL3)
-' 
-' This program is free software: you can redistribute it and/or modify
-' it under the terms of the GNU General Public License as published by
-' the Free Software Foundation, either version 3 of the License, or
-' (at your option) any later version.
-' 
-' This program is distributed in the hope that it will be useful,
-' but WITHOUT ANY WARRANTY; without even the implied warranty of
-' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-' GNU General Public License for more details.
-' 
-' You should have received a copy of the GNU General Public License
-' along with this program. If not, see <http://www.gnu.org/licenses/>.
+    ' Author:
+    ' 
+    '       asuka (amethyst.asuka@gcmodeller.org)
+    '       xieguigang (xie.guigang@live.com)
+    '       xie (genetics@smrucc.org)
+    ' 
+    ' Copyright (c) 2016 GPL3 Licensed
+    ' 
+    ' 
+    ' GNU GENERAL PUBLIC LICENSE (GPL3)
+    ' 
+    ' This program is free software: you can redistribute it and/or modify
+    ' it under the terms of the GNU General Public License as published by
+    ' the Free Software Foundation, either version 3 of the License, or
+    ' (at your option) any later version.
+    ' 
+    ' This program is distributed in the hope that it will be useful,
+    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
+    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    ' GNU General Public License for more details.
+    ' 
+    ' You should have received a copy of the GNU General Public License
+    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -45,11 +45,11 @@ Namespace Assembly.NCBI.CDD
 
 #Region "Public Property & Constants"
 
-        Implements sIdEnumerable
-        Implements I_PolymerSequenceModel
+        Implements INamedValue
+        Implements IPolymerSequenceModel
 
         <XmlAttribute>
-        Public Property Id As Integer
+        Public Property ID As String
         <XmlElement>
         Public Property Title As String
         <XmlElement>
@@ -61,7 +61,7 @@ Namespace Assembly.NCBI.CDD
         ''' </summary>
         ''' <remarks></remarks>
         <XmlText>
-        Public Property SequenceData As String Implements I_PolymerSequenceModel.SequenceData
+        Public Property SequenceData As String Implements IPolymerSequenceModel.SequenceData
         ''' <summary>
         ''' UniqueId
         ''' </summary>
@@ -69,7 +69,7 @@ Namespace Assembly.NCBI.CDD
         ''' <returns></returns>
         ''' <remarks></remarks>
         <XmlAttribute>
-        Public Overridable Property Identifier As String Implements sIdEnumerable.Identifier
+        Public Overridable Property Name As String Implements INamedValue.Key
         <XmlAttribute("name")>
         Public Property CommonName As String
 
@@ -86,7 +86,7 @@ Namespace Assembly.NCBI.CDD
 #End Region
 
         Public Overrides Function ToString() As String
-            Return String.Format("[{0}] {1}", Id, Title)
+            Return String.Format("[{0}] {1}", ID, Title)
         End Function
 
         ''' <summary>
@@ -94,8 +94,8 @@ Namespace Assembly.NCBI.CDD
         ''' </summary>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Public Function Export() As FastaToken
-            Dim Title As String = $"{Id}/1-2 {Id}.1 {Identifier}.1;{CommonName};"
+        Public Function EXPORT() As FastaToken
+            Dim Title As String = $"{ID}/1-2 {ID}.1 {Name}.1;{CommonName};"
             Dim fasta As New FastaToken With {
                 .SequenceData = SequenceData,
                 .Attributes = New String() {Title}
@@ -120,7 +120,7 @@ Namespace Assembly.NCBI.CDD
                 tokens = Strings.Split(sTemp, ",")
             End If
 
-            SmpFile.Identifier = tokens(0)
+            SmpFile.Name = tokens(0)
             SmpFile.CommonName = tokens(1).Trim
             SmpFile.Title = tokens(2).Trim
 

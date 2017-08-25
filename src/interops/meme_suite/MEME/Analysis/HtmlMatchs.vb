@@ -1,45 +1,41 @@
 ﻿#Region "Microsoft.VisualBasic::f5cb24ce3fe849bd402314b7ce790df6, ..\interops\meme_suite\MEME\Analysis\HtmlMatchs.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports System.Reflection
 Imports System.Runtime.CompilerServices
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Data.csv.Extensions
-Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports Microsoft.VisualBasic.Linq.Extensions
 Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports SMRUCC.genomics.Analysis.RNA_Seq
-Imports SMRUCC.genomics.Analysis.RNA_Seq.RTools.WGCNA
 Imports SMRUCC.genomics.Analysis.RNA_Seq.WGCNA
 Imports SMRUCC.genomics.Assembly
 Imports SMRUCC.genomics.Assembly.KEGG.DBGET
@@ -47,7 +43,6 @@ Imports SMRUCC.genomics.Assembly.NCBI.GenBank
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.CsvExports
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
-Imports SMRUCC.genomics.ComponentModel.Loci
 Imports SMRUCC.genomics.Data
 Imports SMRUCC.genomics.Data.Regprecise
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.GenomeMotifFootPrints
@@ -57,11 +52,13 @@ Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MEME.HTML
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MEME.LDM
 Imports SMRUCC.genomics.Model.Network.VirtualFootprint.DocumentFormat
 Imports SMRUCC.genomics.SequenceModel
-Imports SMRUCC.genomics.SequenceModel.NucleotideModels
+
+Imports Strands = SMRUCC.genomics.ComponentModel.Loci.Strands
+Imports SMRUCC.genomics.Assembly.DOOR
 
 Namespace Analysis
 
-    <[PackageNamespace]("MEME_Html.Analysis.Parser", Category:=APICategories.ResearchTools, Publisher:="xie.guigang@gmail.com")>
+    <Package("MEME_Html.Analysis.Parser", Category:=APICategories.ResearchTools, Publisher:="xie.guigang@gmail.com")>
     Public Module HtmlMatching
 
         Public Class MEMEAnalysisResult : Implements RegulonDatabase.IRegulationModel
@@ -88,9 +85,9 @@ Namespace Analysis
             Return TempChunk.ToArray
         End Function
 
-        Public Function MatchedTargetRegulator(ExportFile As DocumentStream.File, BestMatches As RegpreciseMPBBH()) As MatchedResult()
+        Public Function MatchedTargetRegulator(ExportFile As IO.File, BestMatches As RegpreciseMPBBH()) As MatchedResult()
             Dim ChunkBuffer As MatchedResult() = ExportFile.AsDataSource(Of MatchedResult)(False)
-            Dim MatchLQuery = (From Match As MatchedResult In ChunkBuffer.AsParallel Select Process(Match, BestMatches)).ToArray.MatrixToVector
+            Dim MatchLQuery = (From Match As MatchedResult In ChunkBuffer.AsParallel Select Process(Match, BestMatches)).ToArray.ToVector
             Return MatchLQuery
         End Function
 
@@ -121,7 +118,7 @@ Namespace Analysis
             Dim dictMotif = Motifs.ToDictionary(Function(motif) motif.Id)
             Dim LQuery = (From seq As DocumentFormat.XmlOutput.MAST.SequenceDescript
                           In MastXml.Sequences.SequenceList
-                          Select __match(dictMotif, seq)).ToArray.MatrixToVector.TrimNull
+                          Select __match(dictMotif, seq)).ToArray.ToVector.TrimNull
             Return LQuery
         End Function
 
@@ -225,11 +222,11 @@ Namespace Analysis
         Private Function __match(Motifs As Dictionary(Of String, MEME.LDM.Motif),
                                  seq As DocumentFormat.XmlOutput.MAST.SequenceDescript) As MotifSite()
             Dim resultSet = seq.Segments.ToArray(Function(site) __match(Motifs, site, seq.name))
-            Return resultSet.MatrixToVector
+            Return resultSet.ToVector
         End Function
 
         Private Function __match(Motifs As Dictionary(Of String, MEME.LDM.Motif), site As XmlOutput.MAST.Segment, uid As String) As MotifSite()
-            Return site.Hits.ToArray(Function(loci) __match(Motifs, loci, uid)).MatrixToVector
+            Return site.Hits.ToArray(Function(loci) __match(Motifs, loci, uid)).ToVector
         End Function
 
         Private Function __match(Motifs As Dictionary(Of String, MEME.LDM.Motif), site As XmlOutput.MAST.HitResult, uid As String) As MotifSite()
@@ -296,14 +293,14 @@ Namespace Analysis
                                    masthtml As String,
                                    genome As SequenceModel.FASTA.FastaToken,
                                    cdsInfo As IEnumerable(Of GeneDumpInfo)) As VirtualFootprints()
-            Dim Reader As SegmentReader = New SegmentReader(genome, False)
+
             Dim MAST = DocumentFormat.MAST.HTML.LoadDocument_v410(masthtml, False)
             Dim result = DocumentFormat.MAST.HTML.MatchMEMEAndMast(meme, MAST)
             Dim Footprints As VirtualFootprints() = (
                 From motif As MEMEOutput
                 In result
                 Select __createMotifSiteInfo(Of GeneDumpInfo)(
-                    motif, Reader, GeneBriefInformation:=cdsInfo)).ToArray.MatrixToVector
+                    motif, genome, GeneBriefInformation:=cdsInfo)).ToArray.ToVector
 
             Return Footprints
         End Function
@@ -324,7 +321,7 @@ Namespace Analysis
             Dim GBKSource = (From path As KeyValuePair(Of String, String)
                              In LoadSourceEntryList(source:=FileIO.FileSystem.GetFiles(
                                  GbkSourceDir, FileIO.SearchOption.SearchTopLevelOnly, "*.gbk", "*.gb")).AsParallel
-                             Select ID = path.Key, gbk = GBFF.File.Read(path.Value)).ToDictionary(
+                             Select ID = path.Key, gbk = GBFF.File.Load(path.Value)).ToDictionary(
                                 Function(key) key.ID, elementSelector:=Function(obj) obj.gbk)
             Dim mast = (From path As String
                         In FileIO.FileSystem.GetDirectories(MastSourceDir, FileIO.SearchOption.SearchTopLevelOnly)
@@ -337,7 +334,7 @@ Namespace Analysis
                               meme,
                               mast_data.mast_html,
                               ptt.Origin.ToFasta,
-                              cdsInfo:=gbExportService.ExportGeneAnno(ptt)),
+                              cdsInfo:=gbExportService.ExportGeneFeatures(ptt)),
                               ID = mast_data.ID).ToArray
 
             For Each item In LQuery
@@ -410,15 +407,15 @@ Namespace Analysis
             Return 0
         End Function
 
-        Private Function __matchProcess(DoorOperons As DOOR.OperonView,
+        Private Function __matchProcess(DOOR As OperonView,
                                         item As MatchedResult,
                                         Pcc As PccMatrix,
                                         WGCNAWeights As WGCNAWeight) As MatchedResult
 
-            If Not DoorOperons.ContainsOperon(item.DoorId) Then
+            If Not DOOR.HaveOperon(item.DoorId) Then
                 Call $"{item.DoorId} is not exists in the operons data!".__DEBUG_ECHO
             Else
-                item.OperonPromoter = DoorOperons(item.DoorId).InitialX.Synonym
+                item.OperonPromoter = DOOR(item.DoorId).InitialX.Synonym
             End If
             item.TFPcc = Pcc.GetValue(item.TF, item.OperonPromoter)
             item.PccArray = (From Id As String In item.OperonGeneIds Select Pcc.GetValue(item.TF, Id)).ToArray
@@ -446,12 +443,12 @@ Namespace Analysis
         End Function
 
         <ExportAPI("Statics.Regulations.CellPhenotype")>
-        Public Function PhenotypeRegulations(MatchedRegulations As IEnumerable(Of MatchedResult), Pathways As IEnumerable(Of bGetObject.Pathway)) As DocumentStream.File
+        Public Function PhenotypeRegulations(MatchedRegulations As IEnumerable(Of MatchedResult), Pathways As IEnumerable(Of bGetObject.Pathway)) As IO.File
             Dim Regulations = (From Regulator As String
                                In (From item In MatchedRegulations Select item.TF Distinct).ToArray
                                Let RegulatedGenes = (From item As MatchedResult In MatchedRegulations
                                                      Where String.Equals(Regulator, item.TF)
-                                                     Select item.OperonGeneIds).MatrixToVector.Distinct
+                                                     Select item.OperonGeneIds).ToVector.Distinct
                                Select Regulator, RegulatedGenes).ToArray
             Dim PathwayFunctions As Dictionary(Of String, BriteHEntry.Pathway) =
                 BriteHEntry.Pathway.LoadFromResource.ToDictionary(Function(item) item.EntryId)
@@ -461,10 +458,10 @@ Namespace Analysis
                                                                Select (From Pathway In Pathways
                                                                        Where Not Pathway.Genes.IsNullOrEmpty AndAlso Pathway.IsContainsGeneObject(RegulatedGeneId)
                                                                        Let [Class] As BriteHEntry.Pathway = PathwayFunctions(Regex.Match(Pathway.EntryId, "\d{5}").Value)
-                                                                       Select Pathway.EntryId, [Class].Category).ToArray).ToArray.MatrixToVector
+                                                                       Select Pathway.EntryId, [Class].Category).ToArray).ToArray.ToVector
                                       Select Regulator.Regulator, RegulatePhenotypes = RegulatedPathways).ToArray
-            Dim CsvFile As DocumentStream.File = New DocumentStream.File
-            Dim Head As DocumentStream.RowObject = New DocumentStream.RowObject From {"Regulator", "Family"}
+            Dim CsvFile As IO.File = New IO.File
+            Dim Head As IO.RowObject = New IO.RowObject From {"Regulator", "Family"}
             Dim Phenotypes As String() = (From item In PathwayFunctions Select item.Value.Category Distinct).ToArray
             Dim LQuery = (From Regulator In PathwayRegulations.AsParallel
                           Let RegulatorId As String = Regulator.Regulator
@@ -483,7 +480,7 @@ Namespace Analysis
             Call CsvFile.AppendRange((From Line In st
                                       Let Counts = (From item In Line Select CStr(item.Counts)).ToArray
                                       Let Array = New String()() {New String() {Line.First.RegulatorTF, ""}, Counts}
-                                      Let value = Array.MatrixToVector
+                                      Let value = Array.ToVector
                                       Select CType(value, RowObject)).ToArray)
 
             st = st.MatrixTranspose
@@ -559,12 +556,11 @@ Namespace Analysis
             Return 0
         End Function
 
-        Private Function __assignOperonInfo(item As MatchedResult,
-                                            DoorOperons As SMRUCC.genomics.Assembly.DOOR.OperonView) As MatchedResult
-            If Not DoorOperons.ContainsOperon(item.DoorId) Then
+        Private Function __assignOperonInfo(item As MatchedResult, DOOR As OperonView) As MatchedResult
+            If Not DOOR.HaveOperon(item.DoorId) Then
                 Call $"{item.DoorId} is not exists in the operons data!".__DEBUG_ECHO
             Else
-                item.OperonPromoter = DoorOperons(item.DoorId).InitialX.Synonym
+                item.OperonPromoter = DOOR(item.DoorId).InitialX.Synonym
             End If
 
             Return item

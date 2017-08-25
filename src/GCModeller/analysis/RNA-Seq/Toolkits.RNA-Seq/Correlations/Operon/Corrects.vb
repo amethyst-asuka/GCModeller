@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::8f5611fa2749823d217c1b8953c4217a, ..\GCModeller\analysis\RNA-Seq\Toolkits.RNA-Seq\Correlations\Operon\Corrects.vb"
+﻿#Region "Microsoft.VisualBasic::34a7a522b688a3e11877c636c855f13b, ..\GCModeller\analysis\RNA-Seq\Toolkits.RNA-Seq\Correlations\Operon\Corrects.vb"
 
     ' Author:
     ' 
@@ -39,7 +39,7 @@ Namespace Operon
     ''' 根据转录组数据来修正操纵子
     ''' </summary>
     ''' <remarks></remarks>
-    <[PackageNamespace]("Operon.Corrects", Category:=APICategories.UtilityTools, Description:="Corrects the DOOR operon data based on the RNA-Seq data.")>
+    <Package("Operon.Corrects", Category:=APICategories.UtilityTools, Description:="Corrects the DOOR operon data based on the RNA-Seq data.")>
     Public Module Corrects
 
         ''' <summary>
@@ -60,7 +60,7 @@ Namespace Operon
 #End If
             Dim LQuery = DOOR.DOOROperonView.Operons.ToArray(Function(operon) __correctOperon(operon, PCC, pccCutoff))  ' 首先假设Door数据库之中的操纵子之中的基因之间的距离是合理的正确的
             Dim lstCorrected As SMRUCC.genomics.Assembly.DOOR.Operon() =
-                (From x In LQuery.MatrixToList Select x Order By x.Key Ascending).ToArray
+                (From x In LQuery.Unlist Select x Order By x.Key Ascending).ToArray
             Return lstCorrected
         End Function
 
@@ -75,7 +75,7 @@ Namespace Operon
             If Operon.NumOfGenes = 1 Then
                 Return New SMRUCC.genomics.Assembly.DOOR.Operon() {Operon}
             Else
-                Dim source As GeneBrief()
+                Dim source As OperonGene()
                 If Operon.Strand = Strands.Forward Then
                     source = (From x In Operon.Value Select x Order By x.Location.Left Ascending).ToArray
                 Else
@@ -93,7 +93,7 @@ Namespace Operon
         ''' <param name="structGenes">在递归的最开始阶段需要根据链的方向进行排序操作的</param>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Private Function __splitOperon(Operon As String, structGenes As GeneBrief(), Initial As GeneBrief,
+        Private Function __splitOperon(Operon As String, structGenes As OperonGene(), Initial As OperonGene,
                                        idx As Integer,
                                        cutoff As Double,
                                        PccMatrix As PccMatrix) As SMRUCC.genomics.Assembly.DOOR.Operon()
@@ -104,7 +104,7 @@ Namespace Operon
                 Dim Pcc As Double = PccMatrix.GetValue(structGenes(i).Synonym, Initial.Synonym)
 
                 If Pcc < 0 OrElse Pcc < cutoff Then 'Operon之中的第一个基因和其他的基因之间的Pcc必须要大于0
-                    Dim newPart As GeneBrief() = structGenes.Take(i).ToArray
+                    Dim newPart As OperonGene() = structGenes.Take(i).ToArray
                     Dim newOperon As SMRUCC.genomics.Assembly.DOOR.Operon =
                         New SMRUCC.genomics.Assembly.DOOR.Operon($"{Operon}.{idx}", newPart)
 

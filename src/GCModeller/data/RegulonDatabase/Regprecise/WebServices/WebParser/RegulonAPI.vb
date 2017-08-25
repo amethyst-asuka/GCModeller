@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::72f7dfb14999da4c338492454ec7d0bc, ..\GCModeller\data\RegulonDatabase\Regprecise\WebServices\WebParser\RegulonAPI.vb"
+﻿#Region "Microsoft.VisualBasic::f28a371c59b59a7192b348d340fbe6ba, ..\GCModeller\data\RegulonDatabase\Regprecise\WebServices\WebParser\RegulonAPI.vb"
 
     ' Author:
     ' 
@@ -42,7 +42,7 @@ Namespace Regprecise
     ''' <summary>
     ''' 根据直系同源的方法能够真的重建出Regulon么？
     ''' </summary>
-    <PackageNamespace("Regprecise.RegulonAPI",
+    <Package("Regprecise.RegulonAPI",
                       Description:="Tools API for reconstruct the regulon data for your bacterial genome by uisng Regprecise regulon data.",
                       Category:=APICategories.ResearchTools,
                       Publisher:="amethyst.asuka@gcmodeller.org")>
@@ -106,7 +106,7 @@ Namespace Regprecise
             Dim regulators = bbh.Reconstruct(genomeRef, DOOR)
             Dim genomeGET As New BacteriaGenome With {
                 .BacteriaGenome = New WebServices.JSONLDM.genome With {
-                    .name = IO.Path.GetFileNameWithoutExtension(mappings)
+                    .name = basename(mappings)
                 },
                 .Regulons = New Regulon With {
                     .Regulators = regulators
@@ -143,7 +143,7 @@ Namespace Regprecise
                                     Operons As DOOR) As Regulator()
             Dim LQuery As Regulator() = (From x As Regulator
                                          In Regprecise.Regulons.Regulators
-                                         Select mappings.Reconstruct(regulon:=x, DOOR:=Operons)).MatrixToVector
+                                         Select mappings.Reconstruct(regulon:=x, DOOR:=Operons)).ToVector
             Return LQuery
         End Function
 
@@ -218,12 +218,12 @@ Namespace Regprecise
                            Group x By x.LocusId Into Group) _
                                 .ToDictionary(Function(x) x.LocusId,
                                               Function(x) x.Group.ToArray)
-            Dim oprGenes As GeneBrief()
+            Dim oprGenes As OperonGene()
             If DOOR.Genes.IsNullOrEmpty Then
                 oprGenes =
-                    LinqAPI.Exec(Of GeneBrief) <= From x As RegulatedGene
+                    LinqAPI.Exec(Of OperonGene) <= From x As RegulatedGene
                                                   In mappings
-                                                  Select New GeneBrief With {
+                                                  Select New OperonGene With {
                                                       .OperonID = "x",
                                                       .Synonym = x.LocusId,
                                                       .Product = x.Function,
@@ -232,21 +232,21 @@ Namespace Regprecise
             Else
                 oprGenes = mappings.ToArray(Function(x) DOOR.GetGene(x.LocusId))
             End If
-            Dim opr = (From x As GeneBrief In oprGenes
+            Dim opr = (From x As OperonGene In oprGenes
                        Select x
                        Group x By x.OperonID Into Group) _
                             .ToArray(Function(x) New Operon With {
                                 .sId = x.Group.First.OperonID,
-                                .Members = x.Group.ToArray(Function(name) mapHash(name.Synonym)).MatrixToVector})
+                                .Members = x.Group.ToArray(Function(name) mapHash(name.Synonym)).ToVector})
             ' 补齐基因的功能描述信息
             For Each gene As RegulatedGene In mappings
                 If String.IsNullOrEmpty(gene.Function) Then
-                    If DOOR.ContainsGene(gene.LocusId) Then
+                    If DOOR.HaveGene(gene.LocusId) Then
                         gene.Function = DOOR.GetGene(gene.LocusId).Product
                     End If
                 End If
                 If String.IsNullOrEmpty(gene.Name) Then
-                    If DOOR.ContainsGene(gene.LocusId) Then
+                    If DOOR.HaveGene(gene.LocusId) Then
                         gene.Name = DOOR.GetGene(gene.LocusId).COG_number
                     End If
                 End If

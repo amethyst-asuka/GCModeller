@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::1737ff3e8cef07da4a96d2d55f6201e5, ..\GCModeller\data\GO_gene-ontology\GeneOntology\DAG\relationship.vb"
+﻿#Region "Microsoft.VisualBasic::78de0f0cff4c800a1c58b037ec5eb7a0, ..\GCModeller\data\GO_gene-ontology\GeneOntology\DAG\relationship.vb"
 
     ' Author:
     ' 
@@ -49,7 +49,7 @@ Namespace DAG
             ParserDictionary(Of OntologyRelations)()
 
         Public Overrides Function ToString() As String
-            Return $"relationship: {type.ToString} {parent.Name}:{parent.x} ! {parentName}"
+            Return $"relationship: {type.ToString} {parent.Name}:{parent.Value} ! {parentName}"
         End Function
     End Structure
 

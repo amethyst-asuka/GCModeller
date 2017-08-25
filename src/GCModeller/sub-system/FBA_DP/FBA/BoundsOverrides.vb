@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::a230df2cd92f2c630a2b8c6ffd941874, ..\GCModeller\sub-system\FBA_DP\FBA\BoundsOverrides.vb"
+﻿#Region "Microsoft.VisualBasic::460f1718bc293c511e5061624924ddd3, ..\GCModeller\sub-system\FBA_DP\FBA\BoundsOverrides.vb"
 
     ' Author:
     ' 
@@ -51,7 +51,7 @@ Public Class BoundsOverrides
                                         ibo As IBoundsOverrides) As Double()
         Return (From rxn As SeqValue(Of String)
                 In fluxs.SeqIterator
-                Select ibo(rxn.obj, bounds(rxn.i))).ToArray
+                Select ibo(rxn.value, bounds(rxn.i))).ToArray
     End Function
 
     Public Function OverridesLower(fluxs As IEnumerable(Of String), bounds As Double()) As Double()

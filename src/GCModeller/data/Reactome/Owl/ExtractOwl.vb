@@ -27,16 +27,16 @@
 #End Region
 
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Scripting.MetaData
+Imports Microsoft.VisualBasic.Scripting.Runtime
 Imports SMRUCC.genomics.ComponentModel.EquaionModel.DefaultTypes
 Imports SMRUCC.genomics.Data.Reactome.ObjectModels
 Imports SMRUCC.genomics.Data.Reactome.OwlDocument.Abstract
 Imports SMRUCC.genomics.Data.Reactome.OwlDocument.Nodes
 Imports SMRUCC.genomics.Data.Reactome.OwlDocument.XrefNodes
 
-<PackageNamespace("Reactome.ExtractOwl")>
+<Package("Reactome.ExtractOwl")>
 Public Module ExtractOwl
 
     <ExportAPI("Extract.OwlFile")>
@@ -76,7 +76,7 @@ Public Module ExtractOwl
             ' Throw New Exception(String.Format("The data was broken: could not found stoichiometry value for the specific item {0}", ResourceId))
             Return 1
         Else
-            Return Scripting.CastInteger(LQuery.stoichiometricCoefficient)
+            Return CastInteger(LQuery.stoichiometricCoefficient)
         End If
     End Function
 
@@ -90,11 +90,11 @@ Public Module ExtractOwl
         UniqueId = UniqueId.Split.Last
 
         If participantStoichiometry.IsNullOrEmpty Then
-            Return New CompoundSpecieReference With {.StoiChiometry = 1, .Identifier = UniqueId}
+            Return New CompoundSpecieReference With {.StoiChiometry = 1, .ID = UniqueId}
         End If
 
         Dim n As Integer = __getSTO(participantStoichiometry, met)
-        Return New CompoundSpecieReference With {.StoiChiometry = n, .Identifier = UniqueId}
+        Return New CompoundSpecieReference With {.StoiChiometry = n, .ID = UniqueId}
     End Function
 
     <ExportAPI("Extract.Reactions")>
@@ -103,7 +103,7 @@ Public Module ExtractOwl
 
         For Each Model In (From strId As String In ReactionId Select DirectCast(doc.ResourceCollection(strId), BiochemicalReaction)).ToArray
             Dim ReactionObject As Reaction = New Reaction With {.EC = Model.eCNumber, .Comments = Model.Comments}
-            Dim Xref = (From ref In Model.Xref Select DirectCast(doc.ResourceCollection(ref.GetResourceId), Xref)).ToList
+            Dim Xref = (From ref In Model.Xref Select DirectCast(doc.ResourceCollection(ref.GetResourceId), Xref)).AsList
             Dim st = (From stResource As RDFresource
                       In If(Model.participantStoichiometry.IsNullOrEmpty, New RDFresource() {}, Model.participantStoichiometry)
                       Select DirectCast(doc.ResourceCollection(stResource.GetResourceId), Stoichiometry)).ToArray
@@ -169,7 +169,7 @@ Public Module ExtractOwl
                 Call ReactionIdList.Add(ReactionEvent.ResourceId)
             End If
         Next
-        MetaboliteIdCollection = (From strId As String In MetaboliteIdCollection Select strId Distinct).ToList
+        MetaboliteIdCollection = (From strId As String In MetaboliteIdCollection Select strId Distinct).AsList
         ExtractedEvents = ReactionIdList.ToArray
 
         Dim Metabolites = (From strid As String In MetaboliteIdCollection Select doc.ResourceCollection(strid)).ToArray
@@ -226,7 +226,7 @@ Public Module ExtractOwl
 
         If Not SmallMolecule.entityReference Is Nothing Then
             Dim Entity = DirectCast(doc.ResourceCollection(SmallMolecule.entityReference.GetResourceId), SmallMoleculeReference)
-            Call Xref.AddRange((From ref In Entity.xref Select DirectCast(doc.ResourceCollection(ref.GetResourceId), UnificationXref)).ToList)
+            Call Xref.AddRange((From ref In Entity.xref Select DirectCast(doc.ResourceCollection(ref.GetResourceId), UnificationXref)).AsList)
             Name = Entity.name
         End If
 
@@ -247,7 +247,7 @@ Public Module ExtractOwl
     <ExportAPI("Creates.Complex")>
     Public Function GenerateComplex(Complex As Complex, doc As OwlDocument.DocumentFile) As Metabolite
         ' Dim Entity = DirectCast(doc.ResourceCollection(Complex.entityRefrence.GetResourceId), OwlDocument.DocumentElements.SmallMoleculeReference)
-        Dim Xref = (From ref In Complex.Xref Select DirectCast(doc.ResourceCollection(ref.GetResourceId), UnificationXref)).ToList
+        Dim Xref = (From ref In Complex.Xref Select DirectCast(doc.ResourceCollection(ref.GetResourceId), UnificationXref)).AsList
         '  Call Xref.AddRange((From item In SmallMolecule.Xref Select DirectCast(doc.ResourceCollection(item.GetResourceId), OwlDocument.DocumentElements.UnificationXref)).ToArray)
 
         Dim Metabolite = New ObjectModels.Metabolite

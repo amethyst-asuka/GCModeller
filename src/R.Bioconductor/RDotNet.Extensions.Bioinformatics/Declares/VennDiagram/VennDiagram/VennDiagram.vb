@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::06655e0555bfb511800d4f82e2f013a3, ..\R.Bioconductor\RDotNet.Extensions.Bioinformatics\Declares\VennDiagram\VennDiagram\VennDiagram.vb"
+﻿#Region "Microsoft.VisualBasic::b3f29fc4bfab7019f01084b63ce7abd5, ..\R.Bioconductor\RDotNet.Extensions.Bioinformatics\Declares\VennDiagram\VennDiagram\VennDiagram.vb"
 
     ' Author:
     ' 
@@ -35,6 +35,7 @@ Imports Microsoft.VisualBasic.Linq.Extensions
 Imports RDotNET.Extensions.VisualBasic
 Imports RDotNET.Extensions.VisualBasic.SymbolBuilder
 Imports RDotNET.Extensions.VisualBasic.SymbolBuilder.Abstract
+Imports vbList = Microsoft.VisualBasic.Language.List(Of String)
 
 Namespace VennDiagram.ModelAPI
 
@@ -146,14 +147,14 @@ Namespace VennDiagram.ModelAPI
         ''' <returns></returns>
         Public Shared Operator +(venn As VennDiagram, opts As IEnumerable(Of String())) As VennDiagram
             For Each opt As SeqValue(Of String()) In opts.SeqIterator
-                Dim name As String = opt.obj.First
+                Dim name As String = opt.value.First
                 Dim part As Partition = venn.__partitions.Find(name)
 
                 If part Is Nothing Then
                     part = venn.partitions(opt.i)
                 End If
 
-                Call part.ApplyOptions(opt.obj)
+                Call part.ApplyOptions(opt.value)
             Next
 
             Return venn
@@ -167,9 +168,9 @@ Namespace VennDiagram.ModelAPI
         ''' <returns></returns>
         ''' <remarks></remarks>
         Protected Overrides Function __R_script() As String
-            Dim R As ScriptBuilder = New ScriptBuilder(capacity:=5 * 1024)
-            Dim dataList As New List(Of String) ' The list elements for the venn diagram partitions
-            Dim color As New List(Of String) ' The partitions color name vector
+            Dim R As New ScriptBuilder(capacity:=5 * 1024)
+            Dim dataList As New vbList ' The list elements for the venn diagram partitions
+            Dim color As New vbList    ' The partitions color name vector
 
             For i As Integer = 0 To partitions.Length - 1
                 Dim x As Partition = partitions(i)

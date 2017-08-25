@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::00badcae94c75e8d1794b4966417804f, ..\GCModeller\CLI_tools\MEME\Cli\MotifSites.vb"
+﻿#Region "Microsoft.VisualBasic::8ffb8f161858e6aff5d44effecbfa553, ..\GCModeller\CLI_tools\MEME\Cli\MotifSites.vb"
 
     ' Author:
     ' 
@@ -26,28 +26,46 @@
 
 #End Region
 
+Imports System.Data.Linq.Mapping
 Imports System.Runtime.CompilerServices
-Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat
-Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MEME
-Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MEME.Text
-Imports SMRUCC.genomics.SequenceModel
+Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
+Imports Microsoft.VisualBasic.Data.csv
+Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Serialization.JSON
-Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Language
-Imports System.Data.Linq.Mapping
-Imports Microsoft.VisualBasic.CommandLine
-Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.XmlOutput.MAST
 Imports Microsoft.VisualBasic.Text
+Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.MotifScans
+Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat
+Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MEME
+Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MEME.Text
+Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.XmlOutput.MAST
+Imports SMRUCC.genomics.SequenceModel
+Imports SMRUCC.genomics.SequenceModel.FASTA
 
 Partial Module CLI
+
+    <ExportAPI("/MotifSites.Fasta", Usage:="/MotifSites.Fasta /in <mast_motifsites.csv> [/out <out.fasta>]")>
+    Public Function MotifSites2Fasta(args As CommandLine) As Integer
+        Dim [in] = args("/in")
+        Dim out As String = args.GetValue("/out", [in].TrimSuffix & ".fasta")
+        Dim sites = [in].LoadCsv(Of MastSites)
+        Dim fasta = sites.Select(
+            Function(site) New FastaToken With {
+                .SequenceData = site.SequenceData,
+                .Attributes = {
+                    $"{site.Gene}:{site.ATGDist} {site.Trace}"
+                }
+            }).GroupBy(Function(x) x.Attributes(0).Split.First) _
+            .Select(Function(x) x.First)
+        Return New FastaFile(fasta).Save(out, Encodings.ASCII).CLICode
+    End Function
 
     <ExportAPI("/Export.MotifSites",
                Info:="Motif iteration step 1",
                Usage:="/Export.MotifSites /in <meme.txt> [/out <outDIR> /batch]")>
+    <Group(CLIGrouping.MotifSitesTools)>
     Public Function ExportTestMotifs(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim batch As Boolean = args.GetBoolean("/batch")
@@ -88,6 +106,7 @@ Partial Module CLI
     <ExportAPI("/Export.Similarity.Hits",
                Info:="Motif iteration step 2",
                Usage:="/Export.Similarity.Hits /in <inDIR> [/out <out.Csv>]")>
+    <Group(CLIGrouping.MotifSitesTools)>
     Public Function LoadSimilarityHits(args As CommandLine) As Integer
         Dim [in] As String = args - "/in"
         Dim out As String = args.GetValue("/out", [in].TrimEnd("\"c, "/"c) & ".SimilarityHits.Csv")
@@ -174,6 +193,7 @@ Partial Module CLI
     <ExportAPI("/Similarity.Union",
                Info:="Motif iteration step 3",
                Usage:="/Similarity.Union /in <preSource.fasta.DIR> /meme <meme.txt.DIR> /hits <similarity_hist.Csv> [/out <out.DIR>]")>
+    <Group(CLIGrouping.MotifSitesTools)>
     Public Function UnionSimilarity(args As CommandLine) As Integer
         Dim [in] As String = args - "/in"
         Dim meme As String = args - "/meme"
@@ -191,7 +211,7 @@ Partial Module CLI
                         Let motifs As LDM.Motif() =
                             MEME_TEXT.SafelyLoad(file, True)
                         Where Not motifs.IsNullOrEmpty
-                        Select motifs).MatrixAsIterator.ToDictionary(Function(x) x.uid)
+                        Select motifs).IteratesALL.ToDictionary(Function(x) x.uid)
 
         For Each fa As String In ls - l - wildcards("*.fasta") <= [in]
             Dim name As String = fa.BaseName

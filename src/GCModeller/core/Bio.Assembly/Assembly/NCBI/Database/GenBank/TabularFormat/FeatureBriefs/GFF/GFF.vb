@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::2ea3c67cbf35a1453ee5b23e4fa020e2, ..\GCModeller\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\TabularFormat\FeatureBriefs\GFF\GFF.vb"
+﻿#Region "Microsoft.VisualBasic::70eb7bb5461f3629a5308cbd03403aa2, ..\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\TabularFormat\FeatureBriefs\GFF\GFF.vb"
 
     ' Author:
     ' 
@@ -26,28 +26,24 @@
 
 #End Region
 
-Imports System.Text.RegularExpressions
-Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
-Imports System.Text
 Imports System.Data.Linq.Mapping
-Imports Microsoft.VisualBasic.ComponentModel
-Imports Microsoft.VisualBasic.Linq
 Imports System.Reflection
-Imports SMRUCC.genomics.ComponentModel.Loci.Abstract
-Imports SMRUCC.genomics.ComponentModel.Loci
-Imports Microsoft.VisualBasic.Serialization
-Imports SMRUCC.genomics.ContextModel
+Imports System.Text
+Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Serialization.JSON
+Imports SMRUCC.genomics.ComponentModel.Loci
+Imports SMRUCC.genomics.ContextModel
 
-Namespace Assembly.NCBI.GenBank.TabularFormat
+Namespace Assembly.NCBI.GenBank.TabularFormat.GFF
 
     'http://www.sanger.ac.uk/resources/software/gff/spec.html
 
     ''' <summary>
     ''' GFF (General Feature Format) specifications document
     ''' </summary>
-    Public Class GFF : Inherits ITextFile
+    Public Class GFFTable : Inherits ITextFile
         Implements IGenomicsContextProvider(Of Feature)
 
 #Region "Meta Data"
@@ -191,7 +187,7 @@ Namespace Assembly.NCBI.GenBank.TabularFormat
         ''' </summary>
         ''' <param name="gff"></param>
         ''' <param name="type"></param>
-        Sub New(gff As GFF, type As Features)
+        Sub New(gff As GFFTable, type As Features)
             Me.Date = gff.Date
             Me.DNA = gff.DNA
             Me.Features = gff.GetsAllFeatures(type)
@@ -222,9 +218,9 @@ Namespace Assembly.NCBI.GenBank.TabularFormat
         End Function
 
         Public Function GenerateDocument() As String
-            Dim sb As StringBuilder = New StringBuilder("track name=Genes color=255,0,255" & vbCrLf)
+            Dim sb As New StringBuilder("track name=Genes color=255,0,255" & vbCrLf)
             Dim MetaProperty = (From p As PropertyInfo
-                                In GetType(GFF).GetProperties(BindingFlags.Public Or BindingFlags.Instance)
+                                In GetType(GFFTable).GetProperties(BindingFlags.Public Or BindingFlags.Instance)
                                 Let attrs As Object() = p.GetCustomAttributes(attributeType:=GetType(ColumnAttribute), inherit:=True)
                                 Where Not attrs.IsNullOrEmpty
                                 Select p,
@@ -252,30 +248,39 @@ Namespace Assembly.NCBI.GenBank.TabularFormat
         ''' Load a GFF (General Feature Format) specifications document file from a plant text file.
         ''' (从一个指定的文本文件之中加载基因组特性片段的数据)
         ''' </summary>
-        ''' <param name="Path"></param>
+        ''' <param name="path"></param>
+        ''' <param name="defaultVersion">
+        ''' 当GFF的文件头部之中没有包含有版本字样的时候，所使用的的默认版本号，默认是版本3
+        ''' </param>
         ''' <returns></returns>
-        Public Shared Function LoadDocument(Path As String) As GFF
-            Dim Text As String() = IO.File.ReadAllLines(Path)
-            Dim GFF As GFF = New GFF With {
-                .FilePath = Path
+        Public Shared Function LoadDocument(path As String, Optional defaultVersion% = 3) As GFFTable
+            Dim Text As String() = IO.File.ReadAllLines(path)
+            Dim GFF As New GFFTable With {
+                .FilePath = path
             }
 
-            Call TrySetMetaData(Text, GFF)
-            Call SetValue(Of GFF).InvokeSet(GFF, NameOf(GFF.Features), TryGetFreaturesData(Text, GFF.GffVersion))
+            Call TrySetMetaData(Text, GFF, defaultVer:=defaultVersion)
+            Call SetValue(Of GFFTable).InvokeSet(GFF, NameOf(GFF.Features), TryGetFreaturesData(Text, GFF.GffVersion))
             Call $"There are {GFF.Features.Length} genome features exists in the gff file: {GFF.FilePath.ToFileURL}".__DEBUG_ECHO
 
             Return GFF
         End Function
 
-        Private Shared Sub TrySetMetaData(s_Data As String(), ByRef Gff As GFF)
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <param name="s_Data"></param>
+        ''' <param name="Gff"></param>
+        ''' <param name="defaultVer%">默认的文件格式版本号缺省值</param>
+        Private Shared Sub TrySetMetaData(s_Data As String(), ByRef Gff As GFFTable, defaultVer%)
             s_Data = TryGetMetaData(s_Data)
 
-            Dim LQuery = From Token As String
+            Dim LQuery = From t As String
                          In s_Data
-                         Where Not Token.IndexOf(" "c) = -1  ' ### 这种情况下mid函数会出错
-                         Let p As Integer = InStr(Token, " ")
-                         Let Name As String = Mid(Token, 1, p - 1)
-                         Let Value As String = Mid(Token, p + 1)
+                         Where Not t.IndexOf(" "c) = -1  ' ### 这种情况下mid函数会出错
+                         Let p As Integer = InStr(t, " ")
+                         Let Name As String = Mid(t, 1, p - 1)
+                         Let Value As String = Mid(t, p + 1)
                          Select Name,
                              Value
                          Group By Name Into Group '
@@ -291,7 +296,16 @@ Namespace Assembly.NCBI.GenBank.TabularFormat
             Gff.Type = TryGetValue(hash, "##type")
             Gff.SeqRegion = SeqRegion.Parser(TryGetValue(hash, "##sequence-region"))
 
+            ' 为零，则表示文本字符串为空值，则会使用默认的版本号
+            If Gff.GffVersion = 0 Then
+                Gff.GffVersion = defaultVer
+            End If
+
             Call $"The parser version of the gff file is version {Gff.GffVersion}...".__DEBUG_ECHO
+
+            If {1, 2, 3}.IndexOf(Gff.GffVersion) = -1 Then
+                Call $"{NameOf(Version)}={Gff.GffVersion} is currently not supported yet, ignored!".Warning
+            End If
         End Sub
 
         ''' <summary>

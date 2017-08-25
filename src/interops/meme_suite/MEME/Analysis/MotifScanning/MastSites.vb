@@ -44,7 +44,7 @@ Namespace Analysis.MotifScans
     ''' 使用某一个Motif的MEME模型扫描整个基因组的结果
     ''' </summary>
     Public Class MastSites : Inherits NucleotideModels.Contig
-        Implements I_PolymerSequenceModel
+        Implements IPolymerSequenceModel
         Implements ISiteReader
 
         Public Property Start As Integer Implements ISiteReader.gStart
@@ -54,7 +54,7 @@ Namespace Analysis.MotifScans
         <Column("MEME.E-value")>
         Public Property evalue As Double
         Public Property match As String
-        Public Property SequenceData As String Implements I_PolymerSequenceModel.SequenceData
+        Public Property SequenceData As String Implements IPolymerSequenceModel.SequenceData
 
         ''' <summary>
         ''' 在Regprecise之中的调控位点的记录，这个是通过meme模型来获取的，然后再根据这个就可以找到调控因子了，再结合bbh结果就可以计算出预测的调控关系了
@@ -175,7 +175,7 @@ Namespace Analysis.MotifScans
                 .GetSet(NameOf(Analysis.MotifScans.MastSites.Family))
             Dim result As Analysis.MotifScans.MastSites() =
                 LinqAPI.Exec(Of Analysis.MotifScans.MastSites) <= From site As Analysis.MotifScans.MastSites
-                                                                  In mastSites.MatrixAsIterator
+                                                                  In mastSites.IteratesALL
                                                                   Where Not site Is Nothing  ' 由于过滤操作可能会出现空值，这些空值都是被过滤掉的位点，已经不需要了
                                                                   Select setValue(site, FamilyName)
             Return result
@@ -200,8 +200,11 @@ Namespace Analysis.MotifScans
             Return pwmFasta
         End Function
 
-        Public Shared Function Compile(mast As DocumentFormat.XmlOutput.MAST.MAST) As MastSites()
+        Public Shared Function Compile(mast As DocumentFormat.XmlOutput.MAST.MAST, path$) As MastSites()
             Dim FamilyName As String = mast.Motifs.Directory
+            If FamilyName Is Nothing Then
+                FamilyName = path.BaseName
+            End If
             If mast.Sequences Is Nothing OrElse
                 mast.Sequences.SequenceList.IsNullOrEmpty Then
                 Return New MastSites() {}
@@ -211,7 +214,7 @@ Namespace Analysis.MotifScans
                 NameOf(Analysis.MotifScans.MastSites.Family)
             Dim result As MastSites() =
                 LinqAPI.Exec(Of MastSites) <= From site As MastSites
-                                              In mastSites.MatrixAsIterator.MatrixToVector
+                                              In mastSites.IteratesALL.IteratesALL
                                               Select setValue(site, FamilyName)
             Return result
         End Function
@@ -224,14 +227,14 @@ Namespace Analysis.MotifScans
                                                pwms As Dictionary(Of String, AnnotationModel),
                                                pwmSites As Dictionary(Of String, Regprecise.FastaReaders.Site()),
                                                trace As String) As MastSites()
-            Dim sequence As String = TrimVBCrLf(site.SegmentData).Replace(vbTab, "").Trim
+            Dim sequence As String = TrimNewLine(site.SegmentData, "").Replace(vbTab, "").Trim
             Dim sites As MastSites() = site.Hits.ToArray(Of MastSites)(
                 Function(hit) __createObject(site.start, hit, sequence, pwms, pwmSites, offset:=5, trace:=trace))
             Return sites
         End Function
 
         Private Shared Function __createObject(site As DocumentFormat.XmlOutput.MAST.Segment, trace As String) As MastSites()
-            Dim sequence As String = TrimVBCrLf(site.SegmentData).Replace(vbTab, "").Trim
+            Dim sequence As String = TrimNewLine(site.SegmentData, "").Replace(vbTab, "").Trim
             Dim sites As MastSites() = site.Hits.ToArray(Of MastSites)(
                 Function(hit) __createObject(site.start, hit, sequence, OffSet:=5, trace:=trace))
             Return sites
@@ -260,7 +263,7 @@ Namespace Analysis.MotifScans
                                                sequence As String,
                                                OffSet As Integer,
                                                trace As String) As MastSites
-            Dim id As String = hit.motif.Split("_"c).Last
+            Dim id As String = hit.GetId.Split("_"c).Last
             Dim length As Integer = Len(hit.match) + 2 * OffSet  '为了保证在进行分子生物学实验的时候能够得到完整的片段，在这里将位点的范围扩大了10个bp
             start = hit.pos - start
             start -= OffSet
@@ -270,7 +273,7 @@ Namespace Analysis.MotifScans
             End If
 
             Dim site As String = Mid(sequence, start, length)
-            Dim strand As String = hit.strand.GetBriefStrandCode
+            Dim strand As String = hit.GetStrand
 
             '需不需要将反向的序列互补为正向的？？？
 
@@ -302,7 +305,7 @@ Namespace Analysis.MotifScans
 
             Dim pwmSite As AnnotationModel = pwms(id)
             Dim sites As Integer() = (From siteId As Integer
-                                      In pwmSite.Sites.ToArray(Function(siteRef) __getsVIMSSID(siteRef.Name, pwmSites)).MatrixToList
+                                      In pwmSite.Sites.ToArray(Function(siteRef) __getsVIMSSID(siteRef.Name, pwmSites)).Unlist
                                       Select siteId
                                       Distinct).ToArray
             Dim regulators As Integer()() = pwmSite.Sites.ToArray(Function(siteRef) siteRef.Regulators)
@@ -313,7 +316,7 @@ Namespace Analysis.MotifScans
                               Select vsmID
                               Distinct
                               Order By vsmID Ascending).ToArray
-            mastSite.Regulators = (From vsmID As Integer In regulators.MatrixToList
+            mastSite.Regulators = (From vsmID As Integer In regulators.Unlist
                                    Select vsmID
                                    Distinct
                                    Order By vsmID Ascending).ToArray

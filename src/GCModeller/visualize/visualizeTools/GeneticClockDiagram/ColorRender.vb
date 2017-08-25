@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::1457178d8b23c6d78e756be274845b2c, ..\GCModeller\visualize\visualizeTools\GeneticClockDiagram\ColorRender.vb"
+﻿#Region "Microsoft.VisualBasic::13bb29dfb2a0cee55f958d37e1f271f3, ..\visualize\visualizeTools\GeneticClockDiagram\ColorRender.vb"
 
     ' Author:
     ' 
@@ -234,7 +234,7 @@ Namespace GeneticClock
 
         Public Shared ReadOnly Property RandomColor(Optional alpha As Integer = 190) As Color
             Get
-                Dim R = 255 * RandomDouble(), G = 255 * RandomDouble(), B = 255 * RandomDouble()
+                Dim R = 255 * Rnd(), G = 255 * Rnd(), B = 255 * Rnd()
                 Return Color.FromArgb(alpha, baseColor:=Color.FromArgb(R, G, B))
             End Get
         End Property

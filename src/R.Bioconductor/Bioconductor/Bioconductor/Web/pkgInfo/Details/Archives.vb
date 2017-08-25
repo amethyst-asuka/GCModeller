@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::6d1650091ad988e01c9642a213331423, ..\R.Bioconductor\Bioconductor\Bioconductor\Web\pkgInfo\Details\Archives.vb"
+﻿#Region "Microsoft.VisualBasic::cca3f9ddc438e5568aa614e91b01299e, ..\R.Bioconductor\Bioconductor\Bioconductor\Web\pkgInfo\Details\Archives.vb"
 
     ' Author:
     ' 
@@ -26,7 +26,7 @@
 
 #End Region
 
-Imports Microsoft.VisualBasic.DocumentFormat.Csv.StorageProvider.Reflection
+Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports Microsoft.VisualBasic.Serialization.JSON
 
 Namespace Web.Packages

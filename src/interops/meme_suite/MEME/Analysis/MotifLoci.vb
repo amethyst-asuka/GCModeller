@@ -28,17 +28,18 @@
 
 Imports System.Runtime.CompilerServices
 Imports System.Text.RegularExpressions
-Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.ComponentModel
-Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MEME.LDM
-Imports SMRUCC.genomics.Assembly.NCBI.GenBank
-Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat
-Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
-Imports SMRUCC.genomics.ComponentModel.Loci
-Imports SMRUCC.genomics.SequenceModel
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Scripting.MetaData
+Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat
+Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
+Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.ComponentModel
+Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MEME.LDM
+Imports SMRUCC.genomics.SequenceModel
+
+Imports Strands = SMRUCC.genomics.ComponentModel.Loci.Strands
+Imports NucleotideLocation = SMRUCC.genomics.ComponentModel.Loci.NucleotideLocation
 
 Namespace Analysis
 
@@ -46,7 +47,7 @@ Namespace Analysis
     ''' 对MEME text里面的位点在整个基因组上面的定位
     ''' </summary>
     ''' 
-    <PackageNamespace("Motif.Loci", Publisher:="amethyst.asuka@gcmodeller.org")>
+    <Package("Motif.Loci", Publisher:="amethyst.asuka@gcmodeller.org")>
     Public Module MotifLoci
 
         ''' <summary>

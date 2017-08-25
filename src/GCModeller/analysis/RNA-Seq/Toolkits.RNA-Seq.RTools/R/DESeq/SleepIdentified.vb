@@ -30,7 +30,7 @@ Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports Microsoft.VisualBasic.Scripting.MetaData
-Imports Microsoft.VisualBasic.Mathematical
+Imports Microsoft.VisualBasic.Math
 
 Namespace DESeq2
 
@@ -38,7 +38,7 @@ Namespace DESeq2
     ''' 鉴别出底表达量和休眠的基因
     ''' </summary>
     ''' 
-    <PackageNamespace("Expression.Stat")>
+    <Package("Expression.Stat")>
     Public Module SleepIdentified
 
         ''' <summary>

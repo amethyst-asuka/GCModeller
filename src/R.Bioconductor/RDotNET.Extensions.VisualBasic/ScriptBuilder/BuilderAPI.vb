@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::0e504e168f7b973de7cae9eec94aae61, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\ScriptBuilder\BuilderAPI.vb"
+﻿#Region "Microsoft.VisualBasic::16de9227ad21b87b091e5de43dd799a0, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\ScriptBuilder\BuilderAPI.vb"
 
     ' Author:
     ' 
@@ -39,6 +39,15 @@ Namespace SymbolBuilder
     ''' Build script token
     ''' </summary>
     Public Module BuilderAPI
+
+        ''' <summary>
+        ''' additional arguments to be passed to or from methods.
+        ''' </summary>
+        ''' <param name="parameters$"></param>
+        ''' <returns></returns>
+        Public Function list(ParamArray parameters$()) As ParameterList
+            Return New ParameterList(parameters)
+        End Function
 
         Const IsNotAFunc = "Target object is not a R function abstract!"
 

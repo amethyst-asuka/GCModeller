@@ -1,45 +1,42 @@
-﻿#Region "Microsoft.VisualBasic::dd51aaf427a5a0a66f478159facc7a45, ..\GCModeller\CLI_tools\MEME\Cli\Views + Stats\ModuleRegulates.vb"
+﻿#Region "Microsoft.VisualBasic::d58642612cafae37f4567dc60c7bf153, ..\GCModeller\CLI_tools\MEME\Cli\Views + Stats\ModuleRegulates.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports System.Text
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
-Imports Microsoft.VisualBasic.ComponentModel.DataStructures
 Imports Microsoft.VisualBasic.Data.csv
+Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq.Extensions
-Imports Microsoft.VisualBasic.Mathematical
-Imports RDotNet.Extensions.Bioinformatics.VennDiagram.ModelAPI
+Imports Microsoft.VisualBasic.Math
+Imports RDotNET.Extensions.Bioinformatics.VennDiagram.ModelAPI
 Imports SMRUCC.genomics.Assembly.KEGG.DBGET
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.GenomeMotifFootPrints
-Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat
 Imports SMRUCC.genomics.Model.Network.VirtualFootprint.DocumentFormat
-Imports SMRUCC.genomics.SequenceModel.FASTA
 
 Partial Module CLI
 
@@ -52,12 +49,12 @@ Partial Module CLI
         Dim raw = inFile.LoadCsv(Of PredictedRegulationFootprint)
 
         Dim Total As Integer = raw.Count
-        raw = (From site In raw.AsParallel Where Not String.IsNullOrEmpty(site.Regulator) Select site).ToList
+        raw = (From site In raw.AsParallel Where Not String.IsNullOrEmpty(site.Regulator) Select site).AsList
         Dim Regulates As Integer = raw.Count
         Dim dict As SortedDictionary(Of Double, PredictedRegulationFootprint()) =
             New SortedDictionary(Of Double, PredictedRegulationFootprint())
 
-        raw = (From site In raw.AsParallel Where site.Pcc <> 1.0R Select site).ToList
+        raw = (From site In raw.AsParallel Where site.Pcc <> 1.0R Select site).AsList
 
         For p As Double = 0.6 To 1 Step 0.05
             Dim nex = p + 0.05
@@ -73,7 +70,7 @@ Partial Module CLI
             Call dict.Add(p, n)
         Next
 
-        Dim doc As New DocumentStream.File
+        Dim doc As New IO.File
 
         Call doc.Add("Total", CStr(Total))
         Call doc.Add("Regulates", CStr(Regulates))
@@ -131,7 +128,7 @@ Partial Module CLI
 
         If modsDIR.DirectoryExists Then
             Dim modsInfo = BriteHEntry.ModuleClassAPI.FromModules(modsDIR)
-            regulations = modsInfo.Fill(regulations).ToList
+            regulations = modsInfo.Fill(regulations).AsList
         End If
 
         Dim Types = (From row As PredictedRegulationFootprint
@@ -155,14 +152,17 @@ Partial Module CLI
 
             For Each ccls In cls.classes
                 Dim DIR As String = path & $"/{BriteHEntry.Module.TrimPath(ccls.cls)}/"
-                For Each cat In (From row In ccls.Group Select row Group row By row.Category Into Group)
-                    Dim file As String = DIR & $"/{BriteHEntry.Module.TrimPath(cat.Category)}.csv"
-                    Call cat.Group.SaveTo(file)
-                    Call lstRegulators.Add(cat.Group.ToArray(Function(x) x.Regulator))
+                Dim groups = ccls.Group.GroupBy(Function(row) row.Category)
+                For Each cat As IGrouping(Of String, PredictedRegulationFootprint) In groups
+                    Dim file As String = DIR & $"/{BriteHEntry.Module.TrimPath(cat.Key)}.csv"
+                    Dim group = cat.ToArray
+
+                    Call group.SaveTo(file)
+                    Call lstRegulators.Add(group.ToArray(Function(x) x.Regulator))
                 Next
             Next
 
-            Call modRegulators.Add(cls.Type, lstRegulators.Distinct.ToList)
+            Call modRegulators.Add(cls.Type, lstRegulators.Distinct.AsList)
         Next
 
         Dim removes = (From x In modRegulators Where StringHelpers.IsNullOrEmpty(x.Value) Select x.Key)

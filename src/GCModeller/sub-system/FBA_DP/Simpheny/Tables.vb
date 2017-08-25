@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::83f3f44f8bb5af289ac0390b84b8fcff, ..\GCModeller\sub-system\FBA_DP\Simpheny\Tables.vb"
+﻿#Region "Microsoft.VisualBasic::74426a9b09f467156c3ea486af95a011, ..\GCModeller\sub-system\FBA_DP\Simpheny\Tables.vb"
 
     ' Author:
     ' 
@@ -128,9 +128,9 @@ Namespace Simpheny
     ''' 代谢过程的模型
     ''' </summary>
     Public Class RXN : Inherits ProjectElement
-        Implements sIdEnumerable
+        Implements INamedValue
 
-        <Column("REACTION-ID")> Public Property ReactionId As String Implements sIdEnumerable.Identifier
+        <Column("REACTION-ID")> Public Property ReactionId As String Implements INamedValue.Key
         <Column("ABBREVIATION")> Public Property Abbreviation As String
         <Column("OFFICIAL NAME")> Public Property OfficialName As String
         <Column("REVERSIBLE")> Public Property Reversible As Boolean

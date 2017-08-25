@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::335731cf03cbfdc9bff533ab9234d375, ..\GCModeller\engine\GCModeller\EngineSystem\ObjectModels\Entity\Regulator.vb"
+﻿#Region "Microsoft.VisualBasic::69d4a04183cf9a4822f1811ea97ae862, ..\GCModeller\engine\GCModeller\EngineSystem\ObjectModels\Entity\Regulator.vb"
 
     ' Author:
     ' 
@@ -69,7 +69,7 @@ Namespace EngineSystem.ObjectModels.Entity
         ''' <remarks></remarks>
         <DumpNode> Public ReadOnly Property RegulateValue As Double
             Get
-                Dim i As Double = RandomDouble()
+                Dim i As Double = Rnd()
                 Dim w As Double = get_RegulatorValue()
 
                 If w = 0.0R Then

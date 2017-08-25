@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::63f60aca2cfc4af3d8f5c5199502c2e1, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\ScriptBuilder\Abstract\IRToken.vb"
+﻿#Region "Microsoft.VisualBasic::d337f83e88d0f5cfb144359c96b14250, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\ScriptBuilder\Abstract\IRToken.vb"
 
     ' Author:
     ' 
@@ -27,6 +27,7 @@
 #End Region
 
 Imports System.Text
+Imports System.Xml.Serialization
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports RDotNET.Extensions.VisualBasic
 Imports RDotNET.Extensions.VisualBasic.SymbolBuilder
@@ -44,6 +45,7 @@ Namespace SymbolBuilder.Abstract
         ''' ... the additional parameters
         ''' </summary>
         ''' <returns></returns>
+        <XmlIgnore>
         Public Property additional As [Property](Of RExpression)
 
         ''' <summary>

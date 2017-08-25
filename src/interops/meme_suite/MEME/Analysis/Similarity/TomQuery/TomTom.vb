@@ -1,44 +1,44 @@
 ﻿#Region "Microsoft.VisualBasic::67982d0ab34b20fd62e33f9f50e844ac, ..\interops\meme_suite\MEME\Analysis\Similarity\TomQuery\TomTom.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports System.Runtime.CompilerServices
-Imports System.Text.RegularExpressions
 Imports System.Xml.Serialization
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq.Extensions
-Imports Microsoft.VisualBasic.Mathematical
+Imports Microsoft.VisualBasic.Math
 Imports Microsoft.VisualBasic.Scripting.MetaData
-Imports Microsoft.VisualBasic.Text
+Imports Microsoft.VisualBasic.Text.Levenshtein
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.MotifScans
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.ComponentModel
-Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH
+Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH.Abstract
+Imports SMRUCC.genomics.SequenceModel
 
 Namespace Analysis.Similarity.TOMQuery
 
@@ -46,7 +46,7 @@ Namespace Analysis.Similarity.TOMQuery
     ''' various motif column comparison functions and score combination methods
     ''' </summary>
     ''' 
-    <PackageNamespace("TOM.Query",
+    <Package("TOM.Query",
                       Category:=APICategories.ResearchTools,
                       Publisher:="xie.guigang@gcmodeller.org",
                       Description:="Various motif column comparison functions and score combination methods")>
@@ -217,7 +217,7 @@ Nucleic Acids Res. 2005 Jul 1;33(Web Server issue):W438-41.",
             Call $"Load motifs @{MotifDIR.ToDIR_URL}...".__DEBUG_ECHO
 
             TomTOm.Motifs = (From xmlFile As String In Motifs.AsParallel
-                             Let Id As String = IO.Path.GetFileNameWithoutExtension(xmlFile)
+                             Let Id As String = BaseName(xmlFile)
                              Select Id,
                                  motif = xmlFile.LoadXml(Of MotifScans.AnnotationModel)) _
                                 .ToDictionary(Function(x) x.Id, Function(x) x.motif)
@@ -247,7 +247,7 @@ Nucleic Acids Res. 2005 Jul 1;33(Web Server issue):W438-41.",
         ''' 
         <ExportAPI("ED")>
         Public Function ED(X As Analysis.MotifScans.ResidueSite, Y As Analysis.MotifScans.ResidueSite) As Double
-            Dim d As Double = VBMathExtensions.EuclideanDistance(X.PWM, Y.PWM)
+            Dim d As Double = VBMath.EuclideanDistance(X.PWM, Y.PWM)
             Dim value As Double = 1 - d
             Return value
         End Function
@@ -337,7 +337,7 @@ comparison function for the construction of familial binding profiles.")>
             Dim A = x.PWM(0), T = x.PWM(1), G = x.PWM(2), C = x.PWM(3)
             Dim nt As New MotifPM(A:=A, T:=T, G:=G, C:=C)
             Dim res = nt.MostProperly.Key
-            Dim ch As Char = SequenceModel.NucleotideModels.NucleicAcid.ToChar(base:=res)
+            Dim ch As Char = NucleotideModels.Conversion.ToChar(base:=res)
             Dim p As Double = nt.MostProperly.Value
 
             If p < 0.65 Then

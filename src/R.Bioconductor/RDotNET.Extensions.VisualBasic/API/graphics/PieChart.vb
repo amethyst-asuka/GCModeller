@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::176e8e4ee81970c2827c75e396eee09d, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\API\graphics\PieChart.vb"
+﻿#Region "Microsoft.VisualBasic::adf9d72c6671857ec30de2e5bd752dc7, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\API\graphics\PieChart.vb"
 
     ' Author:
     ' 
@@ -28,7 +28,7 @@
 
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.MMFProtocol.Pipeline
 Imports Microsoft.VisualBasic.Scripting
@@ -37,7 +37,7 @@ Imports RDotNET.Extensions.VisualBasic.SymbolBuilder.packages.Graphics
 
 Namespace API.Graphics
 
-    <PackageNamespace("PieChart",
+    <Package("PieChart",
                   Description:="Pie charts are not recommended in the R documentation, and their features are somewhat limited. 
                   The authors recommend bar or dot plots over pie charts because people are able to judge length more accurately than volume. 
                   Pie charts are created with the function pie(x, labels=) where x is a non-negative numeric vector indicating the area of each slice and labels= notes a character vector of names for the slices.",
@@ -50,7 +50,7 @@ Namespace API.Graphics
                               <Parameter("Path.Save")> Optional SaveTo As String = "./pie.png") As Boolean
 
             Call $"# Simple Pie Chart
-slices <- c({String.Join(", ", (From n In slices Select CStr(n.x)).ToArray)})
+slices <- c({String.Join(", ", (From n In slices Select CStr(n.Value)).ToArray)})
 lbls   <- c({String.Join(", ", (From n In slices Select $"""{n.Name}""").ToArray)})
 {GraphicsDevice.tiff(plot:=$"pie(slices, labels = lbls, main=""{Title}"")", filename:=SaveTo, width:=3000, height:=2500)}".__call
             Return True
@@ -65,7 +65,7 @@ lbls   <- c({String.Join(", ", (From n In slices Select $"""{n.Name}""").ToArray
                 In df.Skip(1).AsParallel
                 Select New NamedValue(Of Double) With {
                     .Name = row(0),
-                    .x = Val(row(1))
+                    .Value = Val(row(1))
                 }
 
             Return LQuery
@@ -82,7 +82,7 @@ lbls   <- c({String.Join(", ", (From n In slices Select $"""{n.Name}""").ToArray
                     value As Double = Val(InputHandler.ToString(values(1)))
                 Select New NamedValue(Of Double) With {
                     .Name = name,
-                    .x = value
+                    .Value = value
                 }
 
             Return LQuery

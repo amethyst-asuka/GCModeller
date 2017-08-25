@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::9dbc4192aad7afde9a05ce0ae3980022, ..\R.Bioconductor\RDotNet.Extensions.Bioinformatics\Wrappers\Heatmap.vb"
+﻿#Region "Microsoft.VisualBasic::a1d5eba5838bb3ebe445c6ad5990e271, ..\R.Bioconductor\RDotNet.Extensions.Bioinformatics\Wrappers\Heatmap.vb"
 
     ' Author:
     ' 
@@ -29,7 +29,7 @@
 Imports System.IO
 Imports System.Text
 Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream.Tokenizer
+Imports Microsoft.VisualBasic.Data.csv.IO.Tokenizer
 Imports Microsoft.VisualBasic.Linq
 Imports RDotNET.Extensions.VisualBasic
 Imports RDotNET.Extensions.VisualBasic.SymbolBuilder

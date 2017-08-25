@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::b9931ebedb3115a9b1a8b3de741dcd86, ..\GCModeller\data\Reactome\ObjectModels\Metabolite.vb"
+﻿#Region "Microsoft.VisualBasic::8d3448f8f46ed37e9a826d17d413f10d, ..\GCModeller\data\Reactome\ObjectModels\Metabolite.vb"
 
     ' Author:
     ' 
@@ -31,12 +31,12 @@ Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 
 Namespace ObjectModels
 
-    Public Class Metabolite : Implements IMetabolite, sIdEnumerable
+    Public Class Metabolite : Implements IMetabolite, INamedValue
 
         Public Property ChEBI As String() Implements IMetabolite.ChEBI
         Public Property KEGGCompound As String Implements IMetabolite.KEGGCompound
 
-        Public Property Identifier As String Implements sIdEnumerable.Identifier
+        Public Property Identifier As String Implements INamedValue.Key
         Public Property CommonNames As String()
         Public Property MetaboliteType As MetaboliteTypes
 

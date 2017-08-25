@@ -28,8 +28,7 @@
 
 Imports System.Text.RegularExpressions
 Imports System.Xml.Serialization
-Imports Microsoft.VisualBasic.CommandLine.Reflection
-Imports Microsoft.VisualBasic.Scripting.MetaData
+Imports Microsoft.VisualBasic.Text.HtmlParser
 Imports SMRUCC.genomics.SequenceModel
 Imports SMRUCC.genomics.SequenceModel.FASTA
 
@@ -66,7 +65,7 @@ Namespace DocumentFormat.MAST.HTML
                 ' DO NOTHING
             End Set
         End Property
-        Public Property SequenceData As String Implements I_PolymerSequenceModel.SequenceData
+        Public Property SequenceData As String Implements IPolymerSequenceModel.SequenceData
 
         Public Overrides Function ToString() As String
             Return $"{SequenceId} <--> Motif_{MotifId}:  E-value:={EValue}, #{Starts},{Ends}"

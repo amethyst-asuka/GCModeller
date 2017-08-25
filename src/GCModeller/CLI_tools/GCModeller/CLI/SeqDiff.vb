@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::cd69e2ed34c282dd74342093620fc2c5, ..\GCModeller\CLI_tools\GCModeller\CLI\SeqDiff.vb"
+﻿#Region "Microsoft.VisualBasic::6d7a78aac466f517dc1aba05bb914e50, ..\GCModeller\CLI_tools\GCModeller\CLI\SeqDiff.vb"
 
     ' Author:
     ' 
@@ -35,9 +35,9 @@ Imports SMRUCC.genomics.Analysis.SequenceTools.SequencePatterns.Topologically
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports Microsoft.VisualBasic.Data.csv
 
-Public Class SeqDiff : Implements sIdEnumerable
+Public Class SeqDiff : Implements INamedValue
 
-    Public Property uid As String Implements sIdEnumerable.Identifier
+    Public Property uid As String Implements INamedValue.Key
     Public Property Tag As String
     Public Property Location As String
     Public Property Host As String
@@ -176,4 +176,3 @@ Public Class SeqDiff : Implements sIdEnumerable
         Return Me.GetJson
     End Function
 End Class
-

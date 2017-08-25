@@ -2,6 +2,8 @@
 Imports System.Web.Script.Serialization
 Imports System.Xml.Serialization
 Imports Microsoft.VisualBasic.ComponentModel
+Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Scripting.Runtime
 Imports Microsoft.VisualBasic.Scripting.ShoalShell.Interpreter.LDM.Expressions
 
 Namespace Interpreter.LDM
@@ -64,7 +66,7 @@ Namespace Interpreter.LDM
         ''' <param name="File">脚本文件的文件路径</param>
         ''' <returns></returns>
         Public Shared Function ScriptParser(ScriptText As String, File As String) As SyntaxModel
-            Dim Expressions = Interpreter.MSLParser(ScriptText).ToList
+            Dim Expressions = Interpreter.MSLParser(ScriptText).AsList
             Dim script As SyntaxModel = CreateObject(Expressions)
             script.FilePath = File
             Return script
@@ -73,11 +75,11 @@ Namespace Interpreter.LDM
         Public Overloads Shared Function CreateObject(Expressions As List(Of LDM.Expressions.PrimaryExpression)) As SyntaxModel
             Dim GotoTags As Dictionary(Of String, Integer) =  ' GotoTag的下一行就是目标起始点
                 New Dictionary(Of String, Integer)
-            Dim p As Integer = -1
+            Dim p As int = -1
 
-            Do While p.MoveNext < Expressions.Count - 1
+            Do While ++p < Expressions.Count - 1
 
-                Dim Line = Expressions(p)
+                Dim Line = Expressions(index:=p)
 
                 If Line.ExprTypeID = LDM.Expressions.ExpressionTypes.LineLable Then
 

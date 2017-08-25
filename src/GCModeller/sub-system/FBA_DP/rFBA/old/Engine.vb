@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::bc5b2672b1b93bc17b6fd371f66e8681, ..\GCModeller\sub-system\FBA_DP\rFBA\old\Engine.vb"
+﻿#Region "Microsoft.VisualBasic::f609795e04ad04cfe4c72dde3b06375c, ..\GCModeller\sub-system\FBA_DP\rFBA\old\Engine.vb"
 
     ' Author:
     ' 
@@ -34,7 +34,7 @@ Imports SMRUCC.genomics.Analysis.FBA_DP
 Imports SMRUCC.genomics.Model.SBML.FLuxBalanceModel
 Imports SMRUCC.genomics.Analysis.FBA_DP.Models
 Imports SMRUCC.genomics.Model.SBML
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Data.csv
 
 Namespace rFBA
@@ -107,8 +107,8 @@ Namespace rFBA
         ''' </summary>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Public Function GetFBADataPackage() As DocumentStream.File
-            Dim CsvData As New DocumentStream.File
+        Public Function GetFBADataPackage() As IO.File
+            Dim CsvData As New IO.File
             Call CsvData.Add(New String() {"RTime", "ObjectiveFunction"})
             Call CsvData.First.AddRange(rFBAlpModel.GetFluxColumnIds)
             Dim LQuery = (From dataLine In Me.FBADataPackages.AsParallel
@@ -152,13 +152,13 @@ Namespace rFBA
 
         <XmlElement> Public Property FluxObjects As FluxMap()
 
-        Public Class FluxMap : Implements IAddressHandle
+        Public Class FluxMap : Implements IAddressOf
 
             <XmlAttribute> Public Property FluxName As String
             <XmlAttribute> Public Property Reversible As Boolean
             <XmlElement> Public Property Boundaries As KeyValuePairObject(Of Double, Double)
 
-            <XmlAttribute> Public Property Handle As Integer Implements IAddressHandle.Address
+            <XmlAttribute> Public Property Handle As Integer Implements IAddressOf.Address
             ''' <summary>
             ''' 催化当前这个代谢反应所涉及到的基因
             ''' </summary>
@@ -170,37 +170,6 @@ Namespace rFBA
             Protected Friend Function ApplyConstraint(Kernel As rFBA.Engine)
                 Throw New NotImplementedException
             End Function
-
-#Region "IDisposable Support"
-            Private disposedValue As Boolean ' To detect redundant calls
-
-            ' IDisposable
-            Protected Overridable Sub Dispose(disposing As Boolean)
-                If Not Me.disposedValue Then
-                    If disposing Then
-                        ' TODO: dispose managed state (managed objects).
-                    End If
-
-                    ' TODO: free unmanaged resources (unmanaged objects) and override Finalize() below.
-                    ' TODO: set large fields to null.
-                End If
-                Me.disposedValue = True
-            End Sub
-
-            ' TODO: override Finalize() only if Dispose( disposing As Boolean) above has code to free unmanaged resources.
-            'Protected Overrides Sub Finalize()
-            '    ' Do not change this code.  Put cleanup code in Dispose( disposing As Boolean) above.
-            '    Dispose(False)
-            '    MyBase.Finalize()
-            'End Sub
-
-            ' This code added by Visual Basic to correctly implement the disposable pattern.
-            Public Sub Dispose() Implements IDisposable.Dispose
-                ' Do not change this code.  Put cleanup code in Dispose(disposing As Boolean) above.
-                Dispose(True)
-                GC.SuppressFinalize(Me)
-            End Sub
-#End Region
         End Class
 
         Public Function GetFluxColumnIds() As String()

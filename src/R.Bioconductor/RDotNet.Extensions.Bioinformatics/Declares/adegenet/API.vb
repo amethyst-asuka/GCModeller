@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::63ae4b3da1ef65f03a71e56479a7fadd, ..\R.Bioconductor\RDotNet.Extensions.Bioinformatics\Declares\adegenet\API.vb"
+﻿#Region "Microsoft.VisualBasic::e691b238152ae97cd67f14b565eadf3c, ..\R.Bioconductor\RDotNet.Extensions.Bioinformatics\Declares\adegenet\API.vb"
 
     ' Author:
     ' 
@@ -82,7 +82,7 @@ Namespace adegenet
         ''' genind2df(obj, sep="/")
         ''' ```
         ''' </remarks>
-        Public Function df2genind(X As DocumentStream.File,
+        Public Function df2genind(X As IO.File,
                                   Optional sep As String = NULL,
                                   Optional ncode As String = NULL,
                                   Optional indNames As String() = Nothing,

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::e63fc2520f829a3451b0f5a5f56e6c50, ..\GCModeller\engine\GCTabular\Compiler\KEGG.Compiler\RegulationNetworkFromFootprints.vb"
+﻿#Region "Microsoft.VisualBasic::b0a4c007a8ed355ee58ac208c6d94ca0, ..\GCModeller\engine\GCTabular\Compiler\KEGG.Compiler\RegulationNetworkFromFootprints.vb"
 
     ' Author:
     ' 
@@ -76,7 +76,7 @@ Public Module RegulationNetworkFromFootprints
         '                                                                          {
         '                                                                              .ORF = ItemRegulation.ORF,
         '                                                                              .Position = item.Distance,
-        '                                                                              .Regulators = item.Regulators.ToList,
+        '                                                                              .Regulators = item.Regulators.AsList,
         '                                                                              .TU_MODEL_GUID = TUModel.TU_GUID,
         '                                                                              .MotifName = item.MotifId}).ToArray
         '              Let motifIdList = (From item In motifObjects Select item.motifObject.Internal_GUID).ToArray
@@ -92,9 +92,9 @@ Public Module RegulationNetworkFromFootprints
         '              Let Modified = TUModel.InvokeSet(NameOf(TUModel.Motifs), motifIdList)
         '              Select motifObjects, TUModel, RegulatorList).ToArray
 
-        'TranscriptUnits = (From item In LQuery Select item.TUModel).ToList
+        'TranscriptUnits = (From item In LQuery Select item.TUModel).AsList
         'Motifs = (From item In LQuery Select (From n In item.motifObjects Select n.motifObject).ToArray).ToArray.MatrixToList
-        'Regulators = (From item In LQuery Select item.RegulatorList.MatrixToVector).ToArray.MatrixToVector.ToList
+        'Regulators = (From item In LQuery Select item.RegulatorList.MatrixToVector).ToArray.MatrixToVector.AsList
     End Sub
 
     ''' <summary>
@@ -114,13 +114,13 @@ Public Module RegulationNetworkFromFootprints
                                                        In Regprecise
                                                        Where String.Equals(besthit.QueryName, item.ProteinId)
                                                        Let effector_cpds = besthit.Effectors
-                                                       Select effector_cpds).ToArray.MatrixToVector.Distinct.ToArray
+                                                       Select effector_cpds).ToArray.ToVector.Distinct.ToArray
                       Let mapped_effector = (From id As String
                                              In hits_effector
                                              Select (From efc As MetaCyc.Schema.EffectorMap
                                                      In Effectors
                                                      Where String.Equals(efc.Effector, id)
-                                                     Select efc).ToArray).ToArray.MatrixToVector
+                                                     Select efc).ToArray).ToArray.ToVector
                       Select mapped_effector, item).ToArray
         Dim setValue = New SetValue(Of FileStream.Regulator)().GetSet(NameOf(FileStream.Regulator.Effectors))
 

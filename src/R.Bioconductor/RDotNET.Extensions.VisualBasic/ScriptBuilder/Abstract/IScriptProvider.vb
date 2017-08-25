@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::0b8cc752f1e51ccf9893151e4c900183, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\ScriptBuilder\Abstract\IScriptProvider.vb"
+﻿#Region "Microsoft.VisualBasic::0fb2720f3448107811d9b1768e9be554, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\ScriptBuilder\Abstract\IScriptProvider.vb"
 
     ' Author:
     ' 
@@ -26,13 +26,10 @@
 
 #End Region
 
-Imports System.Text
 Imports System.Xml.Serialization
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
-Imports RDotNET.Extensions.VisualBasic
-Imports RDotNET.Extensions.VisualBasic.SymbolBuilder
-Imports RDotNET.Extensions.VisualBasic.SymbolBuilder.Rtypes
+Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.ListExtensions
 
 Namespace SymbolBuilder.Abstract
 
@@ -61,7 +58,7 @@ Namespace SymbolBuilder.Abstract
                 If value Is Nothing Then
                     __requires = Nothing
                 Else
-                    __requires = value.ToList
+                    __requires = value.AsList
                 End If
             End Set
         End Property

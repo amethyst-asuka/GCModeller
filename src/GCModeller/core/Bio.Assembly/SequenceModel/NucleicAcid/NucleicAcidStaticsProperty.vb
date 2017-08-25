@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::42380d7c94557ea3f4f9a208f6797df8, ..\GCModeller\core\Bio.Assembly\SequenceModel\NucleicAcid\NucleicAcidStaticsProperty.vb"
+﻿#Region "Microsoft.VisualBasic::1710e27f8e21cd2d74cb2f9aaec60171, ..\core\Bio.Assembly\SequenceModel\NucleicAcid\NucleicAcidStaticsProperty.vb"
 
     ' Author:
     ' 
@@ -39,7 +39,10 @@ Imports SMRUCC.genomics.SequenceModel.ISequenceModel
 
 Namespace SequenceModel.NucleotideModels
 
-    <PackageNamespace("NucleicAcid.Property", Publisher:="amethyst.asuka@gcmodeller.org")>
+    ''' <summary>
+    ''' NucleicAcid sequence property calculator
+    ''' </summary>
+    <Package("NucleicAcid.Property", Publisher:="amethyst.asuka@gcmodeller.org")>
     Public Module NucleicAcidStaticsProperty
 
         ''' <summary>
@@ -62,49 +65,50 @@ Namespace SequenceModel.NucleotideModels
             Dim LQuery = From genome As SeqValue(Of FastaToken)
                          In nts.SeqIterator.AsParallel
                          Select genome,
-                             skew = method(genome.obj, winSize, steps, True)
+                             skew = method(genome.value, winSize, steps, True)
                          Order By genome.i Ascending  ' 排序是因为可能没有做多序列比对对齐，在这里需要使用第一条序列的长度作为参考
             Return LinqAPI.Exec(Of NamedValue(Of Double())) <=
                 From g
                 In LQuery
                 Select New NamedValue(Of Double()) With {
-                    .Name = g.genome.obj.ToString,
-                    .x = g.skew
+                    .Name = g.genome.value.ToString,
+                    .Value = g.skew
                 }
         End Function
 
+        ''' <summary>
+        ''' Calculate the GC content of the target sequence data.
+        ''' </summary>
+        ''' <param name="seq"></param>
+        ''' <returns></returns>
         <ExportAPI("GC%", Info:="Calculate the GC content of the target sequence data.")>
-        <Extension> Public Function GC_Content(Sequence As IEnumerable(Of DNA)) As Double
-            Dim LQuery = (From nn As DNA
-                          In Sequence
-                          Where nn = DNA.dGMP OrElse
-                              nn = DNA.dCMP
-                          Select 1).ToArray
-            Return LQuery.Length / Sequence.Count
+        <Extension> Public Function GC_Content(seq As IEnumerable(Of DNA)) As Double
+            Dim array As DNA() = seq.ToArray
+            Dim n% = array _
+                .Where(Function(nn) nn = DNA.dGMP OrElse nn = DNA.dCMP) _
+                .Count
+            Return n / array.Length
         End Function
 
         ''' <summary>
         ''' A, T, G, C
         ''' </summary>
-        ''' <param name="Sequence"></param>
+        ''' <param name="seq"></param>
         ''' <param name="pA"></param>
         ''' <param name="pT"></param>
         ''' <param name="pG"></param>
         ''' <param name="pC"></param>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Public Function GetCompositionVector(Sequence As Char(), ByRef pA As Double,
-                                                                 ByRef pT As Double,
-                                                                 ByRef pG As Double,
-                                                                 ByRef pC As Double) As Integer()
-            Dim Data As Integer() = GetCompositionVector(Sequence)
+        Public Function GetCompositionVector(seq As Char(), ByRef pA#, ByRef pT#, ByRef pG#, ByRef pC#) As Integer()
+            Dim c As Integer() = GetCompositionVector(seq)
 
-            pA = Data(0) / Sequence.Length
-            pT = Data(1) / Sequence.Length
-            pG = Data(2) / Sequence.Length
-            pC = Data(3) / Sequence.Length
+            pA = c(0) / seq.Length
+            pT = c(1) / seq.Length
+            pG = c(2) / seq.Length
+            pC = c(3) / seq.Length
 
-            Return Data
+            Return c
         End Function
 
         ''' <summary>
@@ -132,7 +136,7 @@ Namespace SequenceModel.NucleotideModels
         ''' <remarks></remarks>
         ''' 
         <ExportAPI("GC%", Info:="Calculate the GC content of the target sequence data.")>
-        Public Function GCContent(Sequence As I_PolymerSequenceModel) As Double
+        Public Function GCContent(Sequence As IPolymerSequenceModel) As Double
             Return GCContent(Sequence.SequenceData)
         End Function
 
@@ -171,8 +175,16 @@ Namespace SequenceModel.NucleotideModels
             End If
         End Function
 
+        ''' <summary>
+        ''' Calculate the GC content of the target sequence data.
+        ''' </summary>
+        ''' <param name="SequenceModel"></param>
+        ''' <param name="SlideWindowSize"></param>
+        ''' <param name="Steps"></param>
+        ''' <param name="Circular"></param>
+        ''' <returns></returns>
         <ExportAPI("GC%", Info:="Calculate the GC content of the target sequence data.")>
-        Public Function GCContent(SequenceModel As I_PolymerSequenceModel, SlideWindowSize As Integer, Steps As Integer, Circular As Boolean) As Double()
+        Public Function GCContent(SequenceModel As IPolymerSequenceModel, SlideWindowSize As Integer, Steps As Integer, Circular As Boolean) As Double()
             Return __contentCommon(SequenceModel, SlideWindowSize, Steps, Circular, {"G", "C"})
         End Function
 
@@ -185,7 +197,7 @@ Namespace SequenceModel.NucleotideModels
         ''' <param name="Circular"></param>
         ''' <param name="base">必须是大写的字符</param>
         ''' <returns></returns>
-        Private Function __contentCommon(SequenceModel As I_PolymerSequenceModel,
+        Private Function __contentCommon(SequenceModel As IPolymerSequenceModel,
                                          SlideWindowSize As Integer,
                                          Steps As Integer,
                                          Circular As Boolean,
@@ -197,7 +209,7 @@ Namespace SequenceModel.NucleotideModels
             End If
         End Function
 
-        Private Function __liner(SequenceModel As I_PolymerSequenceModel,
+        Private Function __liner(SequenceModel As IPolymerSequenceModel,
                                  SlideWindowSize As Integer,
                                  Steps As Integer,
                                  base As Char()) As Double()
@@ -213,7 +225,7 @@ Namespace SequenceModel.NucleotideModels
             Return ChunkBuffer.ToArray
         End Function
 
-        Private Function __circular(SequenceModel As I_PolymerSequenceModel,
+        Private Function __circular(SequenceModel As IPolymerSequenceModel,
                                     SlideWindowSize As Integer,
                                     Steps As Integer,
                                     base As Char()) As Double()
@@ -242,14 +254,15 @@ Namespace SequenceModel.NucleotideModels
         End Function
 
         <ExportAPI("AT%")>
-        Public Function ATPercent(SequenceModel As I_PolymerSequenceModel, SlideWindowSize As Integer, Steps As Integer, Circular As Boolean) As Double()
+        Public Function ATPercent(SequenceModel As IPolymerSequenceModel, SlideWindowSize As Integer, Steps As Integer, Circular As Boolean) As Double()
             Return __contentCommon(SequenceModel, SlideWindowSize, Steps, Circular, {"A", "T"})
         End Function
 
-        Public Delegate Function NtProperty(SequenceModel As I_PolymerSequenceModel, SlideWindowSize As Integer, Steps As Integer, Circular As Boolean) As Double()
+        Public Delegate Function NtProperty(SequenceModel As IPolymerSequenceModel, SlideWindowSize As Integer, Steps As Integer, Circular As Boolean) As Double()
 
         ''' <summary>
-        ''' Calculation the GC skew of a specific nucleotide acid sequence.(对核酸链分子计算GC偏移量，请注意，当某一个滑窗区段内的GC是相等的话，则会出现正无穷)
+        ''' Calculation the GC skew of a specific nucleotide acid sequence.
+        ''' (对核酸链分子计算GC偏移量，请注意，当某一个滑窗区段内的GC是相等的话，则会出现正无穷)
         ''' </summary>
         ''' <param name="SequenceModel">Target sequence object should be a nucleotide acid sequence.(目标对象必须为核酸链分子)</param>
         ''' <param name="isCircular"></param>
@@ -257,7 +270,7 @@ Namespace SequenceModel.NucleotideModels
         ''' <remarks></remarks>
         ''' 
         <ExportAPI("GCSkew", Info:="Calculation the GC skew of a specific nucleotide acid sequence.")>
-        Public Function GCSkew(SequenceModel As I_PolymerSequenceModel, slideWindowSize As Integer, steps As Integer, isCircular As Boolean) As Double()
+        Public Function GCSkew(SequenceModel As IPolymerSequenceModel, slideWindowSize As Integer, steps As Integer, isCircular As Boolean) As Double()
             Dim SequenceData As String = SequenceModel.SequenceData.ToUpper
             Dim bufs As New List(Of Double)
 
@@ -285,13 +298,13 @@ Namespace SequenceModel.NucleotideModels
                 Next
             End If
 
-            bufs = (From n As Double In bufs Select __NAHandle(n, slideWindowSize)).ToList '碱基之间是有顺序的，故而不适用并行化拓展
+            bufs = (From n As Double In bufs Select __NAHandle(n, slideWindowSize)).AsList '碱基之间是有顺序的，故而不适用并行化拓展
             Return bufs.ToArray
         End Function
 
-        Private Function __NAHandle(n As Double, SlideWindowSize As Integer) As Double
-            If n = Double.PositiveInfinity OrElse Double.IsNaN(n) OrElse Double.IsInfinity(n) OrElse Double.IsNegativeInfinity(n) OrElse Double.IsPositiveInfinity(n) Then
-                Return 1 / SlideWindowSize
+        Private Function __NAHandle(n As Double, winSize As Integer) As Double
+            If n.IsNaNImaginary Then
+                Return 1 / winSize
             Else
                 Return n
             End If

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::2b8992da5d127897ac498d25d5dfb794, ..\GCModeller\CLI_tools\S.M.A.R.T\ShellScriptAPI.vb"
+﻿#Region "Microsoft.VisualBasic::5c3b3791375f79e1fb2e4022d94b4e97, ..\GCModeller\CLI_tools\S.M.A.R.T\ShellScriptAPI.vb"
 
     ' Author:
     ' 
@@ -39,7 +39,7 @@ Imports SMRUCC.genomics.Interops.NCBI.Extensions
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.BLASTOutput
 Imports SMRUCC.genomics.ProteinModel
 
-<PackageNamespace("SMART", Cites:="Letunic, I., et al. (2006). ""SMART 5: domains in the context of genomes And networks."" Nucleic Acids Res 34(Database issue): D257-260.
+<Package("SMART", Cites:="Letunic, I., et al. (2006). ""SMART 5: domains in the context of genomes And networks."" Nucleic Acids Res 34(Database issue): D257-260.
 	The Simple Modular Architecture Research Tool (SMART) is an online resource (http://smart.embl.de/) used for protein domain identification and the analysis of protein domain architectures. 
 Many new features were implemented to make SMART more accessible to scientists from different fields. 
 The new 'Genomic' mode in SMART makes it easy to analyze domain architectures in completely sequenced genomes. 
@@ -85,7 +85,7 @@ Public Module ShellScriptAPI
     End Function
 
     <ExportAPI("Result2Csv")>
-    Public Function Convert(<Parameter("Db.SMART")> Db As SMARTDB) As DocumentStream.File
+    Public Function Convert(<Parameter("Db.SMART")> Db As SMARTDB) As IO.File
         Return Db.Export
     End Function
 

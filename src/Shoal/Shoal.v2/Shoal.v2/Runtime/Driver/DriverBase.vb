@@ -23,7 +23,7 @@ Namespace Runtime.DeviceDriver
             End If
 
             Dim LQuery = (From hwnd In _HwndTrace
-                          Select $"     ----> [{HandleEntryToString(hwnd.Key)}] Mount at ""{hwnd.Value}""" & vbCrLf).ToList
+                          Select $"     ----> [{HandleEntryToString(hwnd.Key)}] Mount at ""{hwnd.Value}""" & vbCrLf).AsList
             Call LQuery.Insert(0, "Device TYPE_ID is " & Me.GetType.FullName & vbCrLf)
             Return LQuery.ToArray
         End Function
@@ -60,7 +60,7 @@ Namespace Runtime.DeviceDriver
                                        .Type = Handle.SupportType,
                                        .Handle = Handle,
                                        .MethodInfo = MethodInfo}).ToArray).ToArray
-            Return Methods.MatrixToVector
+            Return Methods.ToVector
         End Function
 
         Protected Shared Function GetMethods([module] As System.Type) As __TYPEHwnd()

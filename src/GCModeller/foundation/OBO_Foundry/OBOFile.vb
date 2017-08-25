@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::d2de53aeb10f15d0f092b41b033f360d, ..\GCModeller\foundation\OBO_Foundry\OBOFile.vb"
+﻿#Region "Microsoft.VisualBasic::ecef824810382e3285d673bb4a886912, ..\GCModeller\foundation\OBO_Foundry\OBOFile.vb"
 
     ' Author:
     ' 
@@ -33,7 +33,7 @@ Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports Microsoft.VisualBasic.Linq
 
 ''' <summary>
-''' 
+''' OBO file reader
 ''' </summary>
 ''' <remarks>
 ''' ### OBO文件格式1.2
@@ -207,9 +207,13 @@ Public Class OBOFile : Implements IDisposable
     ReadOnly __file As String
     ReadOnly __reader As StreamReader
 
-    Sub New(file As String)
-        __file = file
-        __reader = New StreamReader(New FileStream(file, FileMode.Open))
+    Sub New(file$)
+        If file.StringEmpty Then
+            Throw New ArgumentNullException("File path can not be empty!")
+        Else
+            __file = file
+            __reader = New StreamReader(New FileStream(file, FileMode.Open))
+        End If
 
         Call __parseHeader()
     End Sub
@@ -250,7 +254,7 @@ Public Class OBOFile : Implements IDisposable
                 In g
                 Select New NamedValue(Of String()) With {
                     .Name = x.id,
-                    .x = x.Group.ToArray(Function(o) o.x)
+                    .Value = x.Group.ToArray(Function(o) o.Value)
                 }
 
             Yield New RawTerm With {
@@ -295,4 +299,3 @@ Public Class OBOFile : Implements IDisposable
     End Sub
 #End Region
 End Class
-

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::20b07c870e0eeedaa70f97e3b84872ad, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\ScriptBuilder\Extensions.vb"
+﻿#Region "Microsoft.VisualBasic::6117775d6f9f1a712ca456a2c41f0467, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\ScriptBuilder\Extensions.vb"
 
     ' Author:
     ' 
@@ -28,7 +28,6 @@
 
 Imports System.Runtime.CompilerServices
 Imports Microsoft.VisualBasic.Linq
-Imports RDotNET.Extensions.VisualBasic.SymbolBuilder.packages.base
 Imports RDotNET.Extensions.VisualBasic.SymbolBuilder.Rtypes
 
 Namespace SymbolBuilder
@@ -89,6 +88,7 @@ Namespace SymbolBuilder
 
         ''' <summary>
         ''' Normalize the file path as the URL format in Unix system.
+        ''' (这个函数只会将目标路径转换为unix格式的文件路径，而不会自动添加双引号)
         ''' </summary>
         ''' <param name="file">The file path string</param>
         ''' <param name="extendsFull">是否转换为全路径？默认不转换</param>
@@ -147,10 +147,20 @@ Namespace SymbolBuilder
             Return $"getOption(""{verbose}"")"
         End Function
 
-        Public Function Rstring(s As String) As String
+        ''' <summary>
+        '''  Treat the target input string a the string vector in the R language.
+        ''' </summary>
+        ''' <param name="s">Input value</param>
+        ''' <returns></returns>
+        <Extension> Public Function Rstring(s As String) As String
             Return $"""{s}"""
         End Function
 
+        ''' <summary>
+        '''  Escaping the boolean value in VisualBasic as the bool value in R language
+        ''' </summary>
+        ''' <param name="b"></param>
+        ''' <returns></returns>
         Public Function Rbool(b As Boolean) As String
             Return New RBoolean(b).RScript
         End Function

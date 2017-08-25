@@ -1,48 +1,45 @@
 ﻿#Region "Microsoft.VisualBasic::719d165f968c9dc404f6d811a852fe9a, ..\interops\visualize\Cytoscape\CLI_tool\CLI\Phenotype.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
-Imports System.Runtime.CompilerServices
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel
-Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Microsoft.VisualBasic.ComponentModel.DataStructures
+Imports Microsoft.VisualBasic.Data.csv
+Imports Microsoft.VisualBasic.Data.visualize.Network.FileStream
 Imports Microsoft.VisualBasic.DataMining
 Imports Microsoft.VisualBasic.DataMining.KMeans
-Imports Microsoft.VisualBasic.DataMining.KMeans.CompleteLinkage
-Imports Microsoft.VisualBasic.Data.visualize.Network.FileStream
-Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Linq.Extensions
 Imports Microsoft.VisualBasic.Terminal.Utility
+Imports Microsoft.VisualBasic.Text
 Imports SMRUCC.genomics.Analysis.FBA_DP.Models.rFBA
 Imports SMRUCC.genomics.Assembly.KEGG.DBGET
 Imports SMRUCC.genomics.Assembly.NCBI.COG
@@ -53,7 +50,6 @@ Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.Similarity.TOMQuery
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MEME
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.RpsBLAST
 Imports SMRUCC.genomics.Model.Network.Regulons.MotifCluster
-Imports Microsoft.VisualBasic.Text
 
 Partial Module CLI
 
@@ -68,14 +64,14 @@ Partial Module CLI
         Dim cog As String = args - "/cogs"
         Dim out As String = args.GetValue("/out", inFile.TrimSuffix & $"-{cog.BaseName}.bTree/")
         Dim clusters = inFile.LoadCsv(Of EntityLDM)
-        Dim bTree As Network = clusters.bTreeNET
-        Dim state = COGFunc.GetClass(cog.LoadCsv(Of MyvaCOG), func)
-        Dim COGs = (From x As COGFunc
+        Dim bTree As NetworkTables = clusters.bTreeNET
+        Dim state = COGFunction.GetClass(cog.LoadCsv(Of MyvaCOG), func)
+        Dim COGs = (From x As COGFunction
                     In state
                     Select (From g As String   ' 有些基因是有多个COG值的，这个情况还不清楚如何处理
-                            In x.locus
+                            In x.IDs
                             Select g,
-                                cogCat = x)).MatrixAsIterator.GroupBy(Function(x) x.g) _
+                                cogCat = x)).IteratesALL.GroupBy(Function(x) x.g) _
                                             .ToDictionary(Function(x) x.Key,
                                                           Function(x) x.First.cogCat)
 
@@ -86,10 +82,10 @@ Partial Module CLI
                 Continue For
             End If
 
-            If COGs.ContainsKey(node.Identifier) Then
-                Dim gene As COGFunc = COGs(node.Identifier)
-                Call node.Add("COG", gene.COG)
-                Call node.Add("Func", gene.Func)
+            If COGs.ContainsKey(node.ID) Then
+                Dim gene As COGFunction = COGs(node.ID)
+                Call node.Add("COG", gene.Catalog)
+                Call node.Add("Func", gene.Description)
                 Call node.Add("Category", gene.Category.Description)
             End If
         Next
@@ -103,14 +99,14 @@ Partial Module CLI
     Public Function MotifCluster(args As CommandLine) As Integer
         Dim query As String = args("/query")
         Dim name As String = args("/LDM")
-        Dim out As String = args.GetValue("/out", query.TrimSuffix & "." & IO.Path.GetFileNameWithoutExtension(name) & ".Csv")
+        Dim out As String = args.GetValue("/out", query.TrimSuffix & "." & basename(name) & ".Csv")
         Dim source As AnnotationModel()
 
         If query.FileExists Then
             source = AnnotationModel.LoadDocument(query)
         Else
             Dim files = FileIO.FileSystem.GetFiles(query, FileIO.SearchOption.SearchAllSubDirectories, "*.txt")
-            source = files.ToArray(Function(x) AnnotationModel.LoadDocument(x)).MatrixToVector
+            source = files.ToArray(Function(x) AnnotationModel.LoadDocument(x)).ToVector
         End If
 
         If Not name.FileExists Then
@@ -130,7 +126,7 @@ Partial Module CLI
     End Function
 
     Private Function __clusteringCommon(nClusters As Integer, Maps As KMeans.Entity(), mapNames As String()) As List(Of EntityLDM)
-        Dim Clusters As ClusterCollection(Of KMeans.Entity) = KMeans.ClusterDataSet(nClusters, Maps)
+        Dim Clusters As ClusterCollection(Of KMeans.Entity) = Maps.ClusterDataSet(nClusters)
         Dim result As New List(Of EntityLDM)
         Dim i As Integer = 1
         Dim setValue = New SetValue(Of EntityLDM) <= NameOf(EntityLDM.Cluster)
@@ -143,8 +139,9 @@ Partial Module CLI
             Else
                 array = cluster.ToArray(Function(x) setValue(x.ToLDM(mapNames), CStr(i)))
             End If
+
+            i += 1
             Call result.Add(array)
-            Call i.MoveNext
         Next
 
         Return result
@@ -168,7 +165,7 @@ Partial Module CLI
 
         Dim param As New Parameters
         Dim files = FileIO.FileSystem.GetFiles(query, FileIO.SearchOption.SearchAllSubDirectories, "*.txt")
-        Dim source As AnnotationModel() = files.ToArray(Function(x) AnnotationModel.LoadDocument(x)).MatrixToVector
+        Dim source As AnnotationModel() = files.ToArray(Function(x) AnnotationModel.LoadDocument(x)).ToVector
         Dim result As Dictionary(Of String, EntityLDM) =
             source.ToArray(Function(x) New EntityLDM With {.Name = x.Uid, .Properties = New Dictionary(Of String, Double)}) _
                   .ToDictionary(Function(x) x.Name)
@@ -187,7 +184,7 @@ Partial Module CLI
             End If
 
             Dim resultSet As List(Of EntityLDM) = __clusteringCommon(nClusters, Maps, Nothing)
-            Dim sId As String = IO.Path.GetFileNameWithoutExtension(xml)
+            Dim sId As String = basename(xml)
             Dim outFile As String = out & "/" & sId & ".Csv"
 
             Call resultSet.SaveTo(outFile)
@@ -232,12 +229,12 @@ Partial Module CLI
         Dim out As String = args.GetValue("/out", inDIR)
         Dim loads = (From file As String
                      In FileIO.FileSystem.GetFiles(inDIR, FileIO.SearchOption.SearchTopLevelOnly, "*.txt")
-                     Select AnnotationModel.LoadDocument(file)).MatrixToList
+                     Select AnnotationModel.LoadDocument(file)).Unlist
         Dim resultSet As EntityLDM() = __clusterFastCommon(loads, args("/ldm"))
         Dim QueryHash As Dictionary(Of AnnotationModel) = loads.ToDictionary
         '将Entity和sites位点联系起来
         Dim asso = (From x In resultSet Select x, sites = QueryHash(x.Name)).ToArray
-        Dim merges = (From gene In (From x In asso Select __expends(x.x, x.sites)).MatrixToList Select gene Group gene By gene.Name Into Group).ToArray
+        Dim merges = (From gene In (From x In asso Select __expends(x.x, x.sites)).Unlist Select gene Group gene By gene.Name Into Group).ToArray
         Dim result As EntityLDM() = merges.ToArray(Function(x) __merges(x.Group.ToArray), parallel:=True)
 
         Call result.SaveTo(out & "/resultSet.Csv")
@@ -323,7 +320,7 @@ Partial Module CLI
             source = files.ToArray(Function(x) x.LoadXml(Of AnnotationModel))
         Else
             Dim files = FileIO.FileSystem.GetFiles(query, FileIO.SearchOption.SearchAllSubDirectories, "*.txt")
-            source = files.ToArray(Function(x) AnnotationModel.LoadDocument(x)).MatrixToVector
+            source = files.ToArray(Function(x) AnnotationModel.LoadDocument(x)).ToVector
         End If
 
         If Not String.IsNullOrEmpty(args("/map")) Then
@@ -399,7 +396,7 @@ Partial Module CLI
         Dim downFile As String = args("/down")
         Dim out As String = args.GetValue("/out", inMAT.TrimSuffix & ".TreeNET/")
         Dim MAT = inMAT.LoadCsv(Of EntityLDM)
-        Dim net As Network = MAT.bTreeNET
+        Dim net As NetworkTables = MAT.bTreeNET
         Dim brief As Boolean = args.GetBoolean("/brief")
 
         If brief Then Call __briefTrim(net)
@@ -412,8 +409,8 @@ Partial Module CLI
                 Continue For
             End If
 
-            If DEGs.ContainsKey(node.Identifier) Then
-                Call node.Add("DEG", DEGs(node.Identifier))
+            If DEGs.ContainsKey(node.ID) Then
+                Call node.Add("DEG", DEGs(node.ID))
             End If
         Next
 
@@ -480,7 +477,7 @@ Partial Module CLI
     ''' <param name="mods"></param>
     ''' <returns></returns>
     Private Function __getMods(keys As String(), mods As bGetObject.Module(), cats As Dictionary(Of String, BriteHEntry.Module), ByRef modSum As Dictionary(Of String, Integer)) As String()
-        Dim LQuery = (From id As String In keys Select (From x In mods Where x.ContainsReaction(id) Select x)).MatrixAsIterator
+        Dim LQuery = (From id As String In keys Select (From x In mods Where x.ContainsReaction(id) Select x)).IteratesALL
         Dim mIds = (From x In LQuery Select x.BriteId Group By BriteId Into Count).ToArray
         Dim catQuery = (From x In mIds Select [mod] = cats(x.BriteId).SubCategory, x.Count Group By [mod] Into Group).ToArray
         Dim orders = (From x In catQuery
@@ -509,7 +506,7 @@ Partial Module CLI
         Dim maps As String = args("/maps")
         Dim out As String = args.GetValue("/out", inMAT.TrimSuffix & ".TreeNET/")
         Dim MAT = inMAT.LoadCsv(Of EntityLDM)
-        Dim net As Network = MAT.bTreeNET
+        Dim net As NetworkTables = MAT.bTreeNET
         Dim brief As Boolean = args.GetBoolean("/brief")
         Dim cut As Double = args.GetValue("/cuts", 0.8)
         Dim mods As String = args("/mods")
@@ -536,7 +533,7 @@ Partial Module CLI
             Dim depth As Integer = edge.FromNode.Split("."c).Length
             Call edge.Properties.Add(NameOf(depth), depth)
 
-            If InStr(edge.InteractionType, "Leaf") = 0 Then
+            If InStr(edge.Interaction, "Leaf") = 0 Then
                 Continue For
             End If
 
@@ -552,7 +549,7 @@ Partial Module CLI
                 Continue For
             End If
 
-            Dim mName As String = node.Identifier.Split("."c).First
+            Dim mName As String = node.ID.Split("."c).First
 
             Call node.Properties.Add(NameOf(mName), mName)
 
@@ -601,7 +598,7 @@ Partial Module CLI
         Dim mods As String = args("/mods")
         Dim out As String = args.GetValue("/out", inMAT.TrimSuffix & ".TreeNET/")
         Dim MAT = inMAT.LoadCsv(Of EntityLDM)
-        Dim net As Network = MAT.bTreeNET
+        Dim net As NetworkTables = MAT.bTreeNET
         Dim brief As Boolean = args.GetBoolean("/brief")
 
         If brief Then Call __briefTrim(net)
@@ -614,7 +611,7 @@ Partial Module CLI
             Dim depth As Integer = edge.FromNode.Split("."c).Length
             Call edge.Properties.Add(NameOf(depth), depth)
 
-            If InStr(edge.InteractionType, "Leaf") = 0 Then
+            If InStr(edge.Interaction, "Leaf") = 0 Then
                 Continue For
             End If
 
@@ -634,9 +631,9 @@ Partial Module CLI
             Dim mName As String
 
             If trim Then
-                mName = Regex.Match(node.Identifier, "[a-z]{1,3}\d+").Value
+                mName = Regex.Match(node.ID, "[a-z]{1,3}\d+").Value
             Else
-                mName = node.Identifier.Split("."c).First
+                mName = node.ID.Split("."c).First
             End If
 
             Call node.Properties.Add(NameOf(mName), mName)
@@ -660,7 +657,7 @@ Partial Module CLI
         Dim mods As String = args("/mods")
         Dim out As String = args.GetValue("/out", inMAT.TrimSuffix & ".TreeNET/")
         Dim MAT = inMAT.LoadCsv(Of EntityLDM)
-        Dim net As Network = MAT.bTreeNET
+        Dim net As NetworkTables = MAT.bTreeNET
         Dim brief As Boolean = args.GetBoolean("/brief")
 
         If brief Then Call __briefTrim(net)
@@ -673,7 +670,7 @@ Partial Module CLI
             Dim depth As Integer = edge.FromNode.Split("."c).Length
             Call edge.Properties.Add(NameOf(depth), depth)
 
-            If InStr(edge.InteractionType, "Leaf") = 0 Then
+            If InStr(edge.Interaction, "Leaf") = 0 Then
                 Continue For
             End If
 
@@ -693,9 +690,9 @@ Partial Module CLI
             Dim mName As String
 
             If trim Then
-                mName = Regex.Match(node.Identifier, "[a-z]+_M\d+", RegexOptions.IgnoreCase).Value
+                mName = Regex.Match(node.ID, "[a-z]+_M\d+", RegexOptions.IgnoreCase).Value
             Else
-                mName = node.Identifier.Split("."c).First
+                mName = node.ID.Split("."c).First
             End If
 
             Call node.Properties.Add(NameOf(mName), mName)
@@ -715,7 +712,7 @@ Partial Module CLI
         Return net.Save(out, Encodings.ASCII).CLICode
     End Function
 
-    Private Sub __briefTrim(ByRef net As Network)
+    Private Sub __briefTrim(ByRef net As NetworkTables)
         For Each x In net.Nodes
             x.Properties = Nothing
         Next
@@ -729,7 +726,7 @@ Partial Module CLI
         Dim inMAT As String = args("/in")
         Dim out As String = args.GetValue("/out", inMAT.TrimSuffix & ".TreeNET/")
         Dim MAT = inMAT.LoadCsv(Of EntityLDM)
-        Dim net As Network = MAT.bTreeNET
+        Dim net As NetworkTables = MAT.bTreeNET
         Dim brief As Boolean = args.GetBoolean("/brief")
 
         If brief Then Call __briefTrim(net)
@@ -744,7 +741,7 @@ Partial Module CLI
             Dim depth As Integer = edge.FromNode.Split("."c).Length
             Call edge.Properties.Add(NameOf(depth), depth)
 
-            If InStr(edge.InteractionType, "Leaf") = 0 Then
+            If InStr(edge.Interaction, "Leaf") = 0 Then
                 Continue For
             End If
 
@@ -758,7 +755,7 @@ Partial Module CLI
                 Continue For
             End If
 
-            Dim mName As String = Regex.Replace(node.Identifier, "\.\d+", "")
+            Dim mName As String = Regex.Replace(node.ID, "\.\d+", "")
             Dim pair = mName.Split("."c)
             Dim locus As String = pair(Scan0)
 
@@ -785,7 +782,7 @@ Partial Module CLI
         Dim inFile As String = args("/in")
         Dim out As String = args.GetValue("/out", inFile.TrimSuffix & ".Tree.NET/")
         Dim inData = inFile.LoadCsv(Of EntityLDM)
-        Dim net As Network = inData.bTreeNET
+        Dim net As NetworkTables = inData.bTreeNET
         Dim brief As Boolean = args.GetBoolean("/brief")
 
         If brief Then Call __briefTrim(net)
@@ -797,7 +794,7 @@ Partial Module CLI
                             In FileIO.FileSystem.GetFiles(args("/familyinfo"), FileIO.SearchOption.SearchTopLevelOnly, "*.xml").AsParallel
                             Let regs = file.LoadXml(Of BacteriaGenome).Regulons
                             Where Not regs Is Nothing OrElse regs.Regulators.IsNullOrEmpty
-                            Select regs.Regulators).ToArray.MatrixToVector
+                            Select regs.Regulators).ToArray.ToVector
             FamilyHash = (From x As Regulator In regulons
                           Let uid As String = x.LocusId & "." & x.LocusTag.Value.Replace(":", "_")
                           Select x,
@@ -813,7 +810,7 @@ Partial Module CLI
             Dim depth As Integer = edge.FromNode.Split("."c).Length
             Call edge.Properties.Add(NameOf(depth), depth)
 
-            If InStr(edge.InteractionType, "Leaf") = 0 Then
+            If InStr(edge.Interaction, "Leaf") = 0 Then
                 Continue For
             End If
 
@@ -843,7 +840,7 @@ Partial Module CLI
                 Continue For
             End If
 
-            Dim bbh As String = Regex.Replace(node.Identifier, "\.\d+", "")
+            Dim bbh As String = Regex.Replace(node.ID, "\.\d+", "")
             Dim hit As String() = bbh.Split("."c)
 
             If hit.Length = 1 Then

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::f77d806fc95e39632487e5dfa32e0a27, ..\GCModeller\engine\GCModeller\EngineSystem\ObjectModels\Module\CentralDogma\BasalExpression.vb"
+﻿#Region "Microsoft.VisualBasic::e19495cd45423e3052c038936e522c85, ..\GCModeller\engine\GCModeller\EngineSystem\ObjectModels\Module\CentralDogma\BasalExpression.vb"
 
     ' Author:
     ' 
@@ -64,7 +64,7 @@ Namespace EngineSystem.ObjectModels.Module.CentralDogmaInstance
                 Return 0
             End If
 
-            ConstraintFlux._RegulationConstraint.Quantity = RandomDouble() * BasalLevel / Me.CompositionDelayEffect
+            ConstraintFlux._RegulationConstraint.Quantity = Rnd() * BasalLevel / Me.CompositionDelayEffect
             ConstraintFlux.Invoke()
 
             Dim V As Double = ConstraintFlux.FluxValue

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::45278d2da13c657025a1aca6a15904c4, ..\GCModeller\CLI_tools\mpl\CLI\CLI.vb"
+﻿#Region "Microsoft.VisualBasic::e253eb296911eea5acd05752138d9ad7, ..\GCModeller\CLI_tools\mpl\CLI\CLI.vb"
 
     ' Author:
     ' 
@@ -27,23 +27,23 @@
 #End Region
 
 Imports System.Drawing
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Imaging
+Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq.Extensions
 Imports Microsoft.VisualBasic.Scripting.MetaData
+Imports Microsoft.VisualBasic.Text.Levenshtein
 Imports SMRUCC.genomics.Data.Xfam
 Imports SMRUCC.genomics.Data.Xfam.Pfam.PfamString
-Imports SMRUCC.genomics.Data.Xfam.Pfam.ProteinDomainArchitecture
 Imports SMRUCC.genomics.Data.Xfam.Pfam.ProteinDomainArchitecture.MPAlignment
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST
-Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH
+Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH.Abstract
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.BLASTOutput
 Imports SMRUCC.genomics.Visualize.NCBIBlastResult
 
-<PackageNamespace("MPAlignment.CLI", Category:=APICategories.CLI_MAN)>
+<Package("MPAlignment.CLI", Category:=APICategories.CLI_MAN)>
 Module CLI
 
     <ExportAPI("/Pfam.Sub", Usage:="/Pfam.Sub /index <bbh_index.csv> /pfam <pfam-string> [/out <sub-out.csv>]")>
@@ -69,10 +69,10 @@ Module CLI
             Return -100
         End If
 
-        Dim out As String = args.GetValue("/out", $"{query.TrimSuffix}.vs__.{IO.Path.GetFileNameWithoutExtension(alignDb)}.txt")
-        Dim localblast As New Programs.BLASTPlus(GCModeller.FileSystem.GetLocalBlast)
-        Call localblast.FormatDb(alignDb, localblast.MolTypeProtein).Start(WaitForExit:=True)
-        Call localblast.Blastp(query, alignDb, out, Settings.SettingsFile.GetMplParam.Evalue).Start(WaitForExit:=True)
+        Dim out As String = args.GetValue("/out", $"{query.TrimSuffix}.vs__.{basename(alignDb)}.txt")
+        Dim localblast As New Programs.BLASTPlus(GCModeller.FileSystem.GetLocalblast)
+        Call localblast.FormatDb(alignDb, localblast.MolTypeProtein).Start(waitForExit:=True)
+        Call localblast.Blastp(query, alignDb, out, Settings.SettingsFile.GetMplParam.Evalue).Start(waitForExit:=True)
         Return 0
     End Function
 
@@ -158,7 +158,7 @@ Default is not, default checks right side and left side.")>
                       Let lstPfam = lstId.ToArray(Function(sId) subject(sId), where:=Function(sId) subject.ContainsKey(sId))
                       Select (From sbj As PfamString
                               In lstPfam
-                              Select PfamStringEquals(x, sbj, equals))).MatrixAsIterator
+                              Select PfamStringEquals(x, sbj, equals))).IteratesALL
         Dim swap As Boolean = args.GetBoolean("/swap")
         Dim resultOut As MPCsvArchive() = LQuery.ToArray(Function(x) x.ToRow)
 
@@ -215,7 +215,7 @@ Default is not, default checks right side and left side.")>
         Dim subjectPfam = Pfam.PfamString.CLIParser(subject)
         Dim outAlign = PfamStringEquals(queryPfam, subjectPfam, mpCutoff, args.GetBoolean("/parts"))
         Dim out As String = args.GetValue("/out", App.CurrentDirectory & $"/{queryPfam.ProteinId}_.{subjectPfam.ProteinId}/")
-        Call outAlign.Visualize.SaveTo(out & "/LevAlign.html")
+        Call outAlign.HTMLVisualize.SaveTo(out & "/LevAlign.html")
         Call outAlign.SaveAsXml(out & "/mpl.Xml")
         Call {outAlign.ToRow}.SaveTo(out & "/mpl.Csv")
         Return 0
@@ -281,10 +281,12 @@ Default is not, default checks right side and left side.")>
         Dim names As String() = If(args.GetBoolean("/hit_name"),
             hhits.ToArray(Function(x) x.HitName.Split(":"c).Last),
             hhits.ToArray(Function(x) x.QueryName.Split(":"c).Last))
-        Dim LQuery = (From x As PfamString
-                      In pfamString
-                      Where Array.IndexOf(names, x.ProteinId.Split(":"c).Last) > -1
-                      Select x).ToList
+        Dim LQuery = LinqAPI.MakeList(Of PfamString) <=
+            From x As PfamString
+            In pfamString
+            Where Array.IndexOf(names, x.ProteinId.Split(":"c).Last) > -1
+            Select x
+
         Return LQuery > out
     End Function
 End Module

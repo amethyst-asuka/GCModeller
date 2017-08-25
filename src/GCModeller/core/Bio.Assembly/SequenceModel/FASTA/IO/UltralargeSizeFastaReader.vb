@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::5b8bd8e41cc2b608ff1d5e9752491a43, ..\GCModeller\core\Bio.Assembly\SequenceModel\FASTA\IO\UltralargeSizeFastaReader.vb"
+﻿#Region "Microsoft.VisualBasic::9fa6e4e4c4781857b6961ecc157cef05, ..\core\Bio.Assembly\SequenceModel\FASTA\IO\UltralargeSizeFastaReader.vb"
 
     ' Author:
     ' 
@@ -69,11 +69,11 @@ Namespace SequenceModel.FASTA
                 Dim chunkBuffer As Byte() = New Byte(chunkSize - 1) {}
 
                 If encoding Is Nothing Then
-                    encoding = System.Text.Encoding.Default
+                    encoding = Encoding.Default
                 End If
 
                 Dim index As Integer = 0
-                Dim name As String = System.IO.Path.GetFileNameWithoutExtension(path)
+                Dim name As String = BaseName(path)
                 Dim preBlock As Byte() = Nothing
 
                 Do While ReadBuffer(IO, chunkBuffer)
@@ -101,7 +101,7 @@ Namespace SequenceModel.FASTA
         '        End If
 
         '        Dim index As Integer = 0
-        '        Dim name As String = System.IO.Path.GetFileNameWithoutExtension(path)
+        '        Dim name As String = System.basename(path)
         '        Dim preBlock As Byte() = Nothing
 
         '        Do While ReadBuffer(IO, chunkBuffer)
@@ -130,7 +130,8 @@ Namespace SequenceModel.FASTA
                 If Not last_overrides Then
                     Return False
                 Else
-                    Dim path As String = $"{outDIR}/{name}.{index.MoveNext}.fasta"
+                    Dim path As String = $"{outDIR}/{name}.{index}.fasta"
+                    index += 1
                     Return str.SaveTo(path)
                 End If
             End If
@@ -141,7 +142,8 @@ Namespace SequenceModel.FASTA
                 str = (From line As String In block Select ">" & line).ToArray.JoinBy(vbCrLf)
 
                 If block.Length = n Then
-                    Dim path As String = $"{outDIR}/{name}.{index.MoveNext}.fasta"
+                    Dim path As String = $"{outDIR}/{name}.{index}.fasta"
+                    index += 1
                     Call str.SaveTo(path)
                 Else             ' 这个是最后一个元素了
                     preBlock = encoding.GetBytes(str)

@@ -1,28 +1,28 @@
 ﻿#Region "Microsoft.VisualBasic::78a667b5c236c3bcab8cd3291156867d, ..\interops\RNA-Seq\BOW\HTSeq\HtseqCountMethod.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -32,12 +32,13 @@ Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq.Extensions
 Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports SMRUCC.genomics.Assembly.NCBI
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat
+Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.GFF
 Imports SMRUCC.genomics.ComponentModel.Loci
 Imports SMRUCC.genomics.SequenceModel.SAM
 
@@ -46,7 +47,7 @@ Imports SMRUCC.genomics.SequenceModel.SAM
 ''' to each feature.
 ''' </summary>
 ''' <remarks>为了得到比较好的计算性能，SAM文件之中的Reads数据首先被转换为位置数据进行缓存</remarks>
-<[PackageNamespace]("HTSeq-count",
+<Package("HTSeq-count",
                         Description:="Given a file with aligned sequencing reads and a list of genomic features, a common task is to count how many reads map to each feature.",
                         Cites:="Anders, S., et al. (2015). ""HTSeq--a Python framework To work With high-throughput sequencing data."" Bioinformatics 31(2): 166-169.
 <p>MOTIVATION: A large choice of tools exists for many standard tasks in the analysis of high-throughput sequencing (HTS) data. However, once a project deviates from standard workflows, custom scripts are needed. RESULTS: We present HTSeq, a Python library to facilitate the rapid development of such scripts. HTSeq offers parsers for many common data formats in HTS projects, as well as classes to represent data, such as genomic coordinates, sequences, sequencing reads, alignments, gene model information and variant calls, and provides data structures that allow for querying via genomic coordinates. We also present htseq-count, a tool developed with HTSeq that preprocesses RNA-Seq data for differential expression analysis by counting the overlap of reads with genes. AVAILABILITY AND IMPLEMENTATION: HTSeq is released as an open-source software under the GNU General Public Licence and available from http://www-huber.embl.de/HTSeq or from the Python Package Index at https://pypi.python.org/pypi/HTSeq.",
@@ -89,7 +90,7 @@ Public Module HtseqCountMethod
     <ExportAPI("gff.Trim",
                    Info:="The gene identifier in a gff file some times can be a gene name, if you don't want to using the gene name to identified a gene and more prefer using its locus_tag data, 
                    then you can using this function replace the gene name to locus_tag.")>
-    Public Function TrimGFF(gff As GFF, PTT As PTT) As GFF
+    Public Function TrimGFF(gff As GFFTable, PTT As PTT) As GFFTable
         ' 通过位置来进行替换
         Dim Locihash As Dictionary(Of String, String) =
                 PTT.GeneObjects.ToDictionary(Function(GeneObject) GeneObject.Location.ToString,
@@ -144,17 +145,17 @@ Public Module HtseqCountMethod
     <ExportAPI("Data.Frame", Info:="Generates the data input for the DESeq2 R package.")>
     Public Function DataFrame(<Parameter("List.Files")> FileList As IEnumerable(Of String),
                                   PTT As PTT,
-                                  <Parameter("RNA.Statics?")> Optional StaticsRNA As Boolean = False) As DocumentStream.File
+                                  <Parameter("RNA.Statics?")> Optional StaticsRNA As Boolean = False) As IO.File
         Dim LQuery = (From File As String In FileList.AsParallel
-                      Let ID As String = IO.Path.GetFileNameWithoutExtension(File)
+                      Let ID As String = Path.GetFileNameWithoutExtension(File)
                       Select ID, data = CountResult.Load(File)).ToArray
         Dim AllFeatures = (From Experiment In LQuery
                            Select (From obj In Experiment.data
-                                   Select FeatureGeneName = obj.Feature).ToArray).MatrixToList.Distinct.ToArray.OrderBy(Of String)(Function(str) str).ToArray
-        Dim ChunkBuffer As New DocumentStream.File
+                                   Select FeatureGeneName = obj.Feature).ToArray).Unlist.Distinct.ToArray.OrderBy(Of String)(Function(str) str).ToArray
+        Dim ChunkBuffer As New IO.File
 
         '生成表头
-        Dim Head As New DocumentStream.RowObject From {""}
+        Dim Head As New IO.RowObject From {""}
         Call Head.AddRange((From Experiment In LQuery Select Experiment.ID).ToArray) '为了保持一一对应关系，从这里开始不可以再使用并行拓展
         Call ChunkBuffer.Add(Head)
 
@@ -231,7 +232,7 @@ The output value of the function is the rpkm value if the optional function para
 if FALSE for the original feature mapping reads.
 Anders, S., Pyl, P. T., & Huber, W. (2015). HTSeq--a Python framework to work with high-throughput sequencing data. Bioinformatics, 31(2), 166-169. doi: 10.1093/bioinformatics/btu638")>
     Public Function HtseqCount(SAM As IEnumerable(Of AlignmentReads),
-                                   GFF As GFF,
+                                   GFF As GFFTable,
                                    <Parameter("Mode", "The value of this parameter specific the counter of the function will be used, " &
                                    "the available counter values are: union, intersection_strict and intersection_nonempty")>
                                    Optional Mode As String = "intersection_nonempty",
@@ -255,7 +256,7 @@ Anders, S., Pyl, P. T., & Huber, W. (2015). HTSeq--a Python framework to work wi
     ''' <param name="dataExpr0">这里的表达量的计数全部都是原始计数</param>
     ''' <returns></returns>
     <ExportAPI("/RPKM"), Extension>
-    Public Function RPKM(dataExpr0 As IEnumerable(Of CountResult), gff As GFF) As CountResult()
+    Public Function RPKM(dataExpr0 As IEnumerable(Of CountResult), gff As GFFTable) As CountResult()
         Dim MappedReads As Double = (From loci As CountResult In dataExpr0 Select loci.Counts).Sum  '总的Reads计数
         Dim totalLen As Integer = gff.Size
         Dim RPKMValues = (From loci As CountResult In dataExpr0
@@ -267,7 +268,7 @@ Anders, S., Pyl, P. T., & Huber, W. (2015). HTSeq--a Python framework to work wi
         Return array
     End Function
 
-    Delegate Function HtSeqMethod(SAM As IEnumerable(Of AlignmentReads), GFF As GFF, feature As Features) As CountResult()
+    Delegate Function HtSeqMethod(SAM As IEnumerable(Of AlignmentReads), GFF As GFFTable, feature As Features) As CountResult()
 
     Public ReadOnly Property HtSeqMethods As IReadOnlyDictionary(Of String, HtSeqMethod) =
             New Dictionary(Of String, HtSeqMethod) From {
@@ -298,7 +299,7 @@ Anders, S., Pyl, P. T., & Huber, W. (2015). HTSeq--a Python framework to work wi
         End Function
 
         Public Shared Function Load(path As String) As CountResult()
-            Dim lines As String() = IO.File.ReadAllLines(path)
+            Dim lines As String() = path.ReadAllLines
             Dim array As CountResult() = LinqAPI.Exec(Of CountResult) <=
  _
                 From line As String
@@ -341,7 +342,7 @@ Anders, S., Pyl, P. T., & Huber, W. (2015). HTSeq--a Python framework to work wi
                                    Optional feature As Features = Features.CDS) As String
 
         Dim SAMFile As New SamStream(SAM)
-        Dim GFFFile As GFF = GenBank.TabularFormat.GFF.LoadDocument(GFF)
+        Dim GFFFile As GFFTable = GFFTable.LoadDocument(GFF)
         Return HtseqCount(SAMFile.ReadBlock, GFFFile, Mode, RPKM)
     End Function
 
@@ -408,12 +409,12 @@ Anders, S., Pyl, P. T., & Huber, W. (2015). HTSeq--a Python framework to work wi
     ''' <param name="gff"></param>
     ''' <param name="forwards"></param>
     ''' <param name="reversed"></param>
-    Private Sub __getFeatures(gff As GFF, ByRef forwards As Feature(), ByRef reversed As Feature(), feature As Features)
+    Private Sub __getFeatures(gff As GFFTable, ByRef forwards As Feature(), ByRef reversed As Feature(), feature As Features)
         forwards = __getFeatures(gff, direct:=Strands.Forward, feature:=feature)
         reversed = __getFeatures(gff, direct:=Strands.Reverse, feature:=feature)
     End Sub
 
-    Private Function __getFeatures(gff As GFF, direct As Strands, feature As Features) As Feature()
+    Private Function __getFeatures(gff As GFFTable, direct As Strands, feature As Features) As Feature()
         Dim key As String = feature.ToString
         Dim features As Feature() = (From loci As Feature In gff.Features.AsParallel
                                      Where Not loci Is Nothing AndAlso
@@ -424,7 +425,7 @@ Anders, S., Pyl, P. T., & Huber, W. (2015). HTSeq--a Python framework to work wi
     End Function
 
     <ExportAPI("Union")>
-    Public Function Union(SAM As IEnumerable(Of AlignmentReads), GFF As GFF, Optional feature As Features = Features.CDS) As CountResult()
+    Public Function Union(SAM As IEnumerable(Of AlignmentReads), GFF As GFFTable, Optional feature As Features = Features.CDS) As CountResult()
         Dim GFF_Forwards As Feature() = Nothing, GFF_Reversed As Feature() = Nothing
         Call __getFeatures(GFF, GFF_Forwards, GFF_Reversed, feature)
         Dim FeaturesCounting As IEnumerable(Of Feature()) = From Read As AlignmentReads
@@ -463,7 +464,7 @@ Anders, S., Pyl, P. T., & Huber, W. (2015). HTSeq--a Python framework to work wi
     End Function
 
     <ExportAPI("Intersection.Strict")>
-    Public Function IntersectionStrict(SAM As IEnumerable(Of AlignmentReads), GFF As GFF, Optional feature As Features = Features.CDS) As CountResult()
+    Public Function IntersectionStrict(SAM As IEnumerable(Of AlignmentReads), GFF As GFFTable, Optional feature As Features = Features.CDS) As CountResult()
         Dim GFF_Forwards As Feature() = Nothing, GFF_Reversed As Feature() = Nothing
         Call __getFeatures(GFF, GFF_Forwards, GFF_Reversed, feature)
         Dim FeaturesCounting = From Read As AlignmentReads
@@ -474,7 +475,7 @@ Anders, S., Pyl, P. T., & Huber, W. (2015). HTSeq--a Python framework to work wi
     End Function
 
     <ExportAPI("Intersection.Nonempty")>
-    Public Function IntersectionNonempty(SAM As IEnumerable(Of AlignmentReads), GFF As GFF, Optional feature As Features = Features.CDS) As CountResult()
+    Public Function IntersectionNonempty(SAM As IEnumerable(Of AlignmentReads), GFF As GFFTable, Optional feature As Features = Features.CDS) As CountResult()
         Dim GFF_Forwards As Feature() = Nothing, GFF_Reversed As Feature() = Nothing
         Call __getFeatures(GFF, GFF_Forwards, GFF_Reversed, feature)
         Dim FeaturesCounting = From Read As AlignmentReads

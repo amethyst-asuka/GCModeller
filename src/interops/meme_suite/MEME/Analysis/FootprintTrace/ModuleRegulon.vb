@@ -46,7 +46,7 @@ Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.Similarity.TOMQuery
 
 Namespace Analysis.FootprintTraceAPI
 
-    <PackageNamespace("Module.Regulons")>
+    <Package("Module.Regulons")>
     Public Module ModuleRegulon
 
         <ExportAPI("Maps.Hash")>
@@ -177,7 +177,7 @@ Namespace Analysis.FootprintTraceAPI
                                      mapsHash As Dictionary(Of String, bbhMappings())) As IEnumerable(Of PredictedRegulationFootprint)
             Dim LQuery = (From site As PredictedRegulationFootprint
                           In motif.GetFootprints
-                          Select site.FillSites(DOOR, mapsHash)).MatrixToVector
+                          Select site.FillSites(DOOR, mapsHash)).ToVector
             Return LQuery
         End Function
 
@@ -187,7 +187,7 @@ Namespace Analysis.FootprintTraceAPI
                                   DOOR As DOOR,
                                   mapsHash As Dictionary(Of String, bbhMappings())) As PredictedRegulationFootprint()
 
-            Dim g As GeneBrief = DOOR.GetGene(site.ORF)
+            Dim g As OperonGene = DOOR.GetGene(site.ORF)
             site.DoorId = g.OperonID
             site.ORFDirection = g.Location.Strand.GetBriefCode
             site.Strand = site.ORFDirection

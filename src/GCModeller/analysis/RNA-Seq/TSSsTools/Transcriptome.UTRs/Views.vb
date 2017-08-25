@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::643c424fb766c5acf693b4ad636f863f, ..\GCModeller\analysis\RNA-Seq\TSSsTools\Transcriptome.UTRs\Views.vb"
+﻿#Region "Microsoft.VisualBasic::7be9c8fe7df7044cdd06eefb08726820, ..\GCModeller\analysis\RNA-Seq\TSSsTools\Transcriptome.UTRs\Views.vb"
 
     ' Author:
     ' 
@@ -29,7 +29,7 @@
 Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq.Extensions
@@ -44,7 +44,7 @@ Imports SMRUCC.genomics.Assembly.NCBI.COG
 ''' <summary>
 ''' TSSs位点的性质的统计函数
 ''' </summary>
-<PackageNamespace("TSSs.Analysis.Views", Description:="The TSS property statics functions.", Publisher:="amethyst.asuka@gcmodeller.org")>
+<Package("TSSs.Analysis.Views", Description:="The TSS property statics functions.", Publisher:="amethyst.asuka@gcmodeller.org")>
 Public Module Views
 
     <ExportAPI("TSSs.Numbers")>
@@ -104,7 +104,7 @@ Public Module Views
     Public Function TSSsNumberDistributes(data As IEnumerable(Of DocumentFormat.Transcript),
                                           <Parameter("PTT", "The ptt file should contains the COG information.")>
                                           PTT As GenBank.TabularFormat.PTT,
-                                          Optional Max As Integer = 15) As DocumentStream.File
+                                          Optional Max As Integer = 15) As IO.File
 
         Dim LQuery = (From obj In data.AsParallel
                       Where Not String.IsNullOrEmpty(obj.Synonym)
@@ -133,7 +133,7 @@ Public Module Views
         Next
 
         Dim Csv As New File
-        Dim Categories = COGCategories.Categories.ToArray(Of COGCategories)(Function(obj) obj.Class).ToList
+        Dim Categories = COGCategories.Catalogs.ToArray(Of COGCategories)(Function(obj) obj.Class).AsList
         Call Categories.Add(Assembly.NCBI.COG.COGCategories.NotAssigned)
 
         Call Csv.Add(({"Numbers Of TSSs"}).Join(Categories.ToArray(Of String)(Function(cat) cat.Description).Join({"", "Numbers Of Genes"})))
@@ -181,22 +181,29 @@ Public Module Views
     End Function
 
     <ExportAPI("TSSs.Export")>
-    Public Function ExportTSSs(data As Generic.IEnumerable(Of DocumentFormat.Transcript),
-                               NT As SMRUCC.genomics.SequenceModel.FASTA.FastaToken,
+    Public Function ExportTSSs(data As IEnumerable(Of DocumentFormat.Transcript),
+                               NT As FASTA.FastaToken,
                                Optional offset As Integer = 3, <Parameter("Just.ORF", "Only the TSSs site of ORF will be export.")>
-                               Optional ORF As Boolean = True) As SMRUCC.genomics.SequenceModel.FASTA.FastaFile
-        Dim Reader = New SMRUCC.genomics.SequenceModel.NucleotideModels.SegmentReader(NT)
+                               Optional ORF As Boolean = True) As FASTA.FastaFile
+
         Dim Source = If(ORF, (From site In data.AsParallel Where Not String.IsNullOrEmpty(site.Synonym) Select site).ToArray, data.ToArray)
         Source = (From site In Source Select site Group site By site.TSSs Into Group).ToArray.ToArray(Function(obj) obj.Group.First)
-        Dim LQuery = (From i In Source.Sequence.AsParallel
-                      Let site = Source(i)
-                      Where Not site.TSSs - offset < 0
-                      Let ID As String() = {"Loci_" & i, site.Synonym, site.TSSs}
-                      Let Sequence As String = Reader.TryParse(CLng(site.TSSs - offset), Right:=site.TSSs + offset + 1, Strand:=site.MappingLocation.Strand, WARN:=False)
-                      Select New SMRUCC.genomics.SequenceModel.FASTA.FastaToken With {
-                          .Attributes = ID,
-                          .SequenceData = Sequence.ToUpper}).ToArray
-        Return CType(LQuery, SMRUCC.genomics.SequenceModel.FASTA.FastaFile)
+        Dim LQuery = LinqAPI.Exec(Of FASTA.FastaToken) <=
+            From i
+            In Source.Sequence.AsParallel
+            Let site = Source(i)
+            Where Not site.TSSs - offset < 0
+            Let ID As String() = {"Loci_" & i, site.Synonym, site.TSSs}
+            Let loci As NucleotideLocation = New NucleotideLocation(
+                site.TSSs - offset,
+                site.TSSs + offset + 1,
+                Strand:=site.MappingLocation.Strand)
+            Let Sequence As String = NT.CutSequenceLinear(loci).SequenceData
+            Select New FASTA.FastaToken With {
+                .Attributes = ID,
+                .SequenceData = Sequence.ToUpper
+            }
+        Return New FASTA.FastaFile(LQuery)
     End Function
 
     <ExportAPI("TSSs.NT.Frequency")>
@@ -204,13 +211,13 @@ Public Module Views
                                     NT As FASTA.FastaToken,
                                     Optional offset As Integer = 3,
                                     <Parameter("Just.ORF", "Only the TSSs site of ORF will be export.")>
-                                    Optional ORF As Boolean = True) As DocumentStream.File
+                                    Optional ORF As Boolean = True) As IO.File
         Dim Fasta = ExportTSSs(data, NT, offset, ORF)
         Dim pStart = -offset
         Dim FrequencyData As Patterns.PatternModel = Patterns.Frequency(Fasta)
-        Dim df As DocumentStream.File = New DocumentStream.File + {"prob", "A", "T", "G", "C"}
-        df += LinqAPI.Exec(Of Patterns.SimpleSite, DocumentStream.RowObject)(FrequencyData.Residues) _
-           <= Function(rsd As Patterns.SimpleSite) New DocumentStream.RowObject({CStr(pStart + rsd.Address)}.Join(ATGC.ToArray(Function(c) rsd.Probability(c).ToString)))
+        Dim df As IO.File = New IO.File + {"prob", "A", "T", "G", "C"}
+        df += LinqAPI.Exec(Of Patterns.SimpleSite, IO.RowObject)(FrequencyData.Residues) _
+           <= Function(rsd As Patterns.SimpleSite) New IO.RowObject({CStr(pStart + rsd.Address)}.Join(ATGC.ToArray(Function(c) rsd.Probability(c).ToString)))
 
         Return df
     End Function
@@ -234,17 +241,23 @@ Public Module Views
         sites = If(ORF, (From site In sites.AsParallel Where Not String.IsNullOrEmpty(site.Synonym) Select site).ToArray, sites)
 
         Dim sitesGroup = (From site In sites Select site Group site By site.TSSs Into Group).ToArray
-        Dim Reader = New NucleotideModels.SegmentReader(NT)
-        Dim LQuery = (From site In sitesGroup
-                      Let site_loci = site.Group.First
-                      Let loci = If(site_loci.MappingLocation.Strand = Strands.Forward,
-                          New NucleotideLocation(site_loci.TSSs - Length, site_loci.TSSs, Strands.Forward),
-                          New NucleotideLocation(site_loci.TSSs, site_loci.TSSs + Length, Strands.Reverse))
-                      Where loci.Normalization.Left > 0
-                      Let Sequence = Reader.TryParse(loci)
-                      Select New FASTA.FastaToken With {
-                          .Attributes = New String() {"lcl_" & site.TSSs, String.Join(",", site.Group.ToArray(Of String)(Function(obj) obj.Synonym))},
-                          .SequenceData = Sequence.SequenceData}).ToArray
+        Dim reader As IPolymerSequenceModel = NT
+        Dim LQuery = LinqAPI.Exec(Of FASTA.FastaToken) <=
+            From site
+            In sitesGroup
+            Let site_loci = site.Group.First
+            Let loci = If(site_loci.MappingLocation.Strand = Strands.Forward,
+                New NucleotideLocation(site_loci.TSSs - Length, site_loci.TSSs, Strands.Forward),
+                New NucleotideLocation(site_loci.TSSs, site_loci.TSSs + Length, Strands.Reverse))
+            Where loci.Normalization.Left > 0
+            Let Sequence = reader.CutSequenceLinear(loci)
+            Select New FASTA.FastaToken With {
+                .Attributes = {
+                    "lcl_" & site.TSSs,
+                    String.Join(",", site.Group.ToArray(Of String)(Function(obj) obj.Synonym))
+                },
+                .SequenceData = Sequence.SequenceData
+            }
         Return New FASTA.FastaFile(LQuery)
     End Function
 
@@ -272,22 +285,22 @@ Public Module Views
 
         sites = (From site In sites Where Not String.IsNullOrEmpty(site.Synonym) Select site).ToArray
         Dim SitesGroup = (From site In sites Select site Group site By site.Synonym Into Group).ToArray.ToDictionary(Function(obj) obj.Synonym, elementSelector:=Function(obj) obj.Group.ToArray)
-        Dim Reader = New SMRUCC.genomics.SequenceModel.NucleotideModels.SegmentReader(NT)
+        Dim reader As IPolymerSequenceModel = NT
 
-        Call __Export(SitesGroup, Reader, Length:=Length, ID:=(From COG In DESeqCOGs Select COG.DiffDown).ToArray.MatrixToList.Distinct.ToArray) _
+        Call __Export(SitesGroup, Reader, Length:=Length, ID:=(From COG In DESeqCOGs Select COG.DiffDown).ToArray.Unlist.Distinct.ToArray) _
                 .Save($"{Export}/TSSs+Promoters{Length}/{NameOf(DESeq2.DESeqCOGs.DiffDown)}.fasta")
-        Call __Export(SitesGroup, Reader, Length:=Length, ID:=(From COG In DESeqCOGs Select COG.DiffUp).ToArray.MatrixToList.Distinct.ToArray) _
+        Call __Export(SitesGroup, Reader, Length:=Length, ID:=(From COG In DESeqCOGs Select COG.DiffUp).ToArray.Unlist.Distinct.ToArray) _
                 .Save($"{Export}/TSSs+Promoters{Length}/{NameOf(DESeq2.DESeqCOGs.DiffUp)}.fasta")
-        Call __Export(SitesGroup, Reader, Length:=Length, ID:=(From COG In DESeqCOGs Select COG.IdenticalHigh).ToArray.MatrixToList.Distinct.ToArray) _
+        Call __Export(SitesGroup, Reader, Length:=Length, ID:=(From COG In DESeqCOGs Select COG.IdenticalHigh).ToArray.Unlist.Distinct.ToArray) _
                 .Save($"{Export}/TSSs+Promoters{Length}/{NameOf(DESeq2.DESeqCOGs.IdenticalHigh)}.fasta")
-        Call __Export(SitesGroup, Reader, Length:=Length, ID:=(From COG In DESeqCOGs Select COG.IdenticalLow).ToArray.MatrixToList.Distinct.ToArray) _
+        Call __Export(SitesGroup, Reader, Length:=Length, ID:=(From COG In DESeqCOGs Select COG.IdenticalLow).ToArray.Unlist.Distinct.ToArray) _
                 .Save($"{Export}/TSSs+Promoters{Length}/{NameOf(DESeq2.DESeqCOGs.IdenticalLow)}.fasta")
 
         Return True
     End Function
 
     Private Function __Export(TSSs As Dictionary(Of String, DocumentFormat.Transcript()),
-                              Reader As SMRUCC.genomics.SequenceModel.NucleotideModels.SegmentReader,
+                              Reader As IPolymerSequenceModel,
                               ID As String(),
                               Length As Integer) As SMRUCC.genomics.SequenceModel.FASTA.FastaFile
         Dim LQuery = (From site In ID.AsParallel
@@ -297,18 +310,18 @@ Public Module Views
                                   In sites
                               Let sequence As SMRUCC.genomics.SequenceModel.FASTA.FastaToken = __Export(site_loci, Length, Reader)
                               Where Not sequence Is Nothing
-                              Select sequence).ToArray).ToArray.MatrixToList
+                              Select sequence).ToArray).ToArray.Unlist
         Return CType(LQuery, SMRUCC.genomics.SequenceModel.FASTA.FastaFile)
     End Function
 
-    Private Function __Export(site_loci As DocumentFormat.Transcript, Length As Integer, reader As SMRUCC.genomics.SequenceModel.NucleotideModels.SegmentReader) As SMRUCC.genomics.SequenceModel.FASTA.FastaToken
+    Private Function __Export(site_loci As DocumentFormat.Transcript, Length As Integer, reader As IPolymerSequenceModel) As SMRUCC.genomics.SequenceModel.FASTA.FastaToken
         Dim loci = If(site_loci.MappingLocation.Strand = Strands.Forward,
                           New SMRUCC.genomics.ComponentModel.Loci.NucleotideLocation(site_loci.TSSs - Length, site_loci.TSSs, SMRUCC.genomics.ComponentModel.Loci.Strands.Forward),
                           New SMRUCC.genomics.ComponentModel.Loci.NucleotideLocation(site_loci.TSSs, site_loci.TSSs + Length, SMRUCC.genomics.ComponentModel.Loci.Strands.Reverse))
         If Not loci.Normalization.Left > 0 Then
             Return Nothing
         End If
-        Dim Sequence = reader.TryParse(loci)
+        Dim Sequence = reader.CutSequenceLinear(loci)
         Return New SMRUCC.genomics.SequenceModel.FASTA.FastaToken With {
             .Attributes = New String() {$"lcl_{site_loci.TSSs}_{site_loci.Synonym}", site_loci.Synonym},
             .SequenceData = Sequence.SequenceData

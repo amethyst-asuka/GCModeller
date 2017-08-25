@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::1b56c183ca23e6e79565eb4e04d492a1, ..\GCModeller\CLI_tools\gcc\CLI\MetaCyc.vb"
+﻿#Region "Microsoft.VisualBasic::65369a7e4dbe39ffdb037dcb93ed790f, ..\GCModeller\CLI_tools\gcc\CLI\MetaCyc.vb"
 
     ' Author:
     ' 
@@ -33,7 +33,7 @@ Imports Microsoft.VisualBasic.Terminal.STDIO
 Imports SMRUCC.genomics.GCModeller.Assembly
 Imports SMRUCC.genomics.Model.SBML.Specifics.MetaCyc
 
-<PackageNamespace("GCModeller.Compiler.CLI", Category:=APICategories.CLI_MAN,
+<Package("GCModeller.Compiler.CLI", Category:=APICategories.CLI_MAN,
                   Description:="gcc=GCModeller Compiler; Compiler program for the GCModeller virtual cell system model",
                   Url:="http://gcmodeller.org",
                   Publisher:="GCModeller")>
@@ -118,7 +118,7 @@ Public Module CLI
         Dim MetaCyc As SMRUCC.genomics.Assembly.MetaCyc.File.FileSystem.DatabaseLoadder =
             SMRUCC.genomics.Assembly.MetaCyc.File.FileSystem.DatabaseLoadder.CreateInstance(CommandLine("-db"))
         Dim Model As GCMarkupLanguage.BacterialModel = GCMarkupLanguage.BacterialModel.Load(CommandLine("-model"))
-        Dim RuleFile As DocumentStream.File = DocumentStream.File.Load(CommandLine("-rulefile"))
+        Dim RuleFile As IO.File = IO.File.Load(CommandLine("-rulefile"))
 
         Return ProteinDomain.AddingRules(MetaCyc:=MetaCyc, Model:=Model, RuleFile:=RuleFile, GrepScript:=CommandLine("-grep"))
     End Function

@@ -1,28 +1,28 @@
-﻿#Region "Microsoft.VisualBasic::6fb3ca848f782095c76c127896b32360, ..\GCModeller\analysis\SequenceToolkit\SmithWaterman\MotifScanner.vb"
+﻿#Region "Microsoft.VisualBasic::ff4271080512669e07e6b518bfab8445, ..\GCModeller\analysis\SequenceToolkit\SmithWaterman\MotifScanner.vb"
 
-' Author:
-' 
-'       asuka (amethyst.asuka@gcmodeller.org)
-'       xieguigang (xie.guigang@live.com)
-'       xie (genetics@smrucc.org)
-' 
-' Copyright (c) 2016 GPL3 Licensed
-' 
-' 
-' GNU GENERAL PUBLIC LICENSE (GPL3)
-' 
-' This program is free software: you can redistribute it and/or modify
-' it under the terms of the GNU General Public License as published by
-' the Free Software Foundation, either version 3 of the License, or
-' (at your option) any later version.
-' 
-' This program is distributed in the hope that it will be useful,
-' but WITHOUT ANY WARRANTY; without even the implied warranty of
-' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-' GNU General Public License for more details.
-' 
-' You should have received a copy of the GNU General Public License
-' along with this program. If not, see <http://www.gnu.org/licenses/>.
+    ' Author:
+    ' 
+    '       asuka (amethyst.asuka@gcmodeller.org)
+    '       xieguigang (xie.guigang@live.com)
+    '       xie (genetics@smrucc.org)
+    ' 
+    ' Copyright (c) 2016 GPL3 Licensed
+    ' 
+    ' 
+    ' GNU GENERAL PUBLIC LICENSE (GPL3)
+    ' 
+    ' This program is free software: you can redistribute it and/or modify
+    ' it under the terms of the GNU General Public License as published by
+    ' the Free Software Foundation, either version 3 of the License, or
+    ' (at your option) any later version.
+    ' 
+    ' This program is distributed in the hope that it will be useful,
+    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
+    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    ' GNU General Public License for more details.
+    ' 
+    ' You should have received a copy of the GNU General Public License
+    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -31,18 +31,19 @@ Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.ListExtensions
+Imports Microsoft.VisualBasic.Text
 Imports SMRUCC.genomics.Analysis.SequenceTools.SequencePatterns.Motif
 Imports SMRUCC.genomics.SequenceModel
 Imports SMRUCC.genomics.SequenceModel.NucleotideModels
 
 Public Class MotifScanner : Inherits IScanner
 
-    Sub New(nt As I_PolymerSequenceModel)
+    Sub New(nt As IPolymerSequenceModel)
         Call MyBase.New(nt)
     End Sub
 
     Public Overrides Function Scan(pattern As String) As SimpleSegment()
-        Return (Scan(__nt, pattern, AddressOf Equals).ToList +
+        Return (Scan(__nt, pattern, AddressOf Equals).AsList +
             Scan(__nt, Complement(pattern), AddressOf Equals)) _
             .OrderBy(Function(x) x.Start) _
             .ToArray
@@ -51,10 +52,10 @@ Public Class MotifScanner : Inherits IScanner
     ReadOnly __rand As Random = New Random
 
     Public Overloads Function Equals(pattern As String, residue As String) As Integer
-        Dim r As Char = residue.FirstOrDefault(NIL)
+        Dim r As Char = residue.FirstOrDefault(ASCII.NUL)
 
         If pattern.Length = 1 Then
-            Dim p As Char = pattern.FirstOrDefault(NIL)
+            Dim p As Char = pattern.FirstOrDefault(ASCII.NUL)
             If p = "."c OrElse p = "N"c Then
                 Return 10
             End If
@@ -113,14 +114,14 @@ Public Class MotifScanner : Inherits IScanner
 
     Public Shared Function ToChar(s As String) As Char
         If s.Length = 1 Then
-            Dim c As Char = s.FirstOrDefault(NIL)
+            Dim c As Char = s.FirstOrDefault(ASCII.NUL)
             If c = "." Then
                 Return "N"c
             Else
                 Return c
             End If
         Else
-            Dim c As Char = s.FirstOrDefault(NIL)
+            Dim c As Char = s.FirstOrDefault(ASCII.NUL)
             Return Char.ToLower(c)
         End If
     End Function

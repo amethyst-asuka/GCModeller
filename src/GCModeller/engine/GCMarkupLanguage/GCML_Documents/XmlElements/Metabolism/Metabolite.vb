@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::39a30c7de84a07ad10aa9defa1a42ae9, ..\GCModeller\engine\GCMarkupLanguage\GCML_Documents\XmlElements\Metabolism\Metabolite.vb"
+﻿#Region "Microsoft.VisualBasic::17a9fb547fedf7d79b94afdf964c7c2d, ..\GCModeller\engine\GCMarkupLanguage\GCML_Documents\XmlElements\Metabolism\Metabolite.vb"
 
     ' Author:
     ' 
@@ -35,7 +35,7 @@ Namespace GCML_Documents.XmlElements.Metabolism
 
     Public Class Metabolite
         Implements FLuxBalanceModel.IMetabolite
-        Implements sIdEnumerable
+        Implements INamedValue
 
         ''' <summary>
         ''' UniqueID.(本目标对象的唯一标识符)
@@ -43,7 +43,7 @@ Namespace GCML_Documents.XmlElements.Metabolism
         ''' <value></value>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        <DumpNode> <XmlAttribute> Public Property Identifier As String Implements FLuxBalanceModel.IMetabolite.Identifier
+        <DumpNode> <XmlAttribute> Public Property Identifier As String Implements FLuxBalanceModel.IMetabolite.Key
         <DumpNode> <XmlElement("COMMON-NAME", Namespace:="http://code.google.com/p/genome-in-code/virtualcell_model/GCMarkupLanguage/")>
         Public Property CommonName As String
         <DumpNode> <XmlAttribute> Public Property Compartment As String

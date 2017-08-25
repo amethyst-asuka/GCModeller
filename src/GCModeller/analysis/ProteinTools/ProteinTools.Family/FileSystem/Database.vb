@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::e926965c43e603518c5b4e914267a2b7, ..\GCModeller\analysis\ProteinTools\ProteinTools.Family\FileSystem\Database.vb"
+﻿#Region "Microsoft.VisualBasic::de33851ba1d28e4a8791e589fb50ba9f, ..\GCModeller\analysis\ProteinTools\ProteinTools.Family\FileSystem\Database.vb"
 
     ' Author:
     ' 
@@ -48,7 +48,7 @@ Namespace FileSystem
         Private Function __init() As Dictionary(Of String, String)
             Dim Pfam As String = GCModeller.FileSystem.Xfam.Pfam.PfamFamily
             Dim Files = FileIO.FileSystem.GetFiles(Pfam, FileIO.SearchOption.SearchAllSubDirectories, "*.xml")
-            Return Files.ToDictionary(Function(x) IO.Path.GetFileNameWithoutExtension(x))
+            Return Files.ToDictionary(Function(x) basename(x))
         End Function
 
         ''' <summary>
@@ -58,7 +58,7 @@ Namespace FileSystem
         Public Function EntireDb() As FamilyPfam
             Dim LQuery = (From entry In lstDb Select entry.Value.LoadXml(Of FamilyPfam)).ToArray
             Dim Merge As FamilyPfam = New FamilyPfam With {
-                .Family = LQuery.ToArray(Function(x) x.Family).MatrixToVector
+                .Family = LQuery.ToArray(Function(x) x.Family).ToVector
             }
             Return Merge
         End Function

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::ca89d9ae74472199261e80b667cacf87, ..\GCModeller\core\Bio.Assembly\ProteinModel\DomainModels.vb"
+﻿#Region "Microsoft.VisualBasic::52dd969f077869f6ff68ab23390f4c9b, ..\core\Bio.Assembly\ProteinModel\DomainModels.vb"
 
     ' Author:
     ' 
@@ -33,15 +33,40 @@ Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 
 Namespace ProteinModel
 
+    ''' <summary>
+    ''' The simple protein domain motif model.
+    ''' </summary>
     Public Class DomainModel
-        Implements sIdEnumerable, IKeyValuePairObject(Of String, Location)
+        Implements INamedValue, IKeyValuePairObject(Of String, Location)
+        Implements IMotifSite
+        Implements IMotifDomain
 
-        Public Property DomainId As String Implements sIdEnumerable.Identifier, IKeyValuePairObject(Of String, Location).Identifier
-        Public Property Location As Location Implements IKeyValuePairObject(Of String, Location).Value
+        Public Property DomainId As String Implements INamedValue.Key,
+            IKeyValuePairObject(Of String, Location).Key,
+            IMotifSite.Type,
+            IMotifSite.Name,
+            IMotifDomain.ID
+        Public Property Start As Integer
+        Public Property [End] As Integer
+
+        Private Property Location As Location Implements IKeyValuePairObject(Of String, Location).Value, IMotifSite.Site, IMotifDomain.Location
+            Get
+                Return New Location(Start, [End])
+            End Get
+            Set(value As Location)
+                If Not value Is Nothing Then
+                    Start = value.Left
+                    [End] = value.Right
+                End If
+            End Set
+        End Property
 
         Sub New(DomainId As String, Location As Location)
             Me.DomainId = DomainId
             Me.Location = Location
+        End Sub
+
+        Sub New()
         End Sub
 
         Public Overrides Function ToString() As String

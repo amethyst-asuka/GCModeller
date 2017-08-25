@@ -44,13 +44,14 @@ Partial Module CLI
                Usage:="--TCS /in <TCS.csv.DIR> /regulations <TCS.virtualfootprints> /out <outForCytoscape.xml> [/Fill-pcc]")>
     <Argument("/Fill-pcc", True,
                    Description:="If the predicted regulation data did'nt contains pcc correlation value, then you can using this parameter to fill default value 0.6 or just left it default as ZERO")>
+    <Group(CLIGrouping.TCS)>
     Public Function TCS(args As CommandLine) As Integer
         Dim TCSDir As String = args("/in")
         Dim regulations As String = args("/regulations")
         Dim out As String = args("/out")
         Dim TCSProfiles = FileIO.FileSystem.GetFiles(TCSDir, FileIO.SearchOption.SearchAllSubDirectories, "*.csv") _
             .ToArray(Function(file) _
-                         file.LoadCsv(Of CrossTalks)).MatrixToList
+                         file.LoadCsv(Of CrossTalks)).Unlist
         Dim virtualFootprints = regulations.LoadCsv(Of PredictedRegulationFootprint)
 
         Dim HK As String() = (From name As String In TCSProfiles.ToArray(Function(cTk) cTk.Kinase) Select name Distinct Order By name Ascending).ToArray
@@ -64,10 +65,10 @@ Partial Module CLI
                                        Order By name Ascending
         Dim Hybirds As String() = StringHelpers.Intersection(HK, RR)
         Dim Nodes As New List(Of Entity)
-        Call Nodes.Add((From name As String In HK Where Array.IndexOf(Hybirds, name) = -1 Select New Entity With {.Identifier = name, .NodeType = "HK"}).ToArray)
-        Call Nodes.Add((From name As String In RR Where Array.IndexOf(Hybirds, name) = -1 Select New Entity With {.Identifier = name, .NodeType = "RR"}).ToArray)
-        Call Nodes.Add((From name As String In Hybirds Select New Entity With {.Identifier = name, .NodeType = "Hybrids"}).ToArray)
-        Call Nodes.Add((From name As String In Regulators Where Array.IndexOf(HK, name) = -1 AndAlso Array.IndexOf(RR, name) = -1 Select New Entity With {.Identifier = name, .NodeType = "TF"}).ToArray)
+        Call Nodes.Add((From name As String In HK Where Array.IndexOf(Hybirds, name) = -1 Select New Entity With {.ID = name, .NodeType = "HK"}).ToArray)
+        Call Nodes.Add((From name As String In RR Where Array.IndexOf(Hybirds, name) = -1 Select New Entity With {.ID = name, .NodeType = "RR"}).ToArray)
+        Call Nodes.Add((From name As String In Hybirds Select New Entity With {.ID = name, .NodeType = "Hybrids"}).ToArray)
+        Call Nodes.Add((From name As String In Regulators Where Array.IndexOf(HK, name) = -1 AndAlso Array.IndexOf(RR, name) = -1 Select New Entity With {.ID = name, .NodeType = "TF"}).ToArray)
 
         Dim Edges As New List(Of Interaction)
         Dim FillZERO As Boolean = args.GetBoolean("/Fill-pcc")
@@ -81,18 +82,18 @@ Partial Module CLI
                                                   End Function
 
         Call Edges.Add(TCSProfiles.ToArray(Function(cTk) New Interaction With {
-                                               .Confidence = cTk.Probability,
+                                               .value = cTk.Probability,
                                                .FromNode = cTk.Kinase,
                                                .ToNode = cTk.Regulator,
-                                               .InteractionType = "CrossTalk",
+                                               .Interaction = "CrossTalk",
                                                .Family = ""}).ToArray)
         Call Edges.Add((From regulation In virtualFootprints
                         Where Not (String.IsNullOrEmpty(regulation.Regulator) OrElse String.IsNullOrEmpty(regulation.ORF))
                         Select New Interaction With {
-                                    .Confidence = __getPCC(regulation.Pcc),
+                                    .value = __getPCC(regulation.Pcc),
                                     .FromNode = regulation.Regulator,
                                     .ToNode = regulation.ORF,
-                                    .InteractionType = "Regulates",
+                                    .Interaction = "Regulates",
                                     .Family = regulation.MotifId}).ToArray)
         Dim doc As Graph = ExportToFile.Export(Nodes.ToArray, Edges.ToArray, "TCS Crosstalks and Regulations")
         Return doc.Save(out)

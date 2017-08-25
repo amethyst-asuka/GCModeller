@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::6043a081a985ab2041b7e13cb56e2f6a, ..\GCModeller\core\Bio.Assembly\ComponentModel\GeneBrief.vb"
+﻿#Region "Microsoft.VisualBasic::8117a97a440aa51ef1a08dd3e7a9410f, ..\core\Bio.Assembly\ComponentModel\GeneBrief.vb"
 
     ' Author:
     ' 
@@ -42,7 +42,7 @@ Namespace ComponentModel
     ''' The COG annotation data of the genes.(基因对象的COG注释结果)
     ''' </summary>
     ''' <remarks></remarks>
-    Public Interface ICOGDigest : Inherits sIdEnumerable
+    Public Interface ICOGDigest : Inherits INamedValue
 
         ''' <summary>
         ''' The gene object COG classification.(COG功能分类)
@@ -65,6 +65,22 @@ Namespace ComponentModel
         ''' <returns></returns>
         ''' <remarks></remarks>
         Property Length As Integer
+
+    End Interface
+
+    ''' <summary>
+    ''' 这个基因的注释结果之中除了COG编号之外，还有这个编号所属的COG分类
+    ''' </summary>
+    Public Interface ICOGCatalog : Inherits INamedValue
+
+        ''' <summary>
+        ''' The gene object COG classification.(COG功能分类)
+        ''' </summary>
+        ''' <value></value>
+        ''' <returns></returns>
+        ''' <remarks></remarks>
+        Property COG As String
+        Property Catalog As String
 
     End Interface
 End Namespace

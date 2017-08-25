@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::ebe7171d1cbd4d3834f9e2ce18760540, ..\GCModeller\CLI_tools\MEME\Cli\RegulatorMotifs.vb"
+﻿#Region "Microsoft.VisualBasic::ed8d0fb867da4415a5d95be2283672db, ..\GCModeller\CLI_tools\MEME\Cli\RegulatorMotifs.vb"
 
     ' Author:
     ' 
@@ -26,7 +26,6 @@
 
 #End Region
 
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
@@ -37,7 +36,7 @@ Imports Microsoft.VisualBasic.Text
 Imports SMRUCC.genomics.Data
 Imports SMRUCC.genomics.Data.Regprecise
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.Similarity.TOMQuery
-Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application
+Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH.Abstract
 Imports SMRUCC.genomics.SequenceModel.FASTA
 
 Partial Module CLI
@@ -76,9 +75,9 @@ Partial Module CLI
         Dim inMotifs As String = args("/motifs")
         Dim out As String = args.GetValue("/out", inMotifs.TrimSuffix & ".Test.Csv")
         Dim FamilyHits = inFamilyHits.LoadCsv(Of FamilyHit)
-        Dim Motifs = inMotifs.LoadCsv(Of MotifHit)
-        Motifs = HitTest(Motifs, FamilyHits).ToList
-        Return Motifs.SaveTo(out).CLICode
+        Dim Motifs As IEnumerable(Of FamilyHit) = inMotifs.LoadCsv(Of MotifHit)
+        Motifs = HitTest(Motifs, FamilyHits)
+        Return Motifs.ToArray.SaveTo(out).CLICode
     End Function
 
     ''' <summary>
@@ -91,8 +90,8 @@ Partial Module CLI
         Dim inBBH As String = args("/bbh")
         Dim inDIR As String = args("/regprecise")
         Dim out As String = args.GetValue("/out", inBBH.TrimSuffix & ".Motifs.fa")
-        Dim bbh = inBBH.LoadCsv(Of BBH.BBHIndex)
-        Dim hitsHash = (From x As BBH.BBHIndex
+        Dim bbh = inBBH.LoadCsv(Of BBHIndex)
+        Dim hitsHash = (From x As BBHIndex
                         In bbh
                         Where x.Matched
                         Select uid = x.HitName.Split(":"c).Last,
@@ -102,29 +101,29 @@ Partial Module CLI
                                           Function(x) x.Group.ToArray(Function(xx) xx.x))
         Dim genomes As BacteriaGenome() = (ls - l - wildcards("*.Xml") <= inDIR) _
             .ToArray(AddressOf SafeLoadXml(Of BacteriaGenome))
-        Dim all As String() = genomes.ToArray(Function(x) x.ListRegulators).MatrixToList.Distinct.ToArray
+        Dim all As String() = genomes.ToArray(Function(x) x.ListRegulators).Unlist.Distinct.ToArray
         Dim regulators = (From sid As String In all Where hitsHash.ContainsKey(sid) Select sid, hits = hitsHash(sid)).ToArray
         Dim queryRegulators = (From qx In
                                    (From x In regulators
-                                    Select (From hit As BBH.BBHIndex
+                                    Select (From hit As BBHIndex
                                             In x.hits
                                             Select query = hit,
-                                                x.sid)).MatrixAsIterator
+                                                x.sid)).IteratesALL
                                Select qx
                                Group qx By qx.query.QueryName Into Group).ToArray
-        bbh = (From x In queryRegulators Select x.Group.ToArray(Function(xx) xx.query)).MatrixToList
+        bbh = (From x In queryRegulators Select x.Group.ToArray(Function(xx) xx.query)).Unlist
         ' 将Regulators的bbh结果分离出来了
         Call bbh.SaveTo(out & "/Regulators.bbh.csv")
 
         Dim regs = (From reg As Regulator
-                    In genomes.ToArray(Function(x) x.Regulons.Regulators).MatrixAsIterator
+                    In genomes.ToArray(Function(x) x.Regulons.Regulators).IteratesALL
                     Select reg
                     Group reg By reg.LocusId Into Group) _
                          .ToDictionary(Function(x) x.LocusId,
                                        Function(x) x.Group.ToArray)
         Dim motifs = (From query In queryRegulators
                       Let qName As String = query.QueryName
-                      Let sites = (From reg In query.Group Let hit = reg.sid Let ss = regs(hit) Select ss).MatrixAsIterator.ToArray(Function(x) x.RegulatorySites).MatrixToList
+                      Let sites = (From reg In query.Group Let hit = reg.sid Let ss = regs(hit) Select ss).IteratesALL.ToArray(Function(x) x.RegulatorySites).Unlist
                       Select qName, sites).ToArray
         For Each query In motifs
             Dim path As String = $"{out}/{query.qName}.fasta"

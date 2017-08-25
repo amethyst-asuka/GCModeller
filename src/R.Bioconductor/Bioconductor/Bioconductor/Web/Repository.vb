@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::bc05e5978afe47ae28582ff3c27ecedd, ..\R.Bioconductor\Bioconductor\Bioconductor\Web\Repository.vb"
+﻿#Region "Microsoft.VisualBasic::673e24b92514d1fcde411246a8882b61, ..\R.Bioconductor\Bioconductor\Bioconductor\Web\Repository.vb"
 
     ' Author:
     ' 
@@ -28,8 +28,9 @@
 
 Imports System.Text
 Imports Microsoft.VisualBasic.ComponentModel
+Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Serialization.JSON
-Imports Microsoft.VisualBasic
+Imports Microsoft.VisualBasic.Text
 Imports SMRUCC.R.CRAN.Bioconductor.Web.Packages
 
 Namespace Web
@@ -139,7 +140,7 @@ Namespace Web
         End Function
 
         Public Function Save(Optional Path As String = "", Optional encoding As Encodings = Encodings.UTF8) As Boolean Implements ISaveHandle.Save
-            Return Me.Save(Path, encoding.GetEncodings)
+            Return Me.Save(Path, encoding.CodePage)
         End Function
     End Class
 End Namespace

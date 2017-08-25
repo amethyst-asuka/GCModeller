@@ -1,46 +1,45 @@
 ﻿#Region "Microsoft.VisualBasic::1f118acae767a2442c2b1a824841666c, ..\interops\meme_suite\MEME\Analysis\Similarity\MotifDeltaSimilarity.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports System.Xml.Serialization
+Imports Microsoft.VisualBasic.CommandLine.Reflection
+Imports Microsoft.VisualBasic.ComponentModel.Algorithm.base
+Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Linq
+Imports Microsoft.VisualBasic.ListExtensions
+Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.ComponentModel
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MEME.LDM
-Imports SMRUCC.genomics.SequenceModel.NucleotideModels.NucleicAcid
-Imports Microsoft.VisualBasic.CommandLine.Reflection
-Imports Microsoft.VisualBasic.Scripting.MetaData
-Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.ComponentModel.DataStructures
 Imports SMRUCC.genomics.SequenceModel.NucleotideModels
-Imports Microsoft.VisualBasic.Linq
-Imports Microsoft.VisualBasic.Language
 
 Namespace Analysis.Similarity
 
-    <[PackageNamespace]("Motif.Delta.Similarity",
+    <Package("Motif.Delta.Similarity",
                     Description:="Calculate the motif similarity using the nucleotide sequence delta similarity method.",
                     Publisher:="xie.guigang@gcmodeller.org")>
     Public Module MotifDeltaSimilarity
@@ -62,17 +61,17 @@ Namespace Analysis.Similarity
                                               Where Not MotifData.IsNullOrEmpty
                                               Select From i As SeqValue(Of Motif)
                                                      In MotifData.SeqIterator
-                                                     Select setValue(i.obj, path.Key & "." & i.i)
+                                                     Select setValue(i.value, path.Key & "." & i.i)
 
             Dim Grouped = (From item In resources Select item Group item By item.Signature Into Group).ToArray
             Dim LQuery = (From item In Grouped.AsParallel() Let InternalCreateObject As Motif = __createObject(item.Signature, item.Group.ToArray) Select InternalCreateObject
-                          Order By InternalCreateObject.Sites.Count Descending).ToList
+                          Order By InternalCreateObject.Sites.Count Descending).AsList
             Dim ChunkBuffer As List(Of Motif()) = New List(Of Motif())  '按照相似性分组
 
             Do While LQuery.Count > 0
                 Dim Ref = LQuery.First
-                Dim cl = (From n In LQuery.Skip(1).AsParallel Let delta As Double = MotifDeltaSimilarity.Sigma(Ref, n) Where delta <= delta_threshold Select delta, n).ToList
-                Dim ls = (From item In cl Select item.n).ToList
+                Dim cl = (From n In LQuery.Skip(1).AsParallel Let delta As Double = MotifDeltaSimilarity.Sigma(Ref, n) Where delta <= delta_threshold Select delta, n).AsList
+                Dim ls = (From item In cl Select item.n).AsList
                 Call ls.Add(Ref)
                 Call ChunkBuffer.Add(ls.ToArray)
 
@@ -84,13 +83,13 @@ Namespace Analysis.Similarity
             LQuery = (From item As Motif()
                   In ChunkBuffer.AsParallel
                       Select Motif = __createObject((From nn In item Select s = MotifPM.ToString(nn.PspMatrix) Order By Len(s) Ascending).First, item)
-                      Order By Motif.Sites.Count Descending).ToList
+                      Order By Motif.Sites.Count Descending).AsList
             Return LQuery.ToArray
         End Function
 
         Private Function __createObject(Signature As String, dat As Motif()) As Motif
             Dim Motif As Motif = New Motif With {.Signature = Signature}
-            Motif.Sites = (From m In dat Select m.Sites).ToArray.MatrixToList.Distinct.ToArray
+            Motif.Sites = (From m In dat Select m.Sites).ToArray.Unlist.Distinct.ToArray
             Motif.Width = dat.First.Width
             Motif.PspMatrix = MotifPM.CreateObject((From nn In dat Select nn.PspMatrix).ToArray)
 
@@ -99,16 +98,16 @@ Namespace Analysis.Similarity
 
         <ExportAPI("Motif.Clustering")>
         Public Function MergeSubsamples(source As IEnumerable(Of Motif), Optional delta_threshold As Double = 0.5) As Motif()
-            Dim resources = source.ToList
+            Dim resources = source.AsList
             Dim Grouped = (From item In resources Select item Group item By item.Signature Into Group).ToArray
             Dim LQuery = (From item In Grouped.AsParallel() Let InternalCreateObject As Motif = __createObject(item.Signature, item.Group.ToArray) Select InternalCreateObject
-                          Order By InternalCreateObject.Sites.Count Descending).ToList
+                          Order By InternalCreateObject.Sites.Count Descending).AsList
             Dim ChunkBuffer As List(Of Motif()) = New List(Of Motif())  '按照相似性分组
 
             Do While LQuery.Count > 0
                 Dim Ref = LQuery.First
-                Dim cl = (From n In LQuery.Skip(1).AsParallel Let delta As Double = MotifDeltaSimilarity.Sigma(Ref, n) Where delta <= delta_threshold Select delta, n).ToList
-                Dim ls = (From item In cl Select item.n).ToList
+                Dim cl = (From n In LQuery.Skip(1).AsParallel Let delta As Double = MotifDeltaSimilarity.Sigma(Ref, n) Where delta <= delta_threshold Select delta, n).AsList
+                Dim ls = (From item In cl Select item.n).AsList
                 Call ls.Add(Ref)
                 Call ChunkBuffer.Add(ls.ToArray)
 
@@ -120,7 +119,7 @@ Namespace Analysis.Similarity
             LQuery = (From item As Motif()
                   In ChunkBuffer.AsParallel
                       Select Motif = __createObject((From nn In item Select s = MotifPM.ToString(nn.PspMatrix) Order By Len(s) Ascending).First, item)
-                      Order By Motif.Sites.Count Descending).ToList
+                      Order By Motif.Sites.Count Descending).AsList
             Return LQuery.ToArray
         End Function
 
@@ -221,7 +220,7 @@ where the sum extends over all dinucleotides (abbreviated sigma-differences).")>
         ''' <remarks></remarks>
         <ExportAPI("MEME.Diff")> Public Function MotifDiff(<Parameter("Path.A")> a As String, <Parameter("Path.b")> b As String) As MotifCompares
             Dim Mtf = DocumentFormat.MEME.Text.Load(a), Mtg = DocumentFormat.MEME.Text.Load(b)
-            Dim LQuery = (From Mta As Motif In Mtf.AsParallel Select (From Mtb In Mtg Select Motif1 = Mta, Motif2 = Mtb, delta = Sigma(Mta, Mtb))).MatrixToVector
+            Dim LQuery = (From Mta As Motif In Mtf.AsParallel Select (From Mtb In Mtg Select Motif1 = Mta, Motif2 = Mtb, delta = Sigma(Mta, Mtb))).ToVector
             Dim Result As MotifCompares = New MotifCompares With {
                 .Motif1 = Mtf,
                 .Motif2 = Mtg,
@@ -303,7 +302,7 @@ where fX denotes the frequency of the nucleotide X and fXY is the frequency of t
             Dim SlideWindows = Motif.CreateSlideWindows(slideWindowSize:=nl)
             Dim LQuery = (From n In SlideWindows
                           Let compare = (From i As Integer In ns.Sequence
-                                         Let nn = n.Elements(i).MostProperly
+                                         Let nn = n.Items(i).MostProperly
                                          Where ns(i) = nn.Key
                                          Select nn.Value).ToArray
                           Where compare.Length = nl

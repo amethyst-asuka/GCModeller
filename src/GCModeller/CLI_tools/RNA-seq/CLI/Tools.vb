@@ -1,28 +1,28 @@
-﻿#Region "Microsoft.VisualBasic::e88440a8acc172e6af2e89841c90d7cd, ..\GCModeller\CLI_tools\RNA-seq\CLI\Tools.vb"
+﻿#Region "Microsoft.VisualBasic::38b9cdb32d163499d666965dcb83e5d4, ..\GCModeller\CLI_tools\RNA-seq\CLI\Tools.vb"
 
-' Author:
-' 
-'       asuka (amethyst.asuka@gcmodeller.org)
-'       xieguigang (xie.guigang@live.com)
-'       xie (genetics@smrucc.org)
-' 
-' Copyright (c) 2016 GPL3 Licensed
-' 
-' 
-' GNU GENERAL PUBLIC LICENSE (GPL3)
-' 
-' This program is free software: you can redistribute it and/or modify
-' it under the terms of the GNU General Public License as published by
-' the Free Software Foundation, either version 3 of the License, or
-' (at your option) any later version.
-' 
-' This program is distributed in the hope that it will be useful,
-' but WITHOUT ANY WARRANTY; without even the implied warranty of
-' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-' GNU General Public License for more details.
-' 
-' You should have received a copy of the GNU General Public License
-' along with this program. If not, see <http://www.gnu.org/licenses/>.
+    ' Author:
+    ' 
+    '       asuka (amethyst.asuka@gcmodeller.org)
+    '       xieguigang (xie.guigang@live.com)
+    '       xie (genetics@smrucc.org)
+    ' 
+    ' Copyright (c) 2016 GPL3 Licensed
+    ' 
+    ' 
+    ' GNU GENERAL PUBLIC LICENSE (GPL3)
+    ' 
+    ' This program is free software: you can redistribute it and/or modify
+    ' it under the terms of the GNU General Public License as published by
+    ' the Free Software Foundation, either version 3 of the License, or
+    ' (at your option) any later version.
+    ' 
+    ' This program is distributed in the hope that it will be useful,
+    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
+    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    ' GNU General Public License for more details.
+    ' 
+    ' You should have received a copy of the GNU General Public License
+    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -30,33 +30,33 @@ Imports System.IO
 Imports System.Runtime.CompilerServices
 Imports System.Text
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream.Linq
+Imports Microsoft.VisualBasic.Data.csv.IO
+Imports Microsoft.VisualBasic.Data.csv.IO.Linq
+Imports Microsoft.VisualBasic.Extensions
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports Microsoft.VisualBasic.Linq
-Imports Microsoft.VisualBasic.Parallel
 Imports Microsoft.VisualBasic.Parallel.Linq
 Imports Microsoft.VisualBasic.Serialization.JSON
 Imports Microsoft.VisualBasic.Text
-Imports RDotNET.Extensions.VisualBasic.API
-Imports RDotNET.Extensions.VisualBasic.TableExtensions
+Imports RDotNET.Extensions.VisualBasic.DataFrameAPI
 Imports SMRUCC.genomics
 Imports SMRUCC.genomics.Analysis.Metagenome
 Imports SMRUCC.genomics.Analysis.Metagenome.BEBaC
-Imports SMRUCC.genomics.Assembly.NCBI
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
+Imports SMRUCC.genomics.Assembly.NCBI.Taxonomy
 Imports SMRUCC.genomics.ComponentModel.Loci
 Imports SMRUCC.genomics.ContextModel
+Imports SMRUCC.genomics.SequenceModel
 Imports SMRUCC.genomics.SequenceModel.FASTA
 Imports SMRUCC.genomics.SequenceModel.Fastaq
 Imports SMRUCC.genomics.SequenceModel.NucleotideModels
 Imports SMRUCC.genomics.SequenceModel.SAM
+Imports R_api = RDotNET.Extensions.VisualBasic.API
 
 Partial Module CLI
 
@@ -89,7 +89,7 @@ Partial Module CLI
     Public Function Fq2fa(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim out As String = args.GetValue("/out", [in].TrimSuffix & ".fasta")
-        Dim fastaq As FastaqFile = FastaqFile.Load([in])
+        Dim fastaq As FastQFile = FastQFile.Load([in])
         Dim fasta As FastaFile = fastaq.ToFasta
         Return fasta.Save(out, Encodings.ASCII)
     End Function
@@ -99,7 +99,7 @@ Partial Module CLI
         Dim [in] As String = args("/in")
         Dim kmax As Integer = args.GetInt32("/kmax")
         Dim out As String = args.GetValue("/out", [in].TrimSuffix & ",kmax=" & kmax & ".Csv")
-        Dim fq As FastaqFile = FastaqFile.Load([in])
+        Dim fq As FastQFile = FastQFile.Load([in])
         Dim vectors = fq.Transform
         Dim Crude = vectors.InitializePartitions(kmax)
         Dim ppppp = Crude.First.PartitionProbability
@@ -112,14 +112,14 @@ Partial Module CLI
         Dim min As Double = args.GetValue("/min", 0.01)
         Dim max As Double = args.GetValue("/max", 0.05)
         Dim EXPORT As String = args.GetValue("/out", [in].TrimDIR & $"/{[in].BaseName}.EXPORT.PR.Csv")
-        Dim out As New DocumentStream.File
+        Dim out As New IO.File
 
         out += {"X", "P", "R"}
 
         For Each file As String In ls - l - r - wildcards("*P*.Csv") <= [in]
             Dim rp As String = file.ParentPath & "/" & file.BaseName.Replace("P", "R") & ".Csv"
-            Dim R As DocumentStream.File = DocumentStream.File.Load(rp)
-            Dim P As DocumentStream.File = DocumentStream.File.Load(file)
+            Dim R As IO.File = IO.File.Load(rp)
+            Dim P As IO.File = IO.File.Load(file)
             Dim Rs = R.Skip(1).ToDictionary(Function(x) x.First, Function(x) x(1))
 
             Call file.__DEBUG_ECHO
@@ -146,7 +146,7 @@ Partial Module CLI
     End Function
 
     <Extension>
-    Private Function __writeFile(file As DocumentStream.File, out As String, min As Double, max As Double) As Boolean
+    Private Function __writeFile(file As IO.File, out As String, min As Double, max As Double) As Boolean
         Dim rows As New List(Of String)
 
         For Each row In file.Skip(1)
@@ -272,8 +272,8 @@ Partial Module CLI
     <ExportAPI("/Export.SAM.Maps",
                Usage:="/Export.SAM.Maps /in <in.sam> [/large /contigs <NNNN.contig.Csv> /raw <ref.fasta> /out <out.Csv> /debug]")>
     <Argument("/raw", True,
-                   AcceptTypes:={GetType(FastaFile), GetType(FastaToken)},
-                   Description:="When this command is processing the NNNNN contact data, just input the contigs csv file, this raw reference is not required for the contig information.")>
+              AcceptTypes:={GetType(FastaFile), GetType(FastaToken)},
+              Description:="When this command is processing the NNNNN contact data, just input the contigs csv file, this raw reference is not required for the contig information.")>
     Public Function ExportSAMMaps(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim out As String = args.GetValue("/out", [in].TrimSuffix & ".Maps.Csv")
@@ -448,7 +448,7 @@ Partial Module CLI
         Dim EXOIRT As String = args.GetValue("/out", [in].TrimDIR & ".Statics.EXPORT/")
 
         For Each file As String In ls - l - r - wildcards("*.Csv") <= [in]
-            Dim data As DocumentStream.File = DocumentStream.File.Load(file)
+            Dim data As IO.File = IO.File.Load(file)
             Dim out As String = EXOIRT & "/" & file.BaseName & ".Csv"
             Dim result = data.Statics
             Call result.Save(out, Encodings.ASCII)
@@ -465,7 +465,7 @@ Partial Module CLI
         Dim EXPORT As String = args.GetValue("/out", [in].TrimDIR & ".SubSets/")
 
         For Each file As String In ls - l - r - wildcards("*.Csv") <= [in]
-            Dim data As DocumentStream.File = DocumentStream.File.Load(file)
+            Dim data As IO.File = IO.File.Load(file)
             Dim out As String = EXPORT & "/" & file.BaseName & ".Csv"
             Dim columns As New List(Of String())
             Dim rev As New List(Of String())
@@ -480,8 +480,8 @@ Partial Module CLI
                 End If
             Next
 
-            Dim selects As DocumentStream.File = columns.JoinColumns
-            Dim noSelects As DocumentStream.File = rev.JoinColumns
+            Dim selects As IO.File = columns.JoinColumns
+            Dim noSelects As IO.File = rev.JoinColumns
 
             Call selects.Save(out, Encodings.ASCII)
             Call noSelects.Save(out.TrimSuffix & "-NonSelected.Csv", Encodings.ASCII)
@@ -499,7 +499,7 @@ Partial Module CLI
 
         For Each file As String In ls - l - r - wildcards("*.Csv") <= [in]
             Dim out As String = EXPORT & file.BaseName & ".Csv"
-            Dim data As DocumentStream.File = DocumentStream.File.Load(file)
+            Dim data As IO.File = IO.File.Load(file)
 
             For Each row In data.Skip(1)
                 Call row.Apply(Function(s) CInt(Val(s)), skip:=1)
@@ -521,16 +521,16 @@ Partial Module CLI
                 End If
             Next
 
-            nonZEROs = nonZEROs.MatrixTranspose.ToList
+            nonZEROs = New List(Of String())(nonZEROs.MatrixTranspose)
 
             Dim first = nonZEROs.First
-            nonZEROs = nonZEROs.Skip(1).ToList
+            nonZEROs = New List(Of String())(nonZEROs.Skip(1))
             Dim pvalues As New RowObject From {"p-value", "null"}
 
             For i As Integer = 0 To nonZEROs.Count - 1
-                Dim jdt As DocumentStream.File = {first, nonZEROs(i)}.JoinColumns
+                Dim jdt As IO.File = {first, nonZEROs(i)}.JoinColumns
                 Call jdt.PushAsTable(tbl)
-                Dim reuslt = stats.chisqTest(tbl)
+                Dim reuslt = R_api.stats.chisqTest(tbl)
                 pvalues.Add(reuslt.pvalue)
             Next
 
@@ -580,5 +580,21 @@ Partial Module CLI
         End Using
 
         Return 0
+    End Function
+
+    <ExportAPI("/Merge.FastQ", Usage:="/Merge.FastQ /in <in.DIR> [/out <out.fq>]")>
+    Public Function MergeFastQ(args As CommandLine) As Integer
+        Dim [in] As String = args("/in")
+        Dim out As String = args.GetValue("/out", [in].TrimDIR & ".fq")
+
+        Using write As StreamWriter = out.OpenWriter
+            For Each fq$ In ls - l - r - {"*.fastq", "*.fq", "*.fq1", "*.fq2"} <= [in]
+                For Each line As FastQ In Fastaq.ReadAllLines(fq$)
+                    Call write.WriteLine(line.AsReadsNode)
+                Next
+            Next
+
+            Return 0
+        End Using
     End Function
 End Module

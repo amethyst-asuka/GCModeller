@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::2a86d11d523e9cf666028d0eb2444ea4, ..\GCModeller\engine\GCModeller\EngineSystem\Services\DataAcquisition\DataAdapters\Regulators.vb"
+﻿#Region "Microsoft.VisualBasic::41d26f0ede81a419dcc05e97e3944835, ..\GCModeller\engine\GCModeller\EngineSystem\Services\DataAcquisition\DataAdapters\Regulators.vb"
 
     ' Author:
     ' 
@@ -43,7 +43,7 @@ Namespace EngineSystem.Services.DataAcquisition.DataAdapters
                                Where Not Model.MotifSites.IsNullOrEmpty
                                Select (From item
                                        In Model.MotifSites
-                                       Select (From n In item.Regulators Select n.EntityBaseType).ToArray).ToArray.MatrixToVector).ToArray.MatrixToVector
+                                       Select (From n In item.Regulators Select n.EntityBaseType).ToArray).ToArray.ToVector).ToArray.ToVector
             Me._Regulators = (From item As ObjectModels.Entity.Compound In ChunkBuffer Select item Distinct).ToArray
         End Sub
 

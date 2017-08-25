@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::bbd85a98a0f90a4fb63f76ff8e5951e9, ..\GCModeller\core\Bio.Assembly\SequenceModel\ISequenceModel.vb"
+﻿#Region "Microsoft.VisualBasic::ec174eeb41c5dbc48c3152cd91826a3b, ..\core\Bio.Assembly\SequenceModel\ISequenceModel.vb"
 
     ' Author:
     ' 
@@ -37,7 +37,7 @@ Namespace SequenceModel
     ''' </summary>
     ''' <remarks></remarks>
     Public MustInherit Class ISequenceModel : Inherits ClassObject
-        Implements I_PolymerSequenceModel
+        Implements IPolymerSequenceModel
 
 #Region "Object properties"
 
@@ -47,7 +47,7 @@ Namespace SequenceModel
         ''' <value></value>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Public Overridable Property SequenceData As String Implements I_PolymerSequenceModel.SequenceData
+        Public Overridable Property SequenceData As String Implements IPolymerSequenceModel.SequenceData
 
         ''' <summary>
         ''' This sequence is a protein type sequence?(判断这条序列是否为蛋白质序列)
@@ -95,7 +95,7 @@ Namespace SequenceModel
         ''' or <see cref="ISequenceModel.NA_CHARS_ALL">nucleotide</see>.</param>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Public Shared Function Get_CompositionVector(SequenceModel As I_PolymerSequenceModel, compositions As Char()) As Integer()
+        Public Shared Function Get_CompositionVector(SequenceModel As IPolymerSequenceModel, compositions As Char()) As Integer()
             Dim CompositionVector As Integer() = New Integer(compositions.Length - 1) {}
             Dim SequenceData As Char() = SequenceModel.SequenceData.ToUpper
 
@@ -114,7 +114,7 @@ Namespace SequenceModel
         ''' <param name="SequenceData"></param>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Public Shared Function IsProteinSource(SequenceData As I_PolymerSequenceModel) As Boolean
+        Public Shared Function IsProteinSource(SequenceData As IPolymerSequenceModel) As Boolean
             Dim LQuery = (From c As Char
                           In SequenceData.SequenceData.ToUpper
                           Where c <> "N"c AndAlso AA_CHARS_ALL.IndexOf(c) > -1

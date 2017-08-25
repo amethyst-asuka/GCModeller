@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::281607cdd4970245a5c49f1b0ac26879, ..\GCModeller\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\ExportServices\gbEntry.vb"
+﻿#Region "Microsoft.VisualBasic::56807975ec1018a1fb3e8334f0ae8e08, ..\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\ExportServices\gbEntry.vb"
 
     ' Author:
     ' 
@@ -31,6 +31,7 @@ Imports SMRUCC.genomics.Assembly.NCBI.GenBank.GBFF.Keywords.FEATURES
 Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports SMRUCC.genomics.SequenceModel.NucleotideModels
+Imports Microsoft.VisualBasic.Language
 
 Namespace Assembly.NCBI.GenBank.CsvExports
 
@@ -38,7 +39,7 @@ Namespace Assembly.NCBI.GenBank.CsvExports
     ''' Genbank数据库的简要信息Csv表格
     ''' </summary>
     ''' <remarks></remarks>
-    Public Class gbEntryBrief : Implements sIdEnumerable
+    Public Class gbEntryBrief : Implements INamedValue
 
         Public Property Definition As String
         Public Property Length As Integer
@@ -46,7 +47,7 @@ Namespace Assembly.NCBI.GenBank.CsvExports
         ''' 基因组的编号
         ''' </summary>
         ''' <returns></returns>
-        Public Property Locus As String Implements sIdEnumerable.Identifier
+        Public Property Locus As String Implements INamedValue.Key
         Public Property AccessionID As String
         Public Property GI As String
         Public Property Organism As String
@@ -142,7 +143,7 @@ Namespace Assembly.NCBI.GenBank.CsvExports
             GBKEntryBrief.Locus = gbk.Locus.AccessionID
             GBKEntryBrief.Organism = gbk.Source.SpeciesName
             GBKEntryBrief.Submit = gbk.Locus.UpdateTime
-            GBKEntryBrief.Strain = gbk.Features.SourceFeature.Query("strain")
+            GBKEntryBrief.Strain = gbk.Features.source.Query("strain")
             GBKEntryBrief.Taxon = gbk.Taxon
             GBKEntryBrief.NumberOfGenes = (From item In gbk.Features._innerList.AsParallel Where String.Equals("gene", item.KeyName, StringComparison.OrdinalIgnoreCase) Select 1).ToArray.Length
             GBKEntryBrief.PSEUDOProteins = (From Feature In gbk.Features._innerList.AsParallel
@@ -151,13 +152,13 @@ Namespace Assembly.NCBI.GenBank.CsvExports
 
             GBKEntryBrief.CDSsWithFunctionalAssignment = CDS.Length - GBKEntryBrief.ConservedHypotheticalCDSs - GBKEntryBrief.HypotheticalCDSs
 
-            Dim p As Integer = 0
-            If p <= gbk.Reference.ReferenceList.Length - 1 Then GBKEntryBrief.Reference1 = gbk.Reference.ReferenceList(p.MoveNext).ToString
-            If p <= gbk.Reference.ReferenceList.Length - 1 Then GBKEntryBrief.Reference2 = gbk.Reference.ReferenceList(p.MoveNext).ToString
-            If p <= gbk.Reference.ReferenceList.Length - 1 Then GBKEntryBrief.Reference3 = gbk.Reference.ReferenceList(p.MoveNext).ToString
-            If p <= gbk.Reference.ReferenceList.Length - 1 Then GBKEntryBrief.Reference4 = gbk.Reference.ReferenceList(p.MoveNext).ToString
-            If p <= gbk.Reference.ReferenceList.Length - 1 Then GBKEntryBrief.Reference5 = gbk.Reference.ReferenceList(p.MoveNext).ToString
-            If p <= gbk.Reference.ReferenceList.Length - 1 Then GBKEntryBrief.Reference6 = gbk.Reference.ReferenceList(p.MoveNext).ToString
+            Dim p As int = 0
+            If p <= gbk.Reference.ReferenceList.Length - 1 Then GBKEntryBrief.Reference1 = gbk.Reference.ReferenceList(++p).ToString
+            If p <= gbk.Reference.ReferenceList.Length - 1 Then GBKEntryBrief.Reference2 = gbk.Reference.ReferenceList(++p).ToString
+            If p <= gbk.Reference.ReferenceList.Length - 1 Then GBKEntryBrief.Reference3 = gbk.Reference.ReferenceList(++p).ToString
+            If p <= gbk.Reference.ReferenceList.Length - 1 Then GBKEntryBrief.Reference4 = gbk.Reference.ReferenceList(++p).ToString
+            If p <= gbk.Reference.ReferenceList.Length - 1 Then GBKEntryBrief.Reference5 = gbk.Reference.ReferenceList(++p).ToString
+            If p <= gbk.Reference.ReferenceList.Length - 1 Then GBKEntryBrief.Reference6 = gbk.Reference.ReferenceList(++p).ToString
 
 
             GBKEntryBrief.Number_of_mobile_element = (From f In gbk.Features._innerList.AsParallel Where String.Equals(f.KeyName, "mobile_element", StringComparison.OrdinalIgnoreCase) Select 1).ToArray.Length
@@ -208,10 +209,10 @@ Namespace Assembly.NCBI.GenBank.CsvExports
 
         Public Overloads Shared Function Build(gbk As NCBI.GenBank.GBFF.File) As Plasmid
             Dim Plasmid As Plasmid = ConvertObject(Of Plasmid)(gbk)
-            Plasmid.PlasmidID = gbk.Features.SourceFeature.Query("plasmid")
-            Plasmid.Host = gbk.Features.SourceFeature.Query("host")
-            Plasmid.Country = gbk.Features.SourceFeature.Query("country")
-            Plasmid.isolation_source = gbk.Features.SourceFeature.Query("isolation_source")
+            Plasmid.PlasmidID = gbk.Features.source.Query("plasmid")
+            Plasmid.Host = gbk.Features.source.Query("host")
+            Plasmid.Country = gbk.Features.source.Query("country")
+            Plasmid.isolation_source = gbk.Features.source.Query("isolation_source")
 
             Return Plasmid
         End Function

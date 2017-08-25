@@ -1,34 +1,35 @@
 ﻿#Region "Microsoft.VisualBasic::72d63f0d21d18eb39f136df3b97a1717, ..\workbench\Model_Repository\Tables\Regprecise.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports System.Data.Linq.Mapping
-Imports System.Data.SQLite.Linq.QueryBuilder
+' Imports System.Data.SQLite.Linq.QueryBuilder
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
+Imports Oracle.LinuxCompatibility.MySQL
 Imports SMRUCC.genomics.Data.Regprecise
 Imports SMRUCC.genomics.SequenceModel
 
@@ -73,7 +74,7 @@ Public Class Regprecise : Inherits DbFileSystemObject : Implements DbFileSystemO
             New Regprecise With {
                 .Family = Fasta.Family,
                 .MD5Hash = MD5,
-                .Definition = Fasta.Definition.TrimmingSQLConserved,
+                .Definition = Fasta.Definition.MySqlEscaping,
                 .LocusID = Fasta.LocusTag,
                 .Regulog = Fasta.Regulog,
                 .SpeciesCode = Fasta.SpeciesCode,
@@ -91,18 +92,18 @@ End Class
 ''' > xcb:XC_1184|Family|Regulates|Regulog|Definition
 ''' </summary>
 Public Class Regulator
-    Implements sIdEnumerable, I_PolymerSequenceModel
+    Implements INamedValue, IPolymerSequenceModel
 
     ''' <summary>
     ''' &lt;(KEGG)species_code>:&lt;locusTag>
     ''' </summary>
     ''' <returns></returns>
-    Public Property KEGG As String Implements sIdEnumerable.Identifier
+    Public Property KEGG As String Implements INamedValue.Key
     Public Property Sites As String()
     Public Property Family As String
     Public Property Regulog As String
     Public Property Definition As String
-    Public Property SequenceData As String Implements I_PolymerSequenceModel.SequenceData
+    Public Property SequenceData As String Implements IPolymerSequenceModel.SequenceData
     Public Property Species As String
     ''' <summary>
     ''' identifier of regulator gene in MicrobesOnline database 

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::d25f3bcb8d72460ebb0310099f095685, ..\GCModeller\sub-system\PLAS.NET\SSystem\System\Elements\Var.vb"
+﻿#Region "Microsoft.VisualBasic::84d93a4505dbf789158eaffc40dfd8f8, ..\GCModeller\sub-system\PLAS.NET\SSystem\System\Elements\Var.vb"
 
     ' Author:
     ' 
@@ -27,9 +27,10 @@
 #End Region
 
 Imports System.Xml.Serialization
-Imports Microsoft.VisualBasic.Mathematical.diffEq
+Imports Microsoft.VisualBasic.Math.Calculus
 Imports SMRUCC.genomics.GCModeller.Framework.Kernel_Driver
 Imports SMRUCC.genomics.Model.SBML.Level2.Elements
+Imports MathExpression = Microsoft.VisualBasic.Math.Scripting.Expression
 
 Namespace Kernel.ObjectModels
 
@@ -70,12 +71,12 @@ Namespace Kernel.ObjectModels
         ''' <param name="strData"></param>
         ''' <param name="val"></param>
         ''' <returns></returns>
-        Public Shared Function TryParse(strData As String, val As Mathematical.Expression) As var
+        Public Shared Function TryParse(strData As String, val As MathExpression) As var
             Dim tokens = strData.GetTagValue("=", trim:=True)
 
             Return New var With {
                 .UniqueId = tokens.Name,
-                .Value = val.Evaluation(tokens.x)
+                .Value = val.Evaluation(tokens.Value)
             }
         End Function
 
@@ -90,7 +91,7 @@ Namespace Kernel.ObjectModels
 
             Return New var With {
                 .UniqueId = Token.Name,
-                .Value = Val(Token.x)
+                .Value = Val(Token.Value)
             }
         End Operator
     End Class

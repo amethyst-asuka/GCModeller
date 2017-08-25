@@ -1,39 +1,38 @@
-﻿#Region "Microsoft.VisualBasic::70c9bba1da6e85fb47bc22ad69eb7538, ..\GCModeller\CLI_tools\MEME\Cli\MotifHits.vb"
+﻿#Region "Microsoft.VisualBasic::6ee11fad373de79826035b1231289b13, ..\GCModeller\CLI_tools\MEME\Cli\MotifHits.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
+Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Linq.Extensions
-Imports Microsoft.VisualBasic.Parallel
 Imports Microsoft.VisualBasic.Parallel.Linq
 Imports Microsoft.VisualBasic.Serialization.JSON
 Imports SMRUCC.genomics
@@ -43,17 +42,17 @@ Imports SMRUCC.genomics.Analysis.SequenceTools.SequencePatterns.Motif
 Imports SMRUCC.genomics.Assembly.DOOR
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat
+Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.GFF
 Imports SMRUCC.genomics.ComponentModel.Loci
 Imports SMRUCC.genomics.Data.Regprecise
 Imports SMRUCC.genomics.Data.Regprecise.WebServices
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite
-Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.FootprintTraceAPI
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.GenomeMotifFootPrints
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.MotifScans
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.Similarity.TOMQuery
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat
-Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH
+Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH.Abstract
 Imports SMRUCC.genomics.SequenceModel.FASTA
 Imports SMRUCC.genomics.SequenceModel.NucleotideModels
 
@@ -77,7 +76,7 @@ Partial Module CLI
                          Let sites As Site() = x.Value.Sites
                          Let regs As String() = (From site As Site
                                                  In sites
-                                                 Select RegDb.GetRegulators(site.Name)).MatrixAsIterator.Distinct.ToArray
+                                                 Select RegDb.GetRegulators(site.Name)).IteratesALL.Distinct.ToArray
                          Select x, regs).ToArray
         Dim mapsRegulates = (From x In Regulates
                              Let mapped As bbhMappings() = (From map As bbhMappings In bbhMaps
@@ -93,7 +92,7 @@ Partial Module CLI
                        Where sourceLDM.ContainsKey(hit.Query) AndAlso
                            LDM.ContainsKey(hit.Subject)
                        Let query = sourceLDM(hit.Query), subject = LDM(hit.Subject)
-                       Select __buildRegulates(query, subject, PTT, correlations, mapsRegulates)).MatrixAsIterator.TrimNull
+                       Select __buildRegulates(query, subject, PTT, correlations, mapsRegulates)).IteratesALL.TrimNull
         Return results.SaveTo(out).CLICode
     End Function
 
@@ -116,7 +115,7 @@ Partial Module CLI
             ' 没有被Mapping到的调控因子，则只返回位点数据
             Return query.Sites.ToArray(Function(x) __siteToFootprint(x, query.Uid, motif, subject, PTT))
         Else
-            Return query.Sites.ToArray(Function(x) __siteToRegulation(x, query.Uid, motif, subject, PTT, correlates, mapsRegulates)).MatrixToVector
+            Return query.Sites.ToArray(Function(x) __siteToRegulation(x, query.Uid, motif, subject, PTT, correlates, mapsRegulates)).ToVector
         End If
     End Function
 
@@ -460,10 +459,10 @@ Partial Module CLI
 
         If gffFile.FileExists Then
             Dim dist As Integer = args.GetValue("/atg-dist", 250)
-            Dim gff As GFF = TabularFormat.GFF.LoadDocument(gffFile)
+            Dim gff As GFFTable = GFFTable.LoadDocument(gffFile)
             Dim list As New List(Of MotifLog)
 
-            gff = New GFF(gff, Features.CDS)
+            gff = New GFFTable(gff, Features.CDS)
 
             For Each x As MotifLog In result
                 Dim rel = gff.GetRelatedGenes(x.MappingLocation,, dist)

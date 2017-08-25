@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::dcd8dceb07fff770788f246010f84e88, ..\GCModeller\analysis\SequenceToolkit\SequencePatterns\ClustalVisual.vb"
+﻿#Region "Microsoft.VisualBasic::4115425a7046c1dad932c9b234204b15, ..\GCModeller\analysis\SequenceToolkit\SequencePatterns\ClustalVisual.vb"
 
     ' Author:
     ' 
@@ -28,14 +28,14 @@
 
 Imports System.Drawing
 Imports System.Runtime.CompilerServices
-Imports SMRUCC.genomics.SequenceModel
-Imports SMRUCC.genomics.SequenceModel.Patterns
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel.SchemaMaps
 Imports Microsoft.VisualBasic.Imaging
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Scripting.MetaData
+Imports SMRUCC.genomics.SequenceModel
+Imports SMRUCC.genomics.SequenceModel.Patterns
 
 ''' <summary>
 ''' Visualization for the result of Clustal multiple sequence alignment.
@@ -43,7 +43,7 @@ Imports Microsoft.VisualBasic.Scripting.MetaData
 ''' </summary>
 ''' <remarks></remarks>
 ''' 
-<[PackageNamespace]("MultipleAlignment.Visualization",
+<Package("MultipleAlignment.Visualization",
                     Category:=APICategories.UtilityTools,
                     Description:="Data visualization for the Clustal multiple alignment output fasta file.",
                     Publisher:="amethyst.asuka@gcmodeller.org",
@@ -110,7 +110,7 @@ Public Module ClustalVisual
                                fa.Title
                            Order By l Descending).First
 
-        Dim titleFont As Font = New Font(Ubuntu, FontSize)
+        Dim titleFont As Font = New Font(FontFace.Ubuntu, FontSize)
         Dim StringSize As Size = titleMaxLen.Title.MeasureString(titleFont)
         Dim DotSize As Integer = ClustalVisual.DotSize
 
@@ -120,14 +120,14 @@ Public Module ClustalVisual
             aln.Max(Function(fa) fa.Length) * DotSize + StringSize.Width + 2 * Margin,
             (aln.NumberOfFasta + 1) * DotSize + 2.5 * Margin)
 
-        Dim gdi As GDIPlusDeviceHandle = grSize.CreateGDIDevice
+        Dim gdi As Graphics2D = grSize.CreateGDIDevice
         Dim X As Integer = 0.5 * Margin + StringSize.Width + 10
         Dim Y As Integer = Margin
-        Dim DotFont As New Font(Ubuntu, FontSize + 1, FontStyle.Bold)
+        Dim DotFont As New Font(FontFace.Ubuntu, FontSize + 1, FontStyle.Bold)
         Dim ConservedSites As Integer() =
             LinqAPI.Exec(Of Integer) <= From site As SeqValue(Of SimpleSite)
                                         In Patterns.Frequency(aln).Residues.SeqIterator
-                                        Where site.obj.IsConserved
+                                        Where site.value.IsConserved
                                         Select site.i
         Dim idx As Integer = 0
 

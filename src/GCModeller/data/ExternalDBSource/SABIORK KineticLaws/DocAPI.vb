@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::ca6142fb7b2643fb279d6bac8b5508ec, ..\GCModeller\data\ExternalDBSource\SABIORK KineticLaws\DocAPI.vb"
+﻿#Region "Microsoft.VisualBasic::0304c67b1a8c9ba4de93c8b258d420f1, ..\GCModeller\data\ExternalDBSource\SABIORK KineticLaws\DocAPI.vb"
 
     ' Author:
     ' 
@@ -26,22 +26,18 @@
 
 #End Region
 
-Imports System.Text
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine.Reflection
-Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.Data.csv.Extensions
-Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports Microsoft.VisualBasic.IEnumerations
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Scripting.MetaData
-Imports SMRUCC.genomics.ComponentModel.EquaionModel.DefaultTypes
+Imports Microsoft.VisualBasic.Text.HtmlParser
 Imports SMRUCC.genomics.Data.SabiorkKineticLaws.TabularDump
 
 Namespace SabiorkKineticLaws
 
-    <PackageNamespace("Sabio-rk.DbAPI")>
+    <Package("Sabio-rk.DbAPI")>
     Public Module DocAPI
 
         <ExportAPI("GET.Identifier")>

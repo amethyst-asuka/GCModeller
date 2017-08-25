@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::f25e49f728c5b9b1bf23180b55ff933d, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\ScriptBuilder\RPackage\Graphics\gplots\heatmap2OUT.vb"
+﻿#Region "Microsoft.VisualBasic::ec950fe53315cf391ad0aeb0f7773861, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\ScriptBuilder\RPackage\Graphics\gplots\heatmap2OUT.vb"
 
     ' Author:
     ' 
@@ -31,7 +31,7 @@ Imports Microsoft.VisualBasic.ComponentModel.DataStructures
 Imports Microsoft.VisualBasic.ComponentModel.DataStructures.BinaryTree
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
-Imports Microsoft.VisualBasic.Serialization
+Imports Microsoft.VisualBasic.Scripting.Runtime
 Imports Microsoft.VisualBasic.Serialization.JSON
 
 Namespace SymbolBuilder.packages.gplots
@@ -77,7 +77,7 @@ Namespace SymbolBuilder.packages.gplots
         Public Property colorTable As colorTable()
 
         Public Shared Function IndParser(result As String) As Integer()
-            Return Regex.Matches(result, "\d+").ToArray(Function(s) Scripting.CastInteger(s))
+            Return Regex.Matches(result, "\d+").ToArray(Function(s) CastInteger(s))
         End Function
 
         Public Shared Function MeansParser(result As String) As Double()
@@ -196,7 +196,7 @@ Namespace SymbolBuilder.packages.gplots
                 From lp As SeqValue(Of String)
                 In colors.SeqIterator
                 Select New colorTable With {
-                    .color = lp.obj,
+                    .color = lp.value,
                     .low = lows(lp.i),
                     .high = highs(lp.i)
                 }

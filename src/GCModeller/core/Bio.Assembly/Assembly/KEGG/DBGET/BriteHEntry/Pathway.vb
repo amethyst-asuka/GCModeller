@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::d0aee2fbe807627e0a24021e885b9336, ..\GCModeller\core\Bio.Assembly\Assembly\KEGG\DBGET\BriteHEntry\Pathway.vb"
+﻿#Region "Microsoft.VisualBasic::b14219e70b16bec145dbc261023601df, ..\core\Bio.Assembly\Assembly\KEGG\DBGET\BriteHEntry\Pathway.vb"
 
     ' Author:
     ' 
@@ -27,14 +27,16 @@
 #End Region
 
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.ComponentModel
+Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
+Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Text.HtmlParser
 
 Namespace Assembly.KEGG.DBGET.BriteHEntry
 
     ''' <summary>
-    ''' The brief entry information for the pathway objects in the KEGG database.(KEGG数据库之中的代谢途径对象的入口点信息) 
+    ''' The brief entry information for the pathway objects in the KEGG database.
+    ''' (KEGG数据库之中的代谢途径对象的分类以及入口点信息) 
     ''' </summary>
     ''' <remarks></remarks>
     Public Class Pathway : Implements IReadOnlyId
@@ -55,7 +57,7 @@ Namespace Assembly.KEGG.DBGET.BriteHEntry
         Public Property Category As String
 
         ''' <summary>
-        ''' C
+        ''' **C**, example as: ``01100  Metabolic pathways``
         ''' </summary>
         ''' <value></value>
         ''' <returns></returns>
@@ -72,9 +74,7 @@ Namespace Assembly.KEGG.DBGET.BriteHEntry
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Shared Function LoadFromResource() As Pathway()
-            Dim TempFile As String = App.AppSystemTemp & "/KEGG_PATHWAYS.txt"
-            Call IO.File.WriteAllText(TempFile, My.Resources.br08901, encoding:=System.Text.Encoding.ASCII)
-            Return LoadData(TempFile)
+            Return LoadStream(My.Resources.br08901)
         End Function
 
         Public Shared Function LoadDictionary() As Dictionary(Of String, Pathway)
@@ -99,59 +99,79 @@ Namespace Assembly.KEGG.DBGET.BriteHEntry
         ''' <returns></returns>
         ''' <remarks></remarks>
         Public Shared Function LoadData(path As String) As Pathway()
-            Dim Chunkbuffer As String() = (From strLine As String In IO.File.ReadAllLines(path)
-                                           Where Not String.IsNullOrEmpty(strLine) AndAlso
-                                               (strLine.First = "A"c OrElse strLine.First = "B"c OrElse strLine.First = "C"c)
-                                           Select strLine).ToArray
-            Dim [Class] As String = "", Category As String = ""
-            Dim ItemList As New List(Of Pathway)
+            Return LoadStream(path.ReadAllText)
+        End Function
 
-            For i As Integer = 0 To Chunkbuffer.Length - 1
-                Dim strLine As String = Chunkbuffer(i)
-                Dim Id As Char = strLine.First
+        Public Shared Function LoadStream(text$) As Pathway()
+            Dim lines$() = LinqAPI.Exec(Of String) <=
+                From line As String
+                In text.lTokens
+                Where Not String.IsNullOrEmpty(line) AndAlso
+                    (line.First = "A"c OrElse
+                     line.First = "B"c OrElse
+                     line.First = "C"c)
+                Select line
 
-                strLine = Mid(strLine, 2).Trim
+            Dim [class] As String = "", category As String = ""
+            Dim out As New List(Of Pathway)
+
+            For Each line As String In lines
+                Dim Id As Char = line.First
+
+                line = Mid(line, 2).Trim
 
                 If Id = "A"c Then
-                    [Class] = BriteHText.NormalizePath(strLine.GetValue)
+                    [class] = BriteHText.NormalizePath(line.GetValue)
+
                 ElseIf Id = "B"c Then
-                    Category = BriteHText.NormalizePath(strLine)
+                    category = BriteHText.NormalizePath(line)
+
                 ElseIf Id = "C"c Then
-                    Dim IdNum As String = Regex.Match(strLine, "\d{5}").Value
-                    strLine = strLine.Replace(IdNum, "").Trim
-                    ItemList += New Pathway With {
-                        .Category = Category,
-                        .Class = [Class],
+                    Dim IdNum As String = Regex.Match(line, "\d{5}").Value
+
+                    line = Mid(line, IdNum.Length + 1).Trim
+                    out += New Pathway With {
+                        .Category = category,
+                        .Class = [class],
                         .Entry = New KeyValuePair With {
                             .Key = IdNum,
-                            .Value = strLine
+                            .Value = line
                         }
                     }
                 End If
             Next
 
-            Return ItemList.ToArray
+            Return out.ToArray
         End Function
 
         Public Shared Function CombineDIR(entry As Pathway, ParentDIR As String) As String
             Return String.Join("/", ParentDIR, [Module].TrimPath(entry.Class), [Module].TrimPath(entry.Category))
         End Function
 
+        ''' <summary>
+        ''' <see cref="Entry"/>::<see cref="KeyValuePair.Key"/>, ``\d+``
+        ''' </summary>
+        ''' <returns></returns>
         Public ReadOnly Property EntryId As String Implements IReadOnlyId.Identity
             Get
                 Return Entry.Key
             End Get
         End Property
 
-        Public Shared Function GetClass(EntryID As String, data As Pathway()) As Pathway
-            Dim MatchID As String = (From m As Match
-                                     In Regex.Matches(EntryID, "\d{5}")
-                                     Select m.Value).Last
-            Dim LQuery As Pathway = (From pwy As Pathway
-                                     In data
-                                     Where String.Equals(MatchID, pwy.Entry.Key)
-                                     Select pwy).FirstOrDefault
-            Return LQuery
+        ''' <summary>
+        ''' 
+        ''' </summary>
+        ''' <param name="KO"></param>
+        ''' <param name="data">``<see cref="Pathway.EntryId"/> -> <see cref="Pathway"/>``</param>
+        ''' <returns></returns>
+        Public Shared Function GetClass(KO As String, data As Dictionary(Of String, Pathway)) As Pathway
+            Dim MatchID As String = Regex.Matches(KO, "\d{5}").ToArray.Last
+
+            If data.ContainsKey(MatchID) Then
+                Return data(MatchID)
+            Else
+                Return Nothing
+            End If
         End Function
     End Class
 End Namespace

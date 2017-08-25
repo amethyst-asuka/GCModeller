@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::5734dd6b8a2d2f059a2c9ea7f0341313, ..\GCModeller\CLI_tools\GCModeller\CLI\DataVisualization.vb"
+﻿#Region "Microsoft.VisualBasic::55ac97dda7b5dfbc4c0bdaa043c82763, ..\GCModeller\CLI_tools\GCModeller\CLI\DataVisualization.vb"
 
 ' Author:
 ' 
@@ -32,6 +32,7 @@ Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.Data.csv.Extensions
 Imports Microsoft.VisualBasic.Imaging
+Imports Microsoft.VisualBasic.Imaging.Driver
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Text
 Imports SMRUCC.genomics.Analysis.SequenceTools.SequencePatterns
@@ -45,6 +46,7 @@ Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.BLASTOutput
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.NCBIBlastResult
 Imports SMRUCC.genomics.Interops.Visualize.Phylip
 Imports SMRUCC.genomics.SequenceModel
+Imports SMRUCC.genomics.SequenceModel.FASTA
 Imports SMRUCC.genomics.Visualize
 Imports SMRUCC.genomics.Visualize.ComparativeAlignment
 Imports SMRUCC.genomics.Visualize.ComparativeGenomics.ModelAPI
@@ -53,6 +55,7 @@ Imports SMRUCC.genomics.Visualize.NCBIBlastResult
 Partial Module CLI
 
     <ExportAPI("/Draw.Comparative", Usage:="/Draw.Comparative /in <meta.Xml> /PTT <PTT_DIR> [/out <outDIR>]")>
+    <Group(CLIGrouping.DataVisualizeTools)>
     Public Function DrawMultipleAlignments(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim PTT As String = args("/PTT")
@@ -63,6 +66,7 @@ Partial Module CLI
 
     <ExportAPI("--Drawing.ClustalW",
                Usage:="--Drawing.ClustalW /in <align.fasta> [/out <out.png> /dot.Size 10]")>
+    <Group(CLIGrouping.DataVisualizeTools)>
     Public Function DrawClustalW(args As CommandLine) As Integer
         Dim inFile As String = args("/in")
         Dim out As String = args.GetValue("/out", inFile.TrimSuffix & ".png")
@@ -70,39 +74,6 @@ Partial Module CLI
         Call ClustalVisual.SetDotSize(args.GetValue("/dot.size", 10))
         Dim res As Image = ClustalVisual.InvokeDrawing(aln)
         Return res.SaveAs(out, ImageFormats.Png)
-    End Function
-
-    <ExportAPI("--Drawing.ChromosomeMap",
-               Info:="Drawing the chromosomes map from the PTT object as the basically genome information source.",
-               Usage:="--Drawing.ChromosomeMap /ptt <genome.ptt> [/conf <config.inf> /out <dir.export> /COG <cog.csv>]")>
-    Public Function DrawingChrMap(args As CommandLine) As Integer
-        Dim PTT = args.GetObject("/ptt", AddressOf TabularFormat.PTT.Load)
-        Dim confInf As String = args("/conf")
-        Dim out As String = args.GetValue("/out", App.CurrentDirectory)
-        Dim config As ChromosomeMap.Configurations
-
-        If String.IsNullOrEmpty(confInf) Then
-            confInf = out & "/config.inf"
-        End If
-
-        If Not confInf.FileExists Then
-Create:     config = ChromosomeMap.GetDefaultConfiguration(confInf)
-        Else
-            Try
-                config = ChromosomeMap.LoadConfig(confInf)
-            Catch ex As Exception
-                GoTo Create
-            End Try
-        End If
-
-        Dim COG As String = args("/COG")
-        Dim COGProfiles As MyvaCOG() = COG.LoadCsv(Of MyvaCOG).ToArray
-        Dim Device = ChromosomeMap.CreateDevice(config)
-        Dim Model = ChromosomeMap.FromPTT(PTT, config)
-        Model = ChromosomeMap.ApplyCogColorProfile(Model, COGProfiles)
-        Dim res = Device.InvokeDrawing(Model)
-
-        Return ChromosomeMap.SaveImage(res, out, "tiff")
     End Function
 
     <ExportAPI("--Gendist.From.Self.Overviews", Usage:="--Gendist.From.Self.Overviews /blast_out <blast_out.txt>")>
@@ -144,40 +115,14 @@ Create:     config = ChromosomeMap.GetDefaultConfiguration(confInf)
         Return LQuery.FlushAllLines(path, Encodings.ASCII).CLICode
     End Function
 
-    <ExportAPI("/Visual.BBH",
-               Usage:="/Visual.BBH /in <bbh.Xml> /PTT <genome.PTT> /density <genomes.density.DIR> [/limits <sp-list.txt> /out <image.png>]")>
-    <Argument("/PTT", False,
-                   Description:="A directory which contains all of the information data files for the reference genome, 
-                   this directory would includes *.gb, *.ptt, *.gff, *.fna, *.faa, etc.")>
-    Public Function BBHVisual(args As CommandLine) As Integer
-        Dim [in] As String = args - "/in"
-        Dim PTT As String = args("/PTT")
-        Dim out As String = args.GetValue("/out", [in].TrimSuffix & ".visualize.png")
-        Dim meta As Analysis.BestHit = [in].LoadXml(Of Analysis.BestHit)
-        Dim limits As String() = args("/limits").ReadAllLines
-        Dim density As String = args("/density")
-
-        If Not limits.IsNullOrEmpty Then
-            meta = meta.Take(limits)
-        End If
-
-        Dim scores As Func(Of Analysis.Hit, Double) =
-            BBHMetaAPI.DensityScore(density, scale:=20)
-        Dim PTTdb As PTT = TabularFormat.PTT.Load(PTT)
-        Dim table As AlignmentTable =
-            BBHMetaAPI.DataParser(meta,
-                                  PTTdb,
-                                  visualGroup:=True,
-                                  scoreMaps:=scores)
-
-        Call $"Min:={table.Hits.Min(Function(x) x.Identity)}, Max:={table.Hits.Max(Function(x) x.Identity)}".__DEBUG_ECHO
-
-        Dim densityQuery As ICOGsBrush = ColorSchema.IdentitiesBrush(scores)
-        Dim res As Image = BlastVisualize.InvokeDrawing(table,
-                                                        PTTdb,
-                                                        AlignmentColorSchema:="identities",
-                                                        IdentityNoColor:=False,
-                                                        queryBrush:=densityQuery)
-        Return res.SaveAs(out, ImageFormats.Png).CLICode
+    <ExportAPI("/Plot.GC", Usage:="/Plot.GC /in <mal.fasta> [/plot <gcskew/gccontent> /colors <Jet> /out <out.png>]")>
+    <Group(CLIGrouping.DataVisualizeTools)>
+    Public Function PlotGC(args As CommandLine) As Integer
+        Dim [in] As String = args("/in")
+        Dim plot As String = args.GetValue("/plot", "gcskew")
+        Dim colors As String = args.GetValue("/colors", "Jet")
+        Dim out As String = args.GetValue("/out", [in].TrimSuffix & "-" & plot & "-" & colors & ".png")
+        Dim img As GraphicsData = GCPlot.PlotGC(New FastaFile([in]), plot, 50, 50,,,,, colors:=colors)
+        Return img.Save(out)
     End Function
 End Module

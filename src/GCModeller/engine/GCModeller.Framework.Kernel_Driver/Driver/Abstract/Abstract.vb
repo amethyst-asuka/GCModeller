@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::5e69880cab4248d56057a3ffc4622e63, ..\GCModeller\engine\GCModeller.Framework.Kernel_Driver\Driver\Abstract\Abstract.vb"
+﻿#Region "Microsoft.VisualBasic::8841d511b23ba15b4e2c4d82b86aa1fb, ..\GCModeller\engine\GCModeller.Framework.Kernel_Driver\Driver\Abstract\Abstract.vb"
 
     ' Author:
     ' 
@@ -29,7 +29,7 @@
 Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 
-Public Interface IObjectStatus : Inherits IAddressHandle
+Public Interface IObjectStatus : Inherits IAddressOf
 
     ReadOnly Property Status As Boolean
     Property locusId As String
@@ -47,7 +47,7 @@ End Class
 ''' (只能取值基本的数值类型(<see cref="Integer"></see>, <see cref="Double"></see>, <see cref="Long"></see>, <see cref="Boolean"></see>))</typeparam>
 ''' <remarks></remarks>
 Public Interface IDynamicsExpression(Of DataType)
-    Inherits IAddressHandle, sIdEnumerable
+    Inherits IAddressOf, INamedValue
 
 #Region "Interface"
     ''' <summary>

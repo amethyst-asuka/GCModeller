@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::a53da6383abd79a9cec201a962d5c52d, ..\GCModeller\analysis\SequenceToolkit\Pfam-HMM\PfamHMMScan\Pfam.hmm\ActiveSite.vb"
+﻿#Region "Microsoft.VisualBasic::6c3b636d0e0bf804151f929f70955f9c, ..\GCModeller\analysis\SequenceToolkit\Pfam-HMM\PfamHMMScan\Pfam.hmm\ActiveSite.vb"
 
     ' Author:
     ' 
@@ -35,9 +35,9 @@ Imports Microsoft.VisualBasic.Serialization.JSON
 ''' <summary>
 ''' active_site.dat
 ''' </summary>
-Public Structure ActiveSite : Implements sIdEnumerable
+Public Structure ActiveSite : Implements INamedValue
 
-    Public Property ID As String Implements sIdEnumerable.Identifier
+    Public Property ID As String Implements INamedValue.Key
     Public Property RE As Dictionary(Of String, RE)
     Public Property AL As Alignment()
 
@@ -91,8 +91,8 @@ Public Structure ActiveSite : Implements sIdEnumerable
     End Function
 End Structure
 
-Public Structure RE : Implements sIdEnumerable
-    Public Property ID As String Implements sIdEnumerable.Identifier
+Public Structure RE : Implements INamedValue
+    Public Property ID As String Implements INamedValue.Key
     Public Property Value As Integer()
 
     Public Overrides Function ToString() As String
@@ -100,8 +100,8 @@ Public Structure RE : Implements sIdEnumerable
     End Function
 End Structure
 
-Public Structure Alignment : Implements sIdEnumerable
-    Public Property ID As String Implements sIdEnumerable.Identifier
+Public Structure Alignment : Implements INamedValue
+    Public Property ID As String Implements INamedValue.Key
     Public Property MAL As String
 
     Sub New(s As String)

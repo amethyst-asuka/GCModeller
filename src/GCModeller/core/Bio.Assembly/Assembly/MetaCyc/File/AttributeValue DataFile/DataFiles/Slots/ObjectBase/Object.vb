@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::558558b339cd63565435fd1688b3dc83, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Slots\ObjectBase\Object.vb"
+﻿#Region "Microsoft.VisualBasic::f1ab3556fed97fa40785e792c2fe02f5, ..\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Slots\ObjectBase\Object.vb"
 
     ' Author:
     ' 
@@ -31,6 +31,7 @@ Imports System.Xml.Serialization
 Imports SMRUCC.genomics.Assembly.MetaCyc.File.DataFiles.Reflection
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Microsoft.VisualBasic
+Imports Microsoft.VisualBasic.Language
 
 Namespace Assembly.MetaCyc.File.DataFiles.Slots
 
@@ -39,10 +40,10 @@ Namespace Assembly.MetaCyc.File.DataFiles.Slots
     ''' </summary>
     ''' <remarks></remarks>
     <XmlType("MetaCyc-Slot-Object")>
-    Public Class [Object] : Implements sIdEnumerable
+    Public Class [Object] : Implements INamedValue
 
         <MetaCycField(Name:="UNIQUE-ID")> <XmlAttribute>
-        Public Overridable Property Identifier As String Implements sIdEnumerable.Identifier
+        Public Overridable Property Identifier As String Implements INamedValue.Key
 
         ''' <summary>
         ''' (Common-Name) This slot defines the primary name by which an object is known 
@@ -177,10 +178,10 @@ Namespace Assembly.MetaCyc.File.DataFiles.Slots
                 If Not _innerHash.ContainsKey(QueryString) Then
                     Return If(emptyNull, New List(Of String), Nothing)
                 Else
-                    Return _innerHash(QueryString).ToList
+                    Return _innerHash(QueryString).AsList
                 End If
             Else
-                Return _innerHash(Key).ToList
+                Return _innerHash(Key).AsList
             End If
         End Function
 

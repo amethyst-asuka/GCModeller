@@ -1,40 +1,40 @@
-﻿#Region "Microsoft.VisualBasic::3b71e116b7d348bfb253d80bf3098969, ..\GCModeller\core\Bio.Assembly\SequenceModel\NucleicAcid\Translation\TranslTable.vb"
+﻿#Region "Microsoft.VisualBasic::37eab031132570febc3a2a62b350cb7f, ..\core\Bio.Assembly\SequenceModel\NucleicAcid\Translation\TranslTable.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
-Imports SMRUCC.genomics.SequenceModel.Polypeptides.Polypeptides
-Imports SMRUCC.genomics.SequenceModel.NucleotideModels.NucleicAcid
 Imports System.Text
-Imports System.Runtime.CompilerServices
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic.Linq.Extensions
-Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.ComponentModel.DataStructures
+Imports Microsoft.VisualBasic.ComponentModel.Algorithm.base
 Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Linq.Extensions
+Imports SMRUCC.genomics.SequenceModel.NucleotideModels.NucleicAcid
+Imports SMRUCC.genomics.SequenceModel.Polypeptides
+Imports SMRUCC.genomics.SequenceModel.Polypeptides.Polypeptides
+Imports SMRUCC.genomics.SequenceModel.NucleotideModels.Conversion
 
 Namespace SequenceModel.NucleotideModels.Translation
 
@@ -137,7 +137,7 @@ Namespace SequenceModel.NucleotideModels.Translation
 
         Private Shared Function __parseHash(tokens As String()) As Dictionary(Of Codon, AminoAcid)
             Dim MAT = tokens.ToArray(Function(token As String) Regex.Split(token, "\s+"))
-            Dim Codons = MAT.ToArray(Function(line) __split(line)).MatrixToList
+            Dim Codons = MAT.ToArray(Function(line) __split(line)).Unlist
             Dim LQuery = (From Token As String() In Codons Select code = New Codon(Token), AA = Token(1).First).ToArray
             Dim hash = LQuery.ToDictionary(Function(obj) obj.code, Function(obj) SequenceModel.Polypeptides.ToEnums(obj.AA))
             Return hash
@@ -310,12 +310,12 @@ Namespace SequenceModel.NucleotideModels.Translation
         Public Function ToCodonCollection(SequenceData As NucleicAcid) As Codon()
             Dim Codons = SequenceData.ToArray.CreateSlideWindows(3, offset:=3)
             Dim AA As Codon() =
-                LinqAPI.Exec(Of Codon) <= From Codon As SlideWindowHandle(Of DNA)
+                LinqAPI.Exec(Of Codon) <= From Codon As SlideWindow(Of DNA)
                                           In Codons
                                           Let aac As Codon = New Codon With {
-                                              .X = Codon.Elements(0),
-                                              .Y = Codon.Elements(1),
-                                              .Z = Codon.Elements(2)
+                                              .X = Codon.Items(0),
+                                              .Y = Codon.Items(1),
+                                              .Z = Codon.Items(2)
                                           }
                                           Select aac
             AA = (From codon As Codon

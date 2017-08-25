@@ -18,7 +18,7 @@
     <DebugType>full</DebugType>
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
-    <OutputPath>D:\GCModeller\GCModeller\bin</OutputPath>
+    <OutputPath>bin\Debug</OutputPath>
     <DocumentationFile>SMRUCC.genomics.Analysis.RNA-Seq.TSSAR.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
   </PropertyGroup>
@@ -47,7 +47,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
-    <OutputPath>D:\GCModeller\GCModeller\bin</OutputPath>
+    <OutputPath>bin\Debug</OutputPath>
     <DocumentationFile>SMRUCC.genomics.Analysis.RNA-Seq.TSSAR.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
     <DebugType>full</DebugType>
@@ -177,7 +177,6 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Annotations\ReadsMap.vb" />
     <Compile Include="Annotations\Reads.vb" />
     <Compile Include="TSSAR\Module1.vb" />
     <Compile Include="TSSAR\TSSAR.vb" />
@@ -225,25 +224,17 @@
       <Project>{9F515BEB-A2CA-4B96-B1D9-F4798736054D}</Project>
       <Name>RNA-seq.Data</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\runtime\visualbasic_App\Data\DataFrame\+VB_DataFrame.vbproj">
+    <ProjectReference Include="..\..\..\..\runtime\sciBASIC#\Data\DataFrame\+VB_DataFrame.vbproj">
       <Project>{7283c179-f852-4ead-8d8f-b82ef2cbd7db}</Project>
       <Name>+VB_DataFrame</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\runtime\sciBASIC#\Microsoft.VisualBasic.Architecture.Framework\+Microsoft.VisualBasic.Architecture.Framework.vbproj">
+      <Project>{fecce1fd-e1d4-49e3-a668-60bb5e7aed99}</Project>
+      <Name>+Microsoft.VisualBasic.Architecture.Framework</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\core\Bio.Assembly\Bio.Assembly.vbproj">
       <Project>{c699d311-9923-4c19-bf70-5048d0e2cf5d}</Project>
       <Name>Bio.Assembly</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\..\runtime\java.net\Java.vbproj">
-      <Project>{c2dc8172-e957-4aa3-9771-4488d95aba2d}</Project>
-      <Name>Java</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\..\runtime\visualbasic_App\Microsoft.VisualBasic.Architecture.Framework\+Microsoft.VisualBasic.Architecture.Framework.vbproj">
-      <Project>{fecce1fd-e1d4-49e3-a668-60bb5e7aed99}</Project>
-      <Name>+Microsoft.VisualBasic.Architecture.Framework</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\visualize\visualizeTools\DataVisualizationTools.vbproj">
-      <Project>{7A5B87B9-4475-4B34-AB8B-30F0B068C1B7}</Project>
-      <Name>DataVisualizationTools</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\interops\RNA-Seq\BOW\BOW.vbproj">
       <Project>{2b903b81-95f4-455f-b892-d2ac36167453}</Project>

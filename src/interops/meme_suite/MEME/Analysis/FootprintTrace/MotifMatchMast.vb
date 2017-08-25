@@ -27,12 +27,11 @@
 #End Region
 
 Imports System.Runtime.CompilerServices
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel
+Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Scripting.MetaData
-Imports Microsoft.VisualBasic.Serialization
 Imports Microsoft.VisualBasic.Serialization.JSON
 Imports Microsoft.VisualBasic.Terminal.Utility
 Imports SMRUCC.genomics.Assembly.DOOR
@@ -46,7 +45,7 @@ Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.MotifScans
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MEME
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MEME.Text
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.XmlOutput.MAST
-Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH
+Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH.Abstract
 
 Namespace Analysis.FootprintTraceAPI
 
@@ -54,7 +53,7 @@ Namespace Analysis.FootprintTraceAPI
     ''' 通过MAST来得到MEME中的Motif的结果
     ''' </summary>
     ''' 
-    <PackageNamespace("MAST.MotifMatch")>
+    <Package("MAST.MotifMatch")>
     Public Module MotifMatchMast
 
         Sub New()
@@ -299,10 +298,10 @@ Namespace Analysis.FootprintTraceAPI
 
         <ExportAPI("Compile.Batch")>
         Public Function BatchCompileDirectly(res As Dictionary(Of String, String)) As MotifSiteHit()
-            Dim LQuery = (From x In res Select CompileDirectly(x.Key, x.Value)).MatrixAsIterator
+            Dim LQuery = (From x In res Select CompileDirectly(x.Key, x.Value)).IteratesALL
             Dim RegPrecise As TranscriptionFactors =
                 GCModeller.FileSystem.RegPrecise.RegPreciseRegulations.LoadXml(Of TranscriptionFactors)
-            LQuery = (From site As MotifSiteHit In LQuery Select RegPrecise.__fill(site)).MatrixAsIterator.ToArray
+            LQuery = (From site As MotifSiteHit In LQuery Select RegPrecise.__fill(site)).IteratesALL.ToArray
             Return DirectCast(LQuery, MotifSiteHit())
         End Function
 
@@ -335,11 +334,11 @@ Namespace Analysis.FootprintTraceAPI
         <ExportAPI("Compile.Single")>
         Public Function CompileSingle(MEME As String, MAST_OUT As String) As MatchResult
             Dim DIRs = FileIO.FileSystem.GetDirectories(MAST_OUT, FileIO.SearchOption.SearchTopLevelOnly)  ' 获取某个模块的顶层的文件夹列表，下面是Motif家族的文件夹列表
-            Dim source As String = IO.Path.GetFileNameWithoutExtension(MEME)
+            Dim source As String = basename(MEME)
             Dim masts As MotifSiteHit() = (From DIR As String In DIRs
                                            Let mast As MAST = (DIR & "/mast.xml").LoadXml(Of MAST)(ThrowEx:=False)
                                            Where Not mast Is Nothing
-                                           Select mast.MotifMatchCompile(trace:=source)).MatrixToVector
+                                           Select mast.MotifMatchCompile(trace:=source)).ToVector
             Dim MEMEDoc = MEME_TEXT.SafelyLoad(MEME)
             If masts.IsNullOrEmpty Then
                 Return New MatchResult With {
@@ -385,14 +384,14 @@ Namespace Analysis.FootprintTraceAPI
 
             Dim list As New List(Of MotifSiteHit)
             Dim Family As String =
-                IO.Path.GetFileNameWithoutExtension(MAST.Sequences.Databases.First.name)
+                basename(MAST.Sequences.Databases.First.name)
 
             For Each x As SequenceDescript In MAST.Sequences.SequenceList
                 If x.Segments.IsNullOrEmpty Then
                     Continue For
                 End If
 
-                Dim sites As MotifSiteHit() = x.Segments.ToArray(AddressOf __toSites).MatrixToVector
+                Dim sites As MotifSiteHit() = x.Segments.ToArray(AddressOf __toSites).ToVector
                 Dim RegPrecise As String = x.name.Split("|"c).First
 
                 For Each site As MotifSiteHit In sites

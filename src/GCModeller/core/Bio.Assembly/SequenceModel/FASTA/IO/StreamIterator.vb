@@ -1,28 +1,28 @@
-﻿#Region "Microsoft.VisualBasic::eb15d1dd3296a1d6b72f390cb363216b, ..\GCModeller\core\Bio.Assembly\SequenceModel\FASTA\IO\StreamIterator.vb"
+﻿#Region "Microsoft.VisualBasic::d0a7945528a3f606a6afbf342044e020, ..\core\Bio.Assembly\SequenceModel\FASTA\IO\StreamIterator.vb"
 
-' Author:
-' 
-'       asuka (amethyst.asuka@gcmodeller.org)
-'       xieguigang (xie.guigang@live.com)
-'       xie (genetics@smrucc.org)
-' 
-' Copyright (c) 2016 GPL3 Licensed
-' 
-' 
-' GNU GENERAL PUBLIC LICENSE (GPL3)
-' 
-' This program is free software: you can redistribute it and/or modify
-' it under the terms of the GNU General Public License as published by
-' the Free Software Foundation, either version 3 of the License, or
-' (at your option) any later version.
-' 
-' This program is distributed in the hope that it will be useful,
-' but WITHOUT ANY WARRANTY; without even the implied warranty of
-' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-' GNU General Public License for more details.
-' 
-' You should have received a copy of the GNU General Public License
-' along with this program. If not, see <http://www.gnu.org/licenses/>.
+    ' Author:
+    ' 
+    '       asuka (amethyst.asuka@gcmodeller.org)
+    '       xieguigang (xie.guigang@live.com)
+    '       xie (genetics@smrucc.org)
+    ' 
+    ' Copyright (c) 2016 GPL3 Licensed
+    ' 
+    ' 
+    ' GNU GENERAL PUBLIC LICENSE (GPL3)
+    ' 
+    ' This program is free software: you can redistribute it and/or modify
+    ' it under the terms of the GNU General Public License as published by
+    ' the Free Software Foundation, either version 3 of the License, or
+    ' (at your option) any later version.
+    ' 
+    ' This program is distributed in the hope that it will be useful,
+    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
+    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    ' GNU General Public License for more details.
+    ' 
+    ' You should have received a copy of the GNU General Public License
+    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -75,7 +75,7 @@ Namespace SequenceModel.FASTA
         ''' <returns></returns>
         Private Iterator Function __loops(stream As List(Of String)) As IEnumerable(Of FastaToken)
             For Each line As String In MyBase.BufferProvider   ' 读取一个数据块
-                If line.IsBlank Then  ' 跳过空白的行
+                If line.StringEmpty Then  ' 跳过空白的行
                     Continue For
                 End If
 
@@ -134,7 +134,7 @@ Namespace SequenceModel.FASTA
         ''' <param name="handle">File path or directory.</param>
         ''' <returns></returns>
         Public Shared Iterator Function SeqSource(handle As String, Optional ext As String() = Nothing, Optional debug As Boolean = False) As IEnumerable(Of FastaToken)
-            If handle.FileExists Then
+            If handle.FixPath.FileExists Then
                 If debug Then
                     Call "File exists, reading fasta data from file...".__DEBUG_ECHO
                 End If

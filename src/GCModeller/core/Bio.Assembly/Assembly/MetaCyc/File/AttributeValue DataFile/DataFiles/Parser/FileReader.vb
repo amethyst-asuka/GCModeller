@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::76fa16b4f51e652e3c3f83bdbbb2765c, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Parser\FileReader.vb"
+﻿#Region "Microsoft.VisualBasic::18a91cc9a5c8199690c50b092a351578, ..\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Parser\FileReader.vb"
 
     ' Author:
     ' 
@@ -72,7 +72,7 @@ Namespace Assembly.MetaCyc.File
             lines = path.ReadAllLines
             first = lines.First
             prop = GetDbProperty(lines)
-            lines = GetData(lines).ToArray.MatrixToVector
+            lines = GetData(lines).ToArray.ToVector
 
             Return ""
         End Function

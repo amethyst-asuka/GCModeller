@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::903f3ca39fe0faa2ec71b1233e1d7b68, ..\GCModeller\core\Bio.Assembly\Assembly\KEGG\DBGET\Objects\SSDB\SShit.vb"
+﻿#Region "Microsoft.VisualBasic::fcdb086d3243cb6c22654a760d1ca88c, ..\core\Bio.Assembly\Assembly\KEGG\DBGET\Objects\SSDB\SShit.vb"
 
     ' Author:
     ' 
@@ -28,8 +28,10 @@
 
 Imports System.Text.RegularExpressions
 Imports System.Xml.Serialization
-Imports SMRUCC.genomics.Assembly.KEGG.WebServices
 Imports Microsoft.VisualBasic.ComponentModel
+Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Text.HtmlParser
+Imports SMRUCC.genomics.Assembly.KEGG.WebServices
 
 Namespace Assembly.KEGG.DBGET.bGetObject.SSDB
 
@@ -106,14 +108,14 @@ Namespace Assembly.KEGG.DBGET.bGetObject.SSDB
                 Dim BestValue As String = (From item As Match
                                            In Regex.Matches(strData, "<a href='.+?' target=_ortholog>\d+</a>", RegexOptions.IgnoreCase)
                                            Select item.Value).ToArray.Last
-                Dim p As Integer = 1
+                Dim p As int = 1
 
-                ResultItem.Length = strValue(p.MoveNext)
-                ResultItem.SWScore = strValue(p.MoveNext) : p += 1
-                ResultItem.Margin = Val(strValue(p.MoveNext))
-                ResultItem.Bits = strValue(p.MoveNext)
-                ResultItem.Identity = strValue(p.MoveNext)
-                ResultItem.Overlap = strValue(p.MoveNext)
+                ResultItem.Length = strValue(++p)
+                ResultItem.SWScore = strValue(++p) : p += 1
+                ResultItem.Margin = Val(strValue(++p))
+                ResultItem.Bits = strValue(++p)
+                ResultItem.Identity = strValue(++p)
+                ResultItem.Overlap = strValue(++p)
                 ResultItem.Best = New KeyValuePair With {
                     .Key = strValue(p).Replace("&lt;", "<").Replace("&gt;", ">"),
                     .Value = Regex.Match(BestValue, ">\d+</a>").Value
@@ -129,18 +131,18 @@ Namespace Assembly.KEGG.DBGET.bGetObject.SSDB
 
                 Dim strValue As String() = (From n In strData.Split Where Not String.IsNullOrEmpty(n.Trim) Select n).ToArray
                 Dim BestValue As String = (From item As Match In Regex.Matches(strData, "<a href='.+?' target=_ortholog>\d+</a>", RegexOptions.IgnoreCase) Select item.Value).ToArray.Last
-                Dim p As Integer = 0
+                Dim p As int = 0
 
-                ResultItem.Length = strValue(p.MoveNext)
-                ResultItem.SWScore = strValue(p.MoveNext) : p += 1
+                ResultItem.Length = strValue(++p)
+                ResultItem.SWScore = strValue(++p) : p += 1
                 If String.Equals(ResultItem.SWScore, "(") Then
                     ResultItem.SWScore = ""
                     p -= 1
                 End If
-                ResultItem.Margin = Val(strValue(p.MoveNext))
-                ResultItem.Bits = strValue(p.MoveNext)
-                ResultItem.Identity = strValue(p.MoveNext)
-                ResultItem.Overlap = strValue(p.MoveNext)
+                ResultItem.Margin = Val(strValue(++p))
+                ResultItem.Bits = strValue(++p)
+                ResultItem.Identity = strValue(++p)
+                ResultItem.Overlap = strValue(++p)
                 ResultItem.Best = New KeyValuePair With {
                     .Key = strValue(p).Replace("&lt;", "<").Replace("&gt;", ">"),
                     .Value = Regex.Match(BestValue, ">\d+</a>").Value

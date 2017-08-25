@@ -1,43 +1,41 @@
-﻿#Region "Microsoft.VisualBasic::2b5289367fce37c23e91fdc0447e3378, ..\GCModeller\core\Bio.Repository\Genbank.vb"
+﻿#Region "Microsoft.VisualBasic::ff6da503519fce8838ec5882f9bd79bb, ..\core\Bio.Repository\Genbank.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports System.Runtime.CompilerServices
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel.Repository
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream.Linq
+Imports Microsoft.VisualBasic.Data.csv.IO.Linq
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports Microsoft.VisualBasic.Linq
-Imports Microsoft.VisualBasic.Serialization
 Imports Microsoft.VisualBasic.Serialization.JSON
-Imports Microsoft.VisualBasic.Text
+Imports Microsoft.VisualBasic.Text.Levenshtein
 Imports SMRUCC.genomics.Assembly
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
@@ -291,7 +289,7 @@ Public Class Genbank : Inherits ClassObject
 End Class
 
 Public Class GeneInfo
-    Implements IKeyedEntity(Of String), sIdEnumerable
+    Implements IKeyedEntity(Of String), INamedValue
 
     ''' <summary>
     ''' 基因组的编号
@@ -302,7 +300,7 @@ Public Class GeneInfo
     ''' 基因的编号
     ''' </summary>
     ''' <returns></returns>
-    Public Property locus_tag As String Implements sIdEnumerable.Identifier, IKeyedEntity(Of String).Key
+    Public Property locus_tag As String Implements IKeyedEntity(Of String).Key
     ''' <summary>
     ''' /gene="基因名"
     ''' </summary>
@@ -330,7 +328,7 @@ Public Class GeneInfo
     End Function
 End Class
 
-Public Class GenbankIndex : Implements IKeyedEntity(Of String), sIdEnumerable
+Public Class GenbankIndex : Implements IKeyedEntity(Of String), INamedValue
 
     ''' <summary>
     ''' DIR name
@@ -342,7 +340,7 @@ Public Class GenbankIndex : Implements IKeyedEntity(Of String), sIdEnumerable
     ''' locus_tag, 索引文件的表主键
     ''' </summary>
     ''' <returns></returns>
-    Public Property AccId As String Implements IKeyedEntity(Of String).Key, sIdEnumerable.Identifier
+    Public Property AccId As String Implements INamedValue.Key
     Public Property definition As String
 
     Public Function Gbk(DIR As String) As GBFF.File

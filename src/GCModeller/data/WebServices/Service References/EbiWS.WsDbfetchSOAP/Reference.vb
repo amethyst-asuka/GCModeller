@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::8e4a878553fbb448baed59b9eccd55b8, ..\GCModeller\data\WebServices\Service References\EbiWS.WsDbfetchSOAP\Reference.vb"
+﻿#Region "Microsoft.VisualBasic::7292b391cf22f875c8a354756eda78c6, ..\GCModeller\data\WebServices\Service References\EbiWS.WsDbfetchSOAP\Reference.vb"
 
     ' Author:
     ' 
@@ -104,19 +104,19 @@ Namespace EbiWS.WsDbfetchSOAP
             MyBase.New
         End Sub
         
-        Public Sub New(ByVal endpointConfigurationName As String)
+        Public Sub New( endpointConfigurationName As String)
             MyBase.New(endpointConfigurationName)
         End Sub
         
-        Public Sub New(ByVal endpointConfigurationName As String, ByVal remoteAddress As String)
+        Public Sub New( endpointConfigurationName As String,  remoteAddress As String)
             MyBase.New(endpointConfigurationName, remoteAddress)
         End Sub
         
-        Public Sub New(ByVal endpointConfigurationName As String, ByVal remoteAddress As System.ServiceModel.EndpointAddress)
+        Public Sub New( endpointConfigurationName As String,  remoteAddress As System.ServiceModel.EndpointAddress)
             MyBase.New(endpointConfigurationName, remoteAddress)
         End Sub
         
-        Public Sub New(ByVal binding As System.ServiceModel.Channels.Binding, ByVal remoteAddress As System.ServiceModel.EndpointAddress)
+        Public Sub New( binding As System.ServiceModel.Channels.Binding,  remoteAddress As System.ServiceModel.EndpointAddress)
             MyBase.New(binding, remoteAddress)
         End Sub
         
@@ -177,4 +177,3 @@ Namespace EbiWS.WsDbfetchSOAP
         End Sub
     End Class
 End Namespace
-

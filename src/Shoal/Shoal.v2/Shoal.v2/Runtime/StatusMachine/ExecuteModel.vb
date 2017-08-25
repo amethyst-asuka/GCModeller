@@ -2,9 +2,11 @@
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.FileIO.FileSystem
 Imports Microsoft.VisualBasic.Linq.Extensions
+Imports Microsoft.VisualBasic.Scripting.Runtime
 Imports Microsoft.VisualBasic.Scripting.ShoalShell.Interpreter.LDM.Expressions
 Imports Microsoft.VisualBasic.Scripting.ShoalShell.Interpreter.Linker.APIHandler
 Imports Microsoft.VisualBasic.Scripting.ShoalShell.Interpreter.Linker.APIHandler.Alignment
+Imports Microsoft.VisualBasic.Scripting.ShoalShell.Interpreter.Parser.Tokens
 Imports Microsoft.VisualBasic.Scripting.ShoalShell.Runtime.Exceptions
 Imports arg = System.Collections.Generic.KeyValuePair(Of String, Object)
 
@@ -473,11 +475,12 @@ Namespace Runtime
             Dim Collection = Expr.Collection.As(Of Interpreter.LDM.Expressions.ControlFlows.ForLoopStatus.ForEach).ToArray
             Dim i As Integer
 
-            For Each Expression In Collection
+            For Each Expression As InternalExpression In Collection
                 Dim value = Exec(Expression.Expression)
                 Call ScriptEngine.MMUDevice.Update(Expr.LoopVariable, value)
                 Call New FSMMachine(ScriptEngine, Expr.Invoke).Execute()
-                Call i.MoveNext
+
+                i += 1
             Next
 
             Return i
@@ -492,7 +495,8 @@ Namespace Runtime
             For i As Double = InitStart To LoopStop Step MoveStep
                 Call ScriptEngine.MMUDevice.Update(Expr.LoopVariable, i)
                 Call New FSMMachine(ScriptEngine, Expr.Invoke).Execute()
-                Call n.MoveNext
+
+                n += 1
             Next
 
             Return n
@@ -500,7 +504,7 @@ Namespace Runtime
 
         Public Function [If](Expression As Interpreter.LDM.Expressions.PrimaryExpression) As Object
             Dim Expr = Expression.As(Of Interpreter.LDM.Expressions.ControlFlows.If)
-            Dim BoolIf As Boolean = InputHandler.ToString(Exec(Expr.BooleanIf.Expression)).getBoolean
+            Dim BoolIf As Boolean = InputHandler.ToString(Exec(Expr.BooleanIf.Expression)).ParseBoolean
             Dim Stack = Me.Stack.Peek
             Dim value As Object
 
@@ -522,7 +526,7 @@ Namespace Runtime
 
             If Not Stack.If = True Then Return True
 
-            Dim BoolIf As Boolean = InputHandler.ToString(Exec(Expr.BooleanIf.Expression)).getBoolean
+            Dim BoolIf As Boolean = InputHandler.ToString(Exec(Expr.BooleanIf.Expression)).ParseBoolean
 
             If BoolIf = True Then
                 value = New Runtime.FSMMachine(ScriptEngine, Expr.Invoke).Execute
@@ -553,7 +557,7 @@ Namespace Runtime
 
             Do While __getBoolean(Expr.BooleanIf)
                 Call New Runtime.FSMMachine(ScriptEngine, Expr.Invoke).Execute()
-                Call i.MoveNext
+                i += 1
             Loop
 
             Return i
@@ -565,7 +569,7 @@ Namespace Runtime
 
             Do Until __getBoolean(Expr.BooleanIf)
                 Call New Runtime.FSMMachine(ScriptEngine, Expr.Invoke).Execute()
-                Call i.MoveNext
+                i += 1
             Loop
 
             Return i
@@ -573,7 +577,7 @@ Namespace Runtime
 
         Private Function __getBoolean(Expr As Interpreter.Parser.Tokens.InternalExpression) As Boolean
             Dim __execed As Object = Exec(Expr.Expression)
-            Dim bool As Boolean = InputHandler.ToString(__execed).getBoolean
+            Dim bool As Boolean = InputHandler.ToString(__execed).ParseBoolean
             Return bool
         End Function
 
@@ -606,7 +610,7 @@ Namespace Runtime
                 Call sbr.AppendLine($"There are {ScriptEngine.Interpreter.EPMDevice.AnonymousDelegate.TempDelegate.Count} script command is current directory:  {Microsoft.VisualBasic.FileIO.FileSystem.CurrentDirectory}")
                 Call sbr.AppendLine(String.Join(vbCrLf, (From obj
                                                          In ScriptEngine.Interpreter.EPMDevice.AnonymousDelegate.TempDelegate
-                                                         Let name As String = IO.Path.GetFileNameWithoutExtension(obj.Value.FilePath)
+                                                         Let name As String = basename(obj.Value.FilePath)
                                                          Select $" {name}  {New String(" "c, NameMaxLen - Len(name))}{GetFileInfo(obj.Value.FilePath).Name }  // {obj.Value.Expressions.Length} Expressions").ToArray))
                 Call sbr.ToString.__DEBUG_ECHO
             End If
@@ -630,7 +634,7 @@ Namespace Runtime
             If String.IsNullOrEmpty(Expr.Assembly) Then
                 Return __libraries()
 
-            ElseIf String.Equals(Expr.Assembly, "/index")
+            ElseIf String.Equals(Expr.Assembly, "/index") Then
                 Dim html As String = ShoalShell.HTML.RequestHtml("index")
                 html = Microsoft.VisualBasic.FileIO.FileSystem.GetFileInfo(html).FullName
                 Call Process.Start(html)

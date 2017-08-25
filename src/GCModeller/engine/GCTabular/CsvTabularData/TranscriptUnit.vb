@@ -41,7 +41,7 @@ Namespace FileStream
     Public Class TranscriptUnit : Implements IReadOnlyId
 
         ''' <summary>
-        ''' 通常为属性<see cref="SMRUCC.genomics.Assembly.Door.GeneBrief.OperonID"></see>的这个编号值
+        ''' 通常为属性<see cref="SMRUCC.genomics.Assembly.Door.OperonGene.OperonID"></see>的这个编号值
         ''' </summary>
         ''' <value></value>
         ''' <returns></returns>
@@ -100,7 +100,7 @@ Namespace FileStream
         End Function
 
         Public Shared Function CreateObject(Regulation As TranscriptRegulation(), Door As OperonView) As List(Of TranscriptUnit)
-            Dim LQuery = (From item In Regulation Select CreateObject(item)).ToList
+            Dim LQuery = (From item In Regulation Select CreateObject(item)).AsList
             Dim Regulations = (From item In LQuery Select item.OperonId Distinct).ToArray
             Dim NullRegulations = (From item In CreateObject(Door) Where Array.IndexOf(Regulation, item.OperonId) = -1 Select item).ToArray
             Call LQuery.AddRange(NullRegulations)
@@ -115,7 +115,7 @@ Namespace FileStream
                               .OperonId = "#" & Operon.Key,
                               .PromoterGene = Operon.InitialX.Synonym
                           }
-                          Select tu).ToList
+                          Select tu).AsList
             Return LQuery
         End Function
 

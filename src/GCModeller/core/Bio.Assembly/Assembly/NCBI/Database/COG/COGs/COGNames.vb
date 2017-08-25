@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::8e9c28e64e764a812cfcfdeb2fb5c603, ..\GCModeller\core\Bio.Assembly\Assembly\NCBI\Database\COG\COGs\COGNames.vb"
+﻿#Region "Microsoft.VisualBasic::613bc9fbc3508315794fce83c02007d4, ..\core\Bio.Assembly\Assembly\NCBI\Database\COG\COGs\COGNames.vb"
 
     ' Author:
     ' 
@@ -28,33 +28,38 @@
 
 Imports System.Data.Linq.Mapping
 Imports System.Xml.Serialization
+Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Microsoft.VisualBasic.Linq.Extensions
+Imports Microsoft.VisualBasic.Text
 
 Namespace Assembly.NCBI.COG.COGs
 
     ''' <summary>
-    ''' cognames2003-2014.tab
-    ''' Contains list of COG annotations. Tab-delimited
-    ''' Functional classes (categories) are described in the file
-    ''' fun2003-2014.tab (see 2.3). Some COGs belong to more than one
-    ''' functional Class; in these cases the class listed first Is considered
-    ''' to be primary.
+    ''' ###### cognames2003-2014.tab
+    ''' 
+    ''' Contains list of COG annotations. Tab-delimited Functional classes 
+    ''' (categories) are described in the file ``fun2003-2014.tab`` (see 2.3). 
+    ''' Some COGs belong to more than one functional Class; in these cases 
+    ''' the class listed first Is considered to be primary.
     ''' </summary>
     ''' <remarks></remarks>
     Public Class COGName
+        Implements INamedValue
 
         ''' <summary>
         ''' COG-id
         ''' </summary>
         ''' <returns></returns>
         <XmlAttribute("COG-id")>
-        <Column(Name:="COG")> Public Property COG As String
+        <Column(Name:="COG")> Public Property COG As String Implements INamedValue.Key
+
         ''' <summary>
         ''' functional-class
         ''' </summary>
         ''' <returns></returns>
         <XmlAttribute("functional-class")>
         <Column(Name:="func")> Public Property Func As String
+
         ''' <summary>
         ''' COG-annotation
         ''' </summary>
@@ -62,18 +67,25 @@ Namespace Assembly.NCBI.COG.COGs
         <XmlAttribute("COG-annotation")>
         <Column(Name:="name")> Public Property Name As String
 
-        Public Shared Function LoadDocument(path As String) As COGName()
-            Dim ChunkBuffer As String()() = (From s As String
-                                             In IO.File.ReadAllLines(path).Skip(1)
-                                             Select Strings.Split(s, vbTab)).ToArray
-            Dim LQuery = (From Line As String() In ChunkBuffer.AsParallel
-                          Let COG As COGName = New COGName With {
-                              .COG = Line(0),
-                              .Func = Line(1),
-                              .Name = Line(2)
-                              }
-                          Select COG
-                          Order By COG.COG Ascending).ToArray
+        ''' <summary>
+        ''' Load table data from file.
+        ''' </summary>
+        ''' <param name="path"></param>
+        ''' <returns></returns>
+        Public Shared Function LoadTable(path As String) As COGName()
+            Dim buf As IEnumerable(Of String()) =
+ _
+                From s As String
+                In IO.File.ReadAllLines(path).Skip(1)
+                Select s.Split(ASCII.TAB)
+
+            Dim LQuery As COGName() = buf.Select(
+                Function(t) New COGName With {
+                    .COG = t(0),
+                    .Func = t(1),
+                    .Name = t(2)
+                }).ToArray
+
             Return LQuery
         End Function
     End Class
@@ -109,9 +121,12 @@ Namespace Assembly.NCBI.COG.COGs
         End Function
 
         Public Shared Function LoadDoc(path As String) As COGFunc()
-            Dim Tokens = IO.File.ReadAllLines(path).Skip(1).ToArray
-            Dim Codes = Tokens.ToArray(Function(Line) New COGFunc(Line))
-            Return Codes
+            Dim tokens$() = IO.File.ReadAllLines(path) _
+                .Skip(1) _
+                .ToArray
+            Dim codes As COGFunc() = tokens _
+                .ToArray(Function(s) New COGFunc(s))
+            Return codes
         End Function
     End Class
 
@@ -161,8 +176,9 @@ Namespace Assembly.NCBI.COG.COGs
         End Function
 
         Public Shared Function LoadDoc(path As String) As Genomes()
-            Dim Tokens As String() = IO.File.ReadAllLines(path).Skip(1).ToArray
-            Dim genomes = Tokens.ToArray(Function(Line) New Genomes(Line))
+            Dim tokens As String() = IO.File.ReadAllLines(path).Skip(1).ToArray
+            Dim genomes As Genomes() = tokens _
+                .ToArray(Function(line) New Genomes(line))
             Return genomes
         End Function
     End Class
@@ -199,9 +215,12 @@ Namespace Assembly.NCBI.COG.COGs
         End Function
 
         Public Shared Function LoadDoc(path As String) As COGProt()
-            Dim Tokens As String() = IO.File.ReadAllLines(path).Skip(1).ToArray
-            Dim Prots = Tokens.ToArray(Function(Line) New COGProt(Line), Parallel:=True)
-            Return Prots
+            Dim tokens$() = IO.File.ReadAllLines(path) _
+                .Skip(1) _
+                .ToArray
+            Dim prots As COGProt() = tokens _
+                .ToArray(Function(line) New COGProt(line), parallel:=True)
+            Return prots
         End Function
     End Class
 End Namespace

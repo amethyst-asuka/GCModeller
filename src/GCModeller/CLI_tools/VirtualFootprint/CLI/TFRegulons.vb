@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::5b7b297471b733012d4fd9a29938deb1, ..\GCModeller\CLI_tools\VirtualFootprint\CLI\TFRegulons.vb"
+﻿#Region "Microsoft.VisualBasic::9b7d04da3e88ea7d43e31a88fcc90d9a, ..\GCModeller\CLI_tools\VirtualFootprint\CLI\TFRegulons.vb"
 
     ' Author:
     ' 
@@ -27,14 +27,13 @@
 #End Region
 
 Imports System.Text
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
+Imports Microsoft.VisualBasic.Data
 Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports Microsoft.VisualBasic.Linq
-Imports Microsoft.VisualBasic.Parallel
 Imports Microsoft.VisualBasic.Parallel.Linq
 Imports Microsoft.VisualBasic.Text
 Imports SMRUCC.genomics
@@ -45,7 +44,7 @@ Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
 Imports SMRUCC.genomics.ComponentModel.Loci
 Imports SMRUCC.genomics.ContextModel
 Imports SMRUCC.genomics.Data.Regprecise
-Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH
+Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH.Abstract
 Imports SMRUCC.genomics.Model.Network.VirtualFootprint.DocumentFormat
 Imports SMRUCC.genomics.SequenceModel.FASTA
 Imports SMRUCC.genomics.SequenceModel.NucleotideModels
@@ -54,6 +53,7 @@ Partial Module CLI
 
     <ExportAPI("/TF.Regulons",
                Usage:="/TF.Regulons /bbh <tf.bbh.csv> /footprints <regulations.csv> [/out <out.csv>]")>
+    <Group(CLIGrouping.TFRegulonTools)>
     Public Function TFRegulons(args As CommandLine) As Integer
         Dim [in] As String = args("/bbh")
         Dim footprints As String = args("/footprints")
@@ -81,6 +81,7 @@ Partial Module CLI
 
     <ExportAPI("/TF.Density.Batch",
                Usage:="/TF.Density.Batch /TF <TF-list.txt> /PTT <genome.PTT.DIR> [/ranges 5000 /out <out.DIR> /cis /un-strand]")>
+    <Group(CLIGrouping.TFRegulonTools)>
     Public Function TFDensityBatch(args As CommandLine) As Integer
         Dim TFs As String = args("/TF")
         Dim PTT As String = args("/PTT")
@@ -109,6 +110,7 @@ Partial Module CLI
                    Description:="A plant text file with the TF locus_tag list.")>
     <Argument("/batch", True,
                    Description:="This function is works in batch mode.")>
+    <Group(CLIGrouping.TFRegulonTools)>
     Public Function TFDensity(args As CommandLine) As Integer
         Dim TFs As String = args - "/TF"
         Dim PTT As String = args - "/PTT"
@@ -145,6 +147,7 @@ Partial Module CLI
     <ExportAPI("/Sites.Pathways",
                Info:="[Type 1] Grouping sites loci by pathway",
                Usage:="/Sites.Pathways /pathway <KEGG.DIR> /sites <simple_segment.Csv.DIR> [/out <out.DIR>]")>
+    <Group(CLIGrouping.TFRegulonTools)>
     Public Function PathwaySites(args As CommandLine) As Integer
         Dim [in] As String = args("/pathway")
         Dim sites As String = args("/sites")
@@ -154,8 +157,8 @@ Partial Module CLI
             .ToArray(AddressOf LoadXml(Of bGetObject.Pathway))
         Dim siteHash = (From x As SimpleSegment
                         In (ls - l - r - wildcards("*.Csv") <= sites) _
-                           .Select(AddressOf LoadCsv(Of SimpleSegment)) _
-                           .MatrixAsIterator
+                           .Select(AddressOf csv.Extensions.LoadCsv(Of SimpleSegment)) _
+                           .IteratesALL
                         Let sId As String = x.ID.Split(":"c).First
                         Select sId,
                             x
@@ -194,6 +197,7 @@ Partial Module CLI
     <ExportAPI("/Sites.Regulons",
                Info:="[Type 2]",
                Usage:="/Sites.Regulons /regulon <RegPrecise.Regulon.Csv> /sites <simple_segment.Csv.DIR> [/map <genome.PTT> /out <out.DIR>]")>
+    <Group(CLIGrouping.TFRegulonTools)>
     Public Function RegulonSites(args As CommandLine) As Integer
         Dim regulon As String = args("/regulon")
         Dim sites As String = args("/sites")
@@ -201,8 +205,8 @@ Partial Module CLI
         Dim regulons As RegPreciseOperon() = regulon.LoadCsv(Of RegPreciseOperon)
         Dim siteHash = (From x As SimpleSegment
                         In (ls - l - r - wildcards("*.Csv") <= sites) _
-                        .Select(AddressOf LoadCsv(Of SimpleSegment)) _
-                        .MatrixAsIterator
+                        .Select(AddressOf csv.Extensions.LoadCsv(Of SimpleSegment)) _
+                        .IteratesALL
                         Where x.SequenceData.Length >= 8
                         Let sId As String = x.ID.Split(":"c).First
                         Select sId,
@@ -252,6 +256,7 @@ Partial Module CLI
     ''' <returns></returns>
     <ExportAPI("/Density.Mappings",
                Usage:="/Density.Mappings /in <density.Csv> [/scale 100 /out <out.PTT>]")>
+    <Group(CLIGrouping.TFRegulonTools)>
     Public Function ContextMappings(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim out As String = args.GetValue("/out", [in].TrimSuffix & ".Maps.PTT")
@@ -303,7 +308,7 @@ Partial Module CLI
 
         totalLen = list _
             .Select(Function(x) {x.Location.Left, x.Location.Right}) _
-            .MatrixAsIterator _
+            .IteratesALL _
             .Max
 
         Dim PTT As New PTT(list, [in].BaseName & " #" & NameOf(ContextMappings), totalLen)

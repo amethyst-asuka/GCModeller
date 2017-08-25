@@ -1,40 +1,38 @@
 ﻿#Region "Microsoft.VisualBasic::54582f00d9e90cfe2914dcc3632fef50, ..\interops\meme_suite\MEME\Analysis\VirtualFootprints\MotifFootPrintsGenerates.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports System.Runtime.CompilerServices
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
 Imports Microsoft.VisualBasic.Data.csv.Extensions
-Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Extensions
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Scripting.MetaData
@@ -43,7 +41,6 @@ Imports SMRUCC.genomics.Assembly
 Imports SMRUCC.genomics.Assembly.DOOR
 Imports SMRUCC.genomics.Assembly.KEGG.DBGET
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat
-Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
 Imports SMRUCC.genomics.Data
 Imports SMRUCC.genomics.Data.Regprecise
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat
@@ -51,7 +48,9 @@ Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MAST.HTML
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MEME
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.MEME.HTML
 Imports SMRUCC.genomics.Model.Network.VirtualFootprint.DocumentFormat
+Imports SMRUCC.genomics.SequenceModel
 Imports SMRUCC.genomics.SequenceModel.NucleotideModels
+Imports sys = System.Math
 
 Namespace Analysis.GenomeMotifFootPrints
 
@@ -59,7 +58,7 @@ Namespace Analysis.GenomeMotifFootPrints
     ''' 这里所定义的所有对象都是和数据解析无关了，都是用于进行数据存储的对象类型
     ''' </summary>
     ''' <remarks></remarks>
-    <[PackageNamespace]("MEME.app.Genome_Footprints",
+    <Package("MEME.app.Genome_Footprints",
         Description:="Steps for genome wide regulation analysis: <br />
      <li> 1. Download the regprecise database And then extract the motif sequence.
      <li> 2. Download the regprecise regulators protein sequence from kegg
@@ -108,12 +107,10 @@ Namespace Analysis.GenomeMotifFootPrints
                               In (From item In GroupOperation Select item.GroupTag Distinct).ToArray.AsParallel
                               Select (From item In GroupOperation Where String.Equals(GroupTag, item.GroupTag) Select item).First).ToArray
 
-            Dim GenomeReader = New SegmentReader(Genome, LinearMolecule:=False)
-
             data = (From item In GroupOperation.AsParallel
                     Select If(item.possible_duplicated.Count = 1,
                         item.possible_duplicated.First,
-                        __reGenerate(item.possible_duplicated, Genome:=GenomeReader))).ToArray
+                        __reGenerate(item.possible_duplicated, Genome:=Genome))).ToArray
             Return data
         End Function
 
@@ -123,7 +120,7 @@ Namespace Analysis.GenomeMotifFootPrints
         ''' <param name="grouped">已经按照<see cref="PredictedRegulationFootprint.Starts"></see>属性进行排序</param>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Private Function __reGenerate(grouped As IEnumerable(Of PredictedRegulationFootprint), Genome As SegmentReader) As PredictedRegulationFootprint
+        Private Function __reGenerate(grouped As IEnumerable(Of PredictedRegulationFootprint), Genome As IPolymerSequenceModel) As PredictedRegulationFootprint
             'Dim RightAligned = (From item In grouped Select item Order By item.Ends Descending).First
             'Dim ReGeneratedData As PredictedRegulationFootprint = grouped.First.Clone
             'ReGeneratedData.Starts = grouped.First.Starts
@@ -202,13 +199,13 @@ Namespace Analysis.GenomeMotifFootPrints
                                                     Let DoorList = (From fp_Data As PredictedRegulationFootprint In OperonData
                                                                     Where String.Equals(fp_Data.ORF, GeneId) OrElse Array.IndexOf(fp_Data.StructGenes, GeneId) > -1
                                                                     Select fp_Data.DoorId).ToArray
-                                                    Select DoorList).ToArray.MatrixToVector.Distinct.ToArray  '首先根据代谢途径之中的基因的信息得到相关的操纵子的编号信息
+                                                    Select DoorList).ToArray.ToVector.Distinct.ToArray  '首先根据代谢途径之中的基因的信息得到相关的操纵子的编号信息
             Dim LQuery = (From fp_Data As PredictedRegulationFootprint In data.AsParallel
                           Where Array.IndexOf(pwyGeneObjs, fp_Data.ORF) > -1
-                          Select fp_Data).ToList   '得到代谢途径之中的基因的调控数据
+                          Select fp_Data).AsList   '得到代谢途径之中的基因的调控数据
             Call LQuery.AddRange((From GeneId As String In pwyGeneObjs.AsParallel
                                   Let OperonFirst = (From item In OperonData Where Array.IndexOf(item.StructGenes, GeneId) > -1 Select item).ToArray
-                                  Select OperonFirst).ToArray.MatrixToVector)  '代谢途径的基因所在的操纵子的第一个基因
+                                  Select OperonFirst).ToArray.ToVector)  '代谢途径的基因所在的操纵子的第一个基因
 
             Dim Grouped = (From fp_Data As PredictedRegulationFootprint
                            In LQuery
@@ -220,7 +217,7 @@ Namespace Analysis.GenomeMotifFootPrints
                                     Where GeneID_List.Count / PathwayRelatedOperon.Count >= 0.65
                                     Select MotifId = groupItem.Key, groupItem.Value).ToArray       '从分组的数据之中筛选出基因的数目站代谢途径的65以上的motif分组，则该分组为可能的正确的数据
 
-            Call chunkBuffer.AddRange((From item In GetPossibleMoitf Select item.Value).ToArray.MatrixToVector)
+            Call chunkBuffer.AddRange((From item In GetPossibleMoitf Select item.Value).ToArray.ToVector)
 
             For Each item In GetPossibleMoitf
                 Call Grouped.Remove(item.MotifId)
@@ -245,7 +242,7 @@ Namespace Analysis.GenomeMotifFootPrints
         ''' <remarks></remarks>
         Private Function __checkMoitfCoRegulations(groupedMotif As PredictedRegulationFootprint()) As PredictedRegulationFootprint()
             'Dim RegulatorIds As String() = (From item In groupedMotif Select item.Regulators).ToArray.MatrixToList.Distinct.ToArray
-            'Dim TrimedData = (From item In groupedMotif Select Regulators = item.Regulators.ToList, Regulation = item).ToArray
+            'Dim TrimedData = (From item In groupedMotif Select Regulators = item.Regulators.AsList, Regulation = item).ToArray
             'Dim n As Integer = TrimedData.Count
 
             'For Each RegulatorId As String In RegulatorIds
@@ -285,7 +282,7 @@ Namespace Analysis.GenomeMotifFootPrints
                           Let MASTDoc As MASTHtml = MAST.HTML.LoadDocument(docPath, FootPrintMode:=True)
                           Let ObjectId As String = FileIO.FileSystem.GetDirectoryInfo(Path).Name
                           Let MEME_doc As MEMEHtml = MEME.HTML.LoadDocument($"{MEME_OUT}/{ObjectId}/meme.html")
-                          Select MAST.HTML.MatchMEMEAndMast(MEME_doc, MASTDoc)).MatrixToVector
+                          Select MAST.HTML.MatchMEMEAndMast(MEME_doc, MASTDoc)).ToVector
             Return LQuery
         End Function
 
@@ -305,7 +302,7 @@ Namespace Analysis.GenomeMotifFootPrints
         <ExportAPI("Footprint.Generate.From.Text")>
         Public Function FootprintMatchesTEXT(MEME_Text As String,
                                              MAST_html As String,
-                                             GenomeSequence As SegmentReader,
+                                             GenomeSequence As IPolymerSequenceModel,
                                              GeneBriefInformation As PTT,
                                              Optional ATGDistance As Integer = 500,
                                              Optional FilterPromoter As Boolean = False) As VirtualFootprints()
@@ -322,11 +319,11 @@ Namespace Analysis.GenomeMotifFootPrints
                                  MastEntry,
                                  GenomeSequence,
                                  GeneBriefInformation,
-                                 ATGDistance)).ToArray.MatrixToList
+                                 ATGDistance)).Unlist
             If FilterPromoter Then Footprint = (From fp As VirtualFootprints
                                                 In Footprint
                                                 Where fp.Distance < 0
-                                                Select fp).ToList
+                                                Select fp).AsList
             Return Footprint.ToArray
         End Function
 
@@ -354,8 +351,8 @@ Namespace Analysis.GenomeMotifFootPrints
             For Each Site In data1
                 Dim LQuery = (From site2 As VirtualFootprints In data2.AsParallel
                               Where String.Equals(Site.ORF, site2.ORF) AndAlso
-                                  Math.Abs(site2.Starts - Site.Starts) <= Math.Min(Site.Length, site2.Length) * 0.85 AndAlso
-                                  Math.Abs(Site.Length - site2.Length) <= Math.Min(Site.Length, site2.Length) * 0.85
+                                  Math.Abs(site2.Starts - Site.Starts) <= sys.Min(Site.Length, site2.Length) * 0.85 AndAlso
+                                  Math.Abs(Site.Length - site2.Length) <= sys.Min(Site.Length, site2.Length) * 0.85
                               Select setValue(site2, data2Tag & site2.MotifId)).ToArray
                 If Not LQuery.IsNullOrEmpty Then
                     '找得到对应的位点，则是一致的数据
@@ -408,7 +405,7 @@ Namespace Analysis.GenomeMotifFootPrints
                                                      pathway.Description).ToArray).ToArray
 
             If Not String.IsNullOrEmpty(EXPORT) Then
-                Dim Csv As New DocumentStream.File
+                Dim Csv As New IO.File
                 Call Csv.Add({"Gene.ID", "Gene.Tag", "KEGG.Pathways", "PathwaysTagData"})
                 Call Csv.AppendRange((From line In AssociationLQuery
                                       Select CType(
@@ -582,10 +579,10 @@ Namespace Analysis.GenomeMotifFootPrints
                 GetPcc = AddressOf PccReader.GetPcc
             End If
 
-            Dim SequenceData = NucleicAcid.CreateObject(GenomeBrief.GenomeFasta.SequenceData).CreateReader
+            Dim SequenceData = NucleicAcid.CreateObject(GenomeBrief.GenomeFasta.SequenceData)
             Dim LQuery = (From item As MEMEOutput
                           In data.AsParallel
-                          Select PredictedRegulationFootprint.__createRegulationObject(item, SequenceData, GenomeBrief, ignoreDirection, ATGDistance)).ToArray.MatrixToVector
+                          Select PredictedRegulationFootprint.__createRegulationObject(item, SequenceData, GenomeBrief, ignoreDirection, ATGDistance)).ToArray.ToVector
             Dim DoorOperonPromoters = (From Operon As SMRUCC.genomics.Assembly.DOOR.Operon
                                        In DOOR_API.Load(Door).DOOROperonView.Operons
                                        Select PromoterGene = Operon.InitialX.Synonym,
@@ -640,7 +637,7 @@ Namespace Analysis.GenomeMotifFootPrints
 
             '将物种前缀去除
             Dim MatchData = (From item In RegulatorMatches.AsParallel Select New KeyValuePair(Of String, String)(item.HitName.Split(CChar(":")).Last, item.QueryName)).ToArray
-            Dim MatchedRegulators = (From Regulation In LQuery.AsParallel Select MatchRegulator(Regulation, MotifEntries, MatchData, GetPcc)).ToArray.MatrixToList  '.AsParallel
+            Dim MatchedRegulators = (From Regulation In LQuery.AsParallel Select MatchRegulator(Regulation, MotifEntries, MatchData, GetPcc)).ToArray.Unlist  '.AsParallel
             Dim AssignPathwayPhenotypesResult = (From Regulation As PredictedRegulationFootprint
                                                  In MatchedRegulators.AsParallel
                                                  Select AssignPhenotype(Regulation)).ToArray
@@ -677,7 +674,7 @@ Namespace Analysis.GenomeMotifFootPrints
             'Call IO.File.WriteAllLines(saveto & "/Edges.csv", FileData)
 
             'Csv = New Microsoft.VisualBasic.DocumentFormat.Csv.DocumentStream.File From {{"UniqueId", "NodeType"}.ToCsvRow}
-            'Dim ChunkBuffer = (From item In FiltedData.AsParallel Select item.ORF, NodeType = "Gene").ToList
+            'Dim ChunkBuffer = (From item In FiltedData.AsParallel Select item.ORF, NodeType = "Gene").AsList
             'Call ChunkBuffer.AddRange((From item In FiltedData.AsParallel Select (From struct As String In item.StructGenes Select ORF = struct, NodeType = "Gene").ToArray).ToArray.MatrixToVector)
             'Call ChunkBuffer.AddRange((From item In FiltedData.AsParallel Select (From Regulator As String In item.Regulators Select ORF = Regulator, NodeType = "Regulator").ToArray).ToArray.MatrixToVector)
 
@@ -740,7 +737,7 @@ Namespace Analysis.GenomeMotifFootPrints
         Public Function MergeFootprints(DIR As String) As PredictedRegulationFootprint()
             Dim LQuery = (From file As String
                           In DIR.EnumerateFiles("*.csv")
-                          Select file.LoadCsv(Of PredictedRegulationFootprint)).MatrixAsIterator
+                          Select file.LoadCsv(Of PredictedRegulationFootprint)).IteratesALL
             Return LQuery.ToArray
         End Function
 
@@ -756,7 +753,7 @@ Namespace Analysis.GenomeMotifFootPrints
 
         <ExportAPI("Hash")>
         <Extension> Private Function CreateEntryDictionary(data As IEnumerable(Of MotifDb.MotifFamily)) As Dictionary(Of MotifDb.Motif)
-            Dim ChunkBuffer = (From Family In data Select Family.Motifs).MatrixAsIterator
+            Dim ChunkBuffer = (From Family In data Select Family.Motifs).IteratesALL
             Return ChunkBuffer.ToDictionary
         End Function
 

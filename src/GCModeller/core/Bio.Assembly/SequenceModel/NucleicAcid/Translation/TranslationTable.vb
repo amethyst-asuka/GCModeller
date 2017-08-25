@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::d31f594d75ebc798ad48abb0dd1fd80f, ..\GCModeller\core\Bio.Assembly\SequenceModel\NucleicAcid\Translation\TranslationTable.vb"
+﻿#Region "Microsoft.VisualBasic::d31f594d75ebc798ad48abb0dd1fd80f, ..\core\Bio.Assembly\SequenceModel\NucleicAcid\Translation\TranslationTable.vb"
 
     ' Author:
     ' 
@@ -39,7 +39,7 @@ Namespace SequenceModel.NucleotideModels.Translation
     ''' transl_table=1 标准密码子表
     ''' </summary>
     ''' 
-    <PackageNamespace("NT.Translation",
+    <Package("NT.Translation",
                       Category:=APICategories.UtilityTools,
                       Description:="",
                       Publisher:="amethyst.asuka@gcmodeller.org",

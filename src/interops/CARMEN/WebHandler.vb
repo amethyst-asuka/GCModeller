@@ -32,11 +32,12 @@ Imports Microsoft.VisualBasic.Linq.Extensions
 Imports Microsoft.VisualBasic.MIME.Markup.HTML
 Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports Microsoft.VisualBasic.Terminal.xConsole
+Imports Microsoft.VisualBasic.Text.HtmlParser
 
 ''' <summary>
 ''' Comparative Analysis and Reconstruction of MEtabolic Networks
 ''' </summary>
-<PackageNamespace("CARMEN.WebHandler",
+<Package("CARMEN.WebHandler",
                   Description:="Comparative Analysis and Reconstruction of MEtabolic Networks<br />
                   KGML-based model reconstruction of metabolic pathways<br /><br />             
 After a CARMEN analysis run has finished, you can directly download various SBML files (Level 2 Version 1 and Version 4, Level 3 Version 1). 
@@ -93,7 +94,7 @@ Public Module WebHandler
                 {OP_pathways, pathway}
         }.BuildReqparm
 
-        Dim result As String = EXEC_Reconstruct.PostRequest(reqparm)
+        Dim result As String = EXEC_Reconstruct.POST(reqparm)
 
         result = Regex.Match(result, "<meta http-equiv=""refresh"".+?>", RegexOptions.IgnoreCase Or RegexOptions.Singleline).Value
 

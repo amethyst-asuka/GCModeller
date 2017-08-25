@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::73a4874ab7843132d988316c21c166a4, ..\R.Bioconductor\RDotNET\R.NET\REngine.vb"
+﻿#Region "Microsoft.VisualBasic::1e7b40b0c32298de38946b5689a7bc6f, ..\R.Bioconductor\RDotNET\R.NET\REngine.vb"
 
     ' Author:
     ' 
@@ -567,22 +567,22 @@ Public Class REngine
 		environment.SetSymbol(name, expression)
 	End Sub
 
-	''' <summary>
-	''' Evaluates a statement in the given string.
-	''' </summary>
-	''' <param name="statement">The statement.</param>
-	''' <returns>Last evaluation.</returns>
-	Public Function Evaluate(statement As String) As SymbolicExpression
-		CheckEngineIsRunning()
-		Return Defer(statement).LastOrDefault()
-	End Function
+    ''' <summary>
+    ''' Evaluates a statement in the given string.
+    ''' </summary>
+    ''' <param name="statement">The statement.</param>
+    ''' <returns>Last evaluation.</returns>
+    Public Overridable Function Evaluate(statement As String) As SymbolicExpression
+        CheckEngineIsRunning()
+        Return Defer(statement).LastOrDefault()
+    End Function
 
-	''' <summary>
-	''' Evaluates a statement in the given stream.
-	''' </summary>
-	''' <param name="stream">The stream.</param>
-	''' <returns>Last evaluation.</returns>
-	Public Function Evaluate(stream As Stream) As SymbolicExpression
+    ''' <summary>
+    ''' Evaluates a statement in the given stream.
+    ''' </summary>
+    ''' <param name="stream">The stream.</param>
+    ''' <returns>Last evaluation.</returns>
+    Public Function Evaluate(stream As Stream) As SymbolicExpression
 		CheckEngineIsRunning()
 		Return Defer(stream).LastOrDefault()
 	End Function

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::2ba41e432fdeefa4c60260e34a8e780b, ..\GCModeller\data\RegulonDatabase\Regprecise\WebServices\WebParser\Motif\MotifSite.vb"
+﻿#Region "Microsoft.VisualBasic::2e9143bbf8e87fdb078682cb36a89620, ..\GCModeller\data\RegulonDatabase\Regprecise\WebServices\WebParser\Motif\MotifSite.vb"
 
     ' Author:
     ' 
@@ -42,7 +42,7 @@ Namespace Regprecise
     ''' regulogs.Xml RegPrecise数据库之中已经完成的Motif位点的数据
     ''' </summary>
     <XmlType("MotifSite")> Public Class MotifSitelog
-        Implements sIdEnumerable
+        Implements INamedValue
 
         Public Property Family As String
         Public Property RegulationMode As String
@@ -53,7 +53,7 @@ Namespace Regprecise
         Public Property Sites As FastaObject()
         <XmlAttribute> Public Property logo As String
 
-        Private Property Identifier As String Implements sIdEnumerable.Identifier
+        Private Property Identifier As String Implements INamedValue.Key
             Get
                 Return Regulog.Key
             End Get

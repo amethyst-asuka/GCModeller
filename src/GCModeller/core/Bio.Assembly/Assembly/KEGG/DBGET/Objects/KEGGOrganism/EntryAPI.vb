@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::c01bb16921baec25c31f70d71c35169f, ..\GCModeller\core\Bio.Assembly\Assembly\KEGG\DBGET\Objects\KEGGOrganism\EntryAPI.vb"
+﻿#Region "Microsoft.VisualBasic::c01bb16921baec25c31f70d71c35169f, ..\core\Bio.Assembly\Assembly\KEGG\DBGET\Objects\KEGGOrganism\EntryAPI.vb"
 
     ' Author:
     ' 
@@ -28,20 +28,17 @@
 
 Imports System.Runtime.CompilerServices
 Imports System.Text.RegularExpressions
-Imports System.Xml.Serialization
 Imports Microsoft.VisualBasic.CommandLine.Reflection
-Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Scripting.MetaData
-Imports Microsoft.VisualBasic.Text
-Imports Microsoft.VisualBasic.Text.Similarity
+Imports Microsoft.VisualBasic.Text.Levenshtein
 
 Namespace Assembly.KEGG.DBGET.bGetObject.Organism
 
     ''' <summary>
     ''' 
     ''' </summary>
-    <PackageNamespace("KEGG.DBGET.spEntry",
+    <Package("KEGG.DBGET.spEntry",
                       Publisher:="amethyst.asuka@gcmodeller.org",
                       Url:=EntryAPI.WEB_URL,
                       Category:=APICategories.UtilityTools,

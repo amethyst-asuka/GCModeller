@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::6bc697e367e07e7b92420ce8f7509149, ..\GCModeller\core\Bio.Assembly\SequenceModel\NucleicAcid\Translation\Codon.vb"
+﻿#Region "Microsoft.VisualBasic::715fcfbc2a3089834ddf5ce48b52d044, ..\core\Bio.Assembly\SequenceModel\NucleicAcid\Translation\Codon.vb"
 
     ' Author:
     ' 
@@ -27,9 +27,10 @@
 #End Region
 
 Imports System.Xml.Serialization
-Imports Microsoft.VisualBasic.Linq.Extensions
-Imports Microsoft.VisualBasic.ComponentModel
+Imports Microsoft.VisualBasic.ComponentModel.Algorithm.base
 Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Linq.Extensions
+Imports SMRUCC.genomics.SequenceModel.NucleotideModels.Conversion
 
 Namespace SequenceModel.NucleotideModels.Translation
 
@@ -54,9 +55,9 @@ Namespace SequenceModel.NucleotideModels.Translation
         ''' <returns></returns>
         <XmlAttribute> Public Property Z As DNA
 
-        '''' <param name="X">密码子中的第一个碱基</param>
-        '''' <param name="Y">密码子中的第二个碱基</param>
-        '''' <param name="Z">密码子中的第三个碱基</param>
+        ''' <param name="X">密码子中的第一个碱基</param>
+        ''' <param name="Y">密码子中的第二个碱基</param>
+        ''' <param name="Z">密码子中的第三个碱基</param>
         Public Shared Function CalTranslHash(X As DNA, Y As DNA, Z As DNA) As Integer
             Return X * 1000 + Y * 100 + Z * 10000
         End Function
@@ -70,17 +71,17 @@ Namespace SequenceModel.NucleotideModels.Translation
         ''' <summary>
         ''' 翻译用途的
         ''' </summary>
-        ''' <param name="Tokens"></param>
-        Friend Sub New(Tokens As String())
-            If Tokens.Length = 4 Then
+        ''' <param name="tokens"></param>
+        Friend Sub New(tokens As String())
+            If tokens.Length = 4 Then
                 IsInitCodon = True
             End If
 
-            If String.Equals(Tokens(1), "*") Then
+            If String.Equals(tokens(1), "*") Then
                 IsStopCodon = True
             End If
 
-            Dim Codon = Tokens(Scan0).ToArray(Function(ntch) NucleicAcid.NucleotideConvert(ntch))
+            Dim Codon = tokens(Scan0).ToArray(Function(ntch) nucleotideConvert(ntch))
             X = Codon(Scan0)
             Y = Codon(1)
             Z = Codon(2)
@@ -98,7 +99,7 @@ Namespace SequenceModel.NucleotideModels.Translation
         End Property
 
         ''' <summary>
-        ''' 返回三联体密码子的核酸片段
+        ''' 返回三联体密码子的核酸片段，以三联体密码子字符串的形式显示当前的这个密码子内的内容
         ''' </summary>
         ''' <returns></returns>
         Public ReadOnly Property CodonValue As String
@@ -143,15 +144,15 @@ Namespace SequenceModel.NucleotideModels.Translation
         ''' <returns></returns>
         Public Shared Function CreateHashTable() As Codon()
             Dim NNCols As DNA() = {DNA.dAMP, DNA.dCMP, DNA.dGMP, DNA.dTMP}
-            Dim Combos = Comb.CreateCombos(NNCols, NNCols)
-            Dim TripleCombos = Comb.CreateCombos(Combos, NNCols)
+            Dim Combos = Combination.CreateCombos(NNCols, NNCols)
+            Dim TripleCombos = Combination.CreateCombos(Combos, NNCols)
             Dim Codens As Codon() =
-                LinqAPI.Exec(Of Codon) <= From coden As KeyValuePair(Of KeyValuePair(Of DNA, DNA), DNA)
+                LinqAPI.Exec(Of Codon) <= From coden As Tuple(Of Tuple(Of DNA, DNA), DNA)
                                           In TripleCombos
                                           Select New Codon With {
-                                              .X = coden.Key.Key,
-                                              .Y = coden.Key.Value,
-                                              .Z = coden.Value
+                                              .X = coden.Item1.Item1,
+                                              .Y = coden.Item1.Item2,
+                                              .Z = coden.Item2
                                           }
             Return Codens
         End Function

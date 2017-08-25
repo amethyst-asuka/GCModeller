@@ -1,16 +1,41 @@
-﻿Imports System.IO
-Imports System.Runtime.CompilerServices
+﻿#Region "Microsoft.VisualBasic::b6a8e317a99a1d54d384edb68830a386, ..\GCModeller\CLI_tools\NCBI_tools\CLI\Taxonomy.vb"
+
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+#End Region
+
+Imports System.IO
 Imports System.Text
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel.Collection
-Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports Microsoft.VisualBasic.ComponentModel.TagData
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports Microsoft.VisualBasic.Data.IO.SearchEngine
 Imports Microsoft.VisualBasic.Language
@@ -19,7 +44,10 @@ Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Parallel.Linq
 Imports Microsoft.VisualBasic.Serialization.JSON
 Imports Microsoft.VisualBasic.Text
+Imports Microsoft.VisualBasic.Text.Levenshtein
+Imports SMRUCC.genomics.Assembly
 Imports SMRUCC.genomics.Assembly.NCBI
+Imports SMRUCC.genomics.Assembly.NCBI.Taxonomy
 Imports SMRUCC.genomics.Metagenomics
 Imports SMRUCC.genomics.SequenceModel.FASTA
 
@@ -47,6 +75,7 @@ Partial Module CLI
               Description:="Search the taxonomy text by using query expression? If this set true, then the input should be a expression csv file.")>
     <Argument("/cut", True, Description:="This parameter will be disabled when ``/expression`` is presents.")>
     <Argument("/in", False, AcceptTypes:={GetType(String()), GetType(QueryArgument)})>
+    <Group(CLIGrouping.TaxonomyTools)>
     Public Function SearchTaxonomy(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim ncbi_taxonomy As String = args("/ncbi_taxonomy")
@@ -66,7 +95,7 @@ Partial Module CLI
                 Let exp As Expression = x.Expression.Build
                 Select New NamedValue(Of Func(Of String, Boolean)) With {
                     .Name = x.Name,
-                    .x = AddressOf exp.Match
+                    .Value = AddressOf exp.Match
                 }
 
             Call "Search in expression query mode!".__DEBUG_ECHO
@@ -80,14 +109,14 @@ Partial Module CLI
                 Let evl As Func(Of String, Boolean) = Function(s) Similarity.Evaluate(s, name) >= cutoff
                 Select New NamedValue(Of Func(Of String, Boolean)) With {
                     .Name = name,
-                    .x = evl
+                    .Value = evl
                 }
         End If
 
         ' Dim ranksData As New Ranks(tree:=taxonomy)
         Dim nodes = From exp
                     In evaluates.AsParallel
-                    Let evaluate = exp.x
+                    Let evaluate = exp.Value
                     Select name = exp.Name,
                         taxid = From k
                                 In taxonomy.Taxonomy.AsParallel
@@ -146,8 +175,10 @@ Partial Module CLI
         Return output.SaveTo(out).CLICode
     End Function
 
-    <ExportAPI("/Split.By.Taxid",
+    <ExportAPI("/Split.By.Taxid", Info:="Split the input fasta file by taxid grouping.",
                Usage:="/Split.By.Taxid /in <nt.fasta> [/gi2taxid <gi2taxid.txt> /out <outDIR>]")>
+    <Group(CLIGrouping.TaxonomyTools)>
+    <Group(CLIGrouping.GITools)>
     Public Function SplitByTaxid(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim gi2taxid As String = args.GetValue("/gi2taxid", [in].TrimSuffix & ".txt")
@@ -161,7 +192,7 @@ Partial Module CLI
         End If
 
         Dim taxids As BucketDictionary(Of Integer, Integer) =
-            Taxonomy.AcquireAuto(gi2taxid)
+            NCBI.Taxonomy.AcquireAuto(gi2taxid)
         Dim output As New Dictionary(Of Integer, StreamWriter)
 
         For Each fa As FastaToken In New StreamIterator([in]).ReadStream
@@ -199,6 +230,7 @@ Partial Module CLI
 
     <ExportAPI("/Split.By.Taxid.Batch",
                Usage:="/Split.By.Taxid.Batch /in <nt.fasta.DIR> [/num_threads <-1> /out <outDIR>]")>
+    <Group(CLIGrouping.TaxonomyTools)>
     Public Function SplitByTaxidBatch(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim out As String = args.GetValue("/out", [in].TrimDIR & "-Split/")
@@ -210,18 +242,9 @@ Partial Module CLI
         Return App.SelfFolks(tasks, LQuerySchedule.AutoConfig(n))
     End Function
 
-    Public Class MapHits
-        <Collection("MapHits",)> Public Property MapHits As String()
-        Public Property Data As Dictionary(Of String, String)
-        Public Property taxid As Integer
-
-        Public Overrides Function ToString() As String
-            Return Me.GetJson
-        End Function
-    End Class
-
     <ExportAPI("/OTU.associated",
                Usage:="/OTU.associated /in <OTU.Data> /maps <mapsHit.csv> [/RawMap <data_mapping.csv> /OTU_Field <""#OTU_NUM""> /out <out.csv>]")>
+    <Group(CLIGrouping.TaxonomyTools)>
     Public Function OTUAssociated(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim maps As String = args("/maps")
@@ -236,12 +259,12 @@ Partial Module CLI
 
         If raw.FileExists Then
             rawMaps =
-                DocumentStream.DataFrame _
+                IO.DataFrame _
                 .Load(raw, Encoding.ASCII) _
                 .EnumerateData _
                 .Select(Function(row) New NamedValue(Of Dictionary(Of String, String)) With {
                     .Name = row(fieldName),
-                    .x = row
+                    .Value = row
                 }).ToDictionary
         Else
             rawMaps = New Dictionary(Of NamedValue(Of Dictionary(Of String, String)))
@@ -256,12 +279,12 @@ Partial Module CLI
                 If rawMaps.ContainsKey(OTU$) Then
                     Dim rawData = rawMaps(OTU$)
 
-                    For Each k In rawData.x
+                    For Each k In rawData.Value
                         find.Data(k.Key) = k.Value
                     Next
 
-                    If rawData.x.ContainsKey("Reference") Then
-                        Dim ref = rawData.x("Reference")
+                    If rawData.Value.ContainsKey("Reference") Then
+                        Dim ref = rawData.Value("Reference")
                         Dim gi = Regex.Match(ref, "gi\|\d+").Value
                         find.Data("gi") = gi
                     End If
@@ -276,6 +299,7 @@ Partial Module CLI
     End Function
 
     <ExportAPI("/OTU.Taxonomy", Usage:="/OTU.Taxonomy /in <OTU.Data> /maps <mapsHit.csv> /tax <taxonomy:nodes/names> [/out <out.csv>]")>
+    <Group(CLIGrouping.TaxonomyTools)>
     Public Function OTU_Taxonomy(args As CommandLine) As Integer
         Dim [in] As String = args("/in")
         Dim maps As String = args("/maps")
@@ -304,18 +328,43 @@ Partial Module CLI
         Return output.SaveTo(out).CLICode
     End Function
 
+    <ExportAPI("/OTU.Taxonomy.Replace", Info:="Using ``MapHits`` property",
+               Usage:="/OTU.Taxonomy.Replace /in <otu.table.csv> /maps <maphits.csv> [/out <out.csv>]")>
+    Public Function OTUTaxonomyReplace(args As CommandLine) As Integer
+        Dim [in] As String = args("/in")
+        Dim maps As String = args("/maps")
+        Dim out As String = args.GetValue("/out", [in].TrimSuffix & "-" & maps.BaseName & "_taxonomy_replaced.csv")
+        Dim OTUs = [in].LoadCsv(Of OTUData)
+        Dim mapsData = maps.LoadCsv(Of MapHit)
+        Dim hash = OTUs.ToDictionary
+
+        For Each x In mapsData
+            For Each tag$ In x.MapHits
+                If hash.ContainsKey(tag) Then
+                    hash(tag).Data(NameOf(MapHit.Taxonomy)) = x.Taxonomy
+                End If
+            Next
+        Next
+
+        Return hash.Values _
+            .ToArray _
+            .SaveTo(out) _
+            .CLICode
+    End Function
+
     ''' <summary>
     ''' ref是总的数据，parts是ref里面的部分数据，则个函数则是将parts之中没有出现的都找出来
     ''' </summary>
     ''' <param name="args"></param>
     ''' <returns></returns>
     <ExportAPI("/OTU.diff", Usage:="/OTU.diff /ref <OTU.Data1.csv> /parts <OTU.Data2.csv> [/out <out.csv>]")>
+    <Group(CLIGrouping.TaxonomyTools)>
     Public Function OTUDiff(args As CommandLine) As Integer
         Dim ref = args("/ref")
         Dim parts = args("/parts")
         Dim out = args.GetValue("/out", parts.TrimSuffix & "-" & ref.BaseName & ".diff.csv")
         Dim diff As New List(Of String)
-        Dim partsId = parts.LoadCsv(Of OTUData).Select(Function(x) x.OTU).Distinct.ToList
+        Dim partsId = parts.LoadCsv(Of OTUData).Select(Function(x) x.OTU).Distinct.AsList
 
         For Each x In ref.LoadCsv(Of OTUData)
             If partsId.IndexOf(x.OTU) = -1 Then
@@ -326,8 +375,19 @@ Partial Module CLI
         Return diff.FlushAllLines(out).CLICode
     End Function
 
-    <ExportAPI("/Taxonomy.Tree",
+    <ExportAPI("/MapHits.list", Usage:="/MapHits.list /in <in.csv> [/out <out.txt>]")>
+    <Argument("/in", AcceptTypes:={GetType(MapHits), GetType(MapHit)})>
+    Public Function GetMapHitsList(args As CommandLine) As Integer
+        Dim [in] As String = args("/in")
+        Dim data = [in].LoadCsv(Of MapHits)
+        Dim list$() = data.Select(Function(x) x.MapHits).IteratesALL.Distinct.ToArray
+        Dim out As String = args.GetValue("/out", [in].TrimSuffix & ".maphits.list.txt")
+        Return list.FlushAllLines(out, Encodings.ASCII).CLICode
+    End Function
+
+    <ExportAPI("/Taxonomy.Tree", Info:="Output taxonomy query info by a given NCBI taxid list.",
                Usage:="/Taxonomy.Tree /taxid <taxid.list.txt> /tax <ncbi_taxonomy:nodes/names> [/out <out.csv>]")>
+    <Group(CLIGrouping.TaxonomyTools)>
     Public Function TaxonomyTree(args As CommandLine) As Integer
         Dim taxid As String = args("/taxid")
         Dim tax As String = args("/tax")
@@ -345,18 +405,18 @@ Partial Module CLI
                 Let t As String() = s.Split(ASCII.TAB)
                 Select New NamedValue(Of Integer) With {
                     .Name = t(Scan0),
-                    .x = CInt(Val(t(1)))
+                    .Value = CInt(Val(t(1)))
                 }
         Else
             taxids = taxid.IterateAllLines.ToArray(Function(s) New NamedValue(Of Integer)("", CInt(Val(s))))
         End If
 
         For Each x As NamedValue(Of Integer) In taxids
-            Dim nodes = data.GetAscendantsWithRanksAndNames(x.x, True)
+            Dim nodes = data.GetAscendantsWithRanksAndNames(x.Value, True)
             Dim tree = TaxonomyNode.BuildBIOM(nodes)
 
             output += New IntegerTagged(Of String) With {
-                .Tag = x.x%,
+                .Tag = x.Value%,
                 .TagStr = x.Name,
                 .value = tree
             }
@@ -366,7 +426,9 @@ Partial Module CLI
     End Function
 
     <ExportAPI("/Taxonomy.Data",
-             Usage:="/Taxonomy.Data /data <data.csv> /field.gi <GI> /gi2taxid <gi2taxid.list.txt> /tax <ncbi_taxonomy:nodes/names> [/out <out.csv>]")>
+               Usage:="/Taxonomy.Data /data <data.csv> /field.gi <GI> /gi2taxid <gi2taxid.list.txt> /tax <ncbi_taxonomy:nodes/names> [/out <out.csv>]")>
+    <Group(CLIGrouping.TaxonomyTools)>
+    <Group(CLIGrouping.GITools)>
     Public Function TaxonomyTreeData(args As CommandLine) As Integer
         Dim gi2taxid As String = args("/gi2taxid")
         Dim tax As String = args("/tax")
@@ -376,14 +438,14 @@ Partial Module CLI
         Dim data As EntityObject() =
             dataFile _
             .LoadCsv(Of EntityObject)(maps:=New Dictionary(Of String, String) From {
-                {giFieldName, NameOf(EntityObject.Identifier)}
+                {giFieldName, NameOf(EntityObject.ID)}
             })
         Dim giMapTaxid As BucketDictionary(Of Integer, Integer) =
-            AcquireAuto(gi2taxid)
+            NCBI.Taxonomy.AcquireAuto(gi2taxid)
         Dim taxTree As New NcbiTaxonomyTree(tax)
 
         For Each x As EntityObject In data
-            Dim gi% = CInt(x.Identifier)
+            Dim gi% = CInt(x.ID)
 
             If giMapTaxid.ContainsKey(gi%) Then
                 Dim taxid% = giMapTaxid(gi%)
@@ -404,4 +466,65 @@ Partial Module CLI
 
         Return data.SaveTo(out).CLICode
     End Function
+
+    <ExportAPI("/Taxonomy.Maphits.Overview",
+               Usage:="/Taxonomy.Maphits.Overview /in <in.DIR> [/out <out.csv>]")>
+    <Group(CLIGrouping.TaxonomyTools)>
+    Public Function TaxidMapHitViews(args As CommandLine) As Integer
+        Dim [in] As String = args("/in")
+        Dim out As String = args.GetValue("/out", [in].TrimDIR & ".overviews.csv")
+        Dim data = MapHit.SamplesView([in]).ToArray
+        Return data.SaveTo(out).CLICode
+    End Function
+
+    Public Class MapHit : Inherits MapHits
+
+        Public Property Name As String
+
+        <Column("Taxonomy.Name")>
+        Public Property TaxonomyName As String
+        Public Property Taxonomy As String
+
+        Public Overrides Function ToString() As String
+            Return Me.GetJson
+        End Function
+
+        Public Shared Iterator Function SamplesView(DIR$) As IEnumerable(Of MapHit)
+            Dim data As New List(Of NamedValue(Of MapHit()))
+
+            For Each file$ In ls - l - r - "*.csv" <= DIR
+                data += New NamedValue(Of MapHit()) With {
+                    .Name = file.BaseName,
+                    .Value = file.LoadCsv(Of MapHit)
+                }
+            Next
+
+            ' grouping by taxid
+            Dim tg = (From x As NamedValue(Of MapHit())
+                      In data
+                      Select x.Value _
+                          .Select(Function(o) (sample:=x.Name, taxid:=o))) _
+                          .IteratesALL _
+                          .GroupBy(Function(x) x.taxid.taxid)
+
+            For Each tax In tg
+                Dim out As (sample$, taxid As MapHit)() = tax.ToArray
+                Dim samples As Dictionary(Of String, String) =
+                    out _
+                    .GroupBy(Function(x) x.sample) _
+                    .ToDictionary(Function(x) x.Key,
+                                  Function(x) x.Select(
+                                  Function(m) m.taxid.MapHits.Length).Sum.ToString)
+
+                Yield New MapHit With {
+                    .MapHits = tax.Select(Function(x) x.taxid.MapHits).IteratesALL.Distinct.ToArray,
+                    .taxid = tax.Key,
+                    .Name = out(Scan0).taxid.Name,
+                    .Taxonomy = out(Scan0).taxid.Taxonomy,
+                    .TaxonomyName = out(Scan0).taxid.TaxonomyName,
+                    .Data = samples
+                }
+            Next
+        End Function
+    End Class
 End Module

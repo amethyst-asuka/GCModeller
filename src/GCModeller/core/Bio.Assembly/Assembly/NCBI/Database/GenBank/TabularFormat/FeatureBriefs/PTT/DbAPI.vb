@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::4d03e30d756d7df0ec6411b89379cde1, ..\GCModeller\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\TabularFormat\FeatureBriefs\PTT\DbAPI.vb"
+﻿#Region "Microsoft.VisualBasic::ebf48fa57a1f56f52eb9dd88833db05f, ..\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\TabularFormat\FeatureBriefs\PTT\DbAPI.vb"
 
     ' Author:
     ' 
@@ -30,7 +30,6 @@ Imports System.Text.RegularExpressions
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports Microsoft.VisualBasic.Linq
-Imports Microsoft.VisualBasic.Serialization
 Imports Microsoft.VisualBasic.Serialization.JSON
 
 Namespace Assembly.NCBI.GenBank.TabularFormat

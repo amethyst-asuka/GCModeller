@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::ae37f7d400c8142d6072cef898a952ab, ..\GCModeller\sub-system\PLAS.NET\SSystem\System\Experiments\Disturb.vb"
+﻿#Region "Microsoft.VisualBasic::33ef8027d3275e1ee54d4ce9b2e47cc5, ..\GCModeller\sub-system\PLAS.NET\SSystem\System\Experiments\Disturb.vb"
 
     ' Author:
     ' 
@@ -27,7 +27,7 @@
 #End Region
 
 Imports System.Xml.Serialization
-Imports Microsoft.VisualBasic.Mathematical.diffEq
+Imports Microsoft.VisualBasic.Math.Calculus
 
 Namespace Kernel.ObjectModels
 

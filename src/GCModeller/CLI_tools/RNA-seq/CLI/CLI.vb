@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::ec80e7beb8a21edcfee475e82fbd92a6, ..\GCModeller\CLI_tools\RNA-seq\CLI\CLI.vb"
+﻿#Region "Microsoft.VisualBasic::885aaafecc73f5ff1691730b28f04a4d, ..\GCModeller\CLI_tools\RNA-seq\CLI\CLI.vb"
 
 ' Author:
 ' 
@@ -26,17 +26,17 @@
 
 #End Region
 
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports Microsoft.VisualBasic.Data.IO.SearchEngine
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Linq.Extensions
+Imports Microsoft.VisualBasic.ListExtensions
 Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports Microsoft.VisualBasic.Serialization.JSON
 Imports Microsoft.VisualBasic.Text
@@ -48,10 +48,11 @@ Imports SMRUCC.genomics.Analysis.RNA_Seq.RTools.DESeq2
 Imports SMRUCC.genomics.Assembly
 Imports SMRUCC.genomics.Assembly.DOOR
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat
-Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.FeatureKeys
+Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.GFF
+Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.GFF.FeatureKeys
 Imports SMRUCC.genomics.Interops.RNA_Seq.BOW
 
-<PackageNamespace("RNA-seq.CLI", Category:=APICategories.CLI_MAN, Publisher:="xie.guigang@gcmodeller.org")>
+<Package("RNA-seq.CLI", Category:=APICategories.CLI_MAN, Publisher:="xie.guigang@gcmodeller.org")>
 Module CLI
 
     Sub New()
@@ -98,11 +99,11 @@ Module CLI
         Dim DOOR = DOOR_API.Load(doorFile)
         Dim corrects As Operon() = CorrectDoorOperon(PCC, DOOR, pccCut)
 
-        Dim MAT As New DocumentStream.File
+        Dim MAT As New IO.File
         Call MAT.Add({"DOOR", "locus_id", "Strand"})
 
         For Each operon As Operon In corrects
-            Dim row As New DocumentStream.RowObject
+            Dim row As New RowObject
             Dim initX = operon.InitialX
             Call row.AddRange({operon.OperonID, initX.Synonym, initX.Location.Strand.GetBriefCode})
             Call MAT.Add(row)
@@ -113,7 +114,7 @@ Module CLI
 
             Dim pre As New List(Of String)
 
-            For Each gene As GeneBrief In (From x In operon Where Not x.Value Is initX Select x.Value)
+            For Each gene As OperonGene In (From x In operon Where Not x.Value Is initX Select x.Value)
                 row = New RowObject
                 Call row.AddRange({operon.OperonID, gene.Synonym, gene.Location.Strand.GetBriefCode})
                 Call row.Add(PCC.GetValue(initX.Synonym, gene.Synonym))
@@ -134,7 +135,7 @@ Module CLI
     Public Function PCC(args As CommandLine) As Integer
         Dim expr As String = args("/expr")
         Dim out As String = args.GetValue("/out", expr.TrimSuffix & ".PCC.dat")
-        Dim MAT As PccMatrix = MatrixAPI.CreatePccMAT(DocumentStream.File.Load(expr))
+        Dim MAT As PccMatrix = MatrixAPI.CreatePccMAT(IO.File.Load(expr))
         Return MatrixSerialization.SaveBin(MAT, out).CLICode
     End Function
 
@@ -142,7 +143,7 @@ Module CLI
     Public Function SPCC(args As CommandLine) As Integer
         Dim expr As String = args("/expr")
         Dim out As String = args.GetValue("/out", expr.TrimSuffix & ".SPCC.dat")
-        Dim MAT As PccMatrix = MatrixAPI.CreateSPccMAT(DocumentStream.File.Load(expr))
+        Dim MAT As PccMatrix = MatrixAPI.CreateSPccMAT(IO.File.Load(expr))
         Return MatrixSerialization.SaveBin(MAT, out).CLICode
     End Function
 
@@ -175,7 +176,7 @@ Module CLI
         Dim raw As String = args("/raw")
         Dim out As String = args.GetValue("/out", raw.TrimSuffix & ".locus_tag.txt")
         Dim counts = CountResult.Load(raw)
-        Dim gff As GFF = GFF.LoadDocument(gffFile)
+        Dim gff As GFFTable = GFFTable.LoadDocument(gffFile)
         Dim mappings = gff.ProtId2Locus
         Dim setValue = New SetValue(Of CountResult) <= NameOf(CountResult.Feature)
 
@@ -197,7 +198,7 @@ Module CLI
         Dim gffFile As String = args("/gff")
         Dim out As String = args.GetValue("/out", inRaw.TrimSuffix & ".RPKM.csv")
         Dim dataExpr0 = CountResult.Load(inRaw)
-        Dim gff As GFF = GFF.LoadDocument(gffFile)
+        Dim gff As GFFTable = GFFTable.LoadDocument(gffFile)
         dataExpr0 = dataExpr0.RPKM(gff)
         Return dataExpr0.SaveTo(out).CLICode
     End Function
@@ -222,7 +223,7 @@ Module CLI
         Dim PTT As String = args("/ptt")
         Dim design As String = args.GetValue("/design", "~condition")
         Dim dtPTT As PTT = NCBI.GenBank.TabularFormat.PTT.Load(PTT)
-        Dim sampleTable As DocumentStream.File = DocumentStream.File.Load(args("/sample.table"))
+        Dim sampleTable As IO.File = IO.File.Load(args("/sample.table"))
         Return RTools.DESeq2.DESeq2(sampleTable, rawDIR, design, dtPTT).CLICode
     End Function
 
@@ -232,7 +233,7 @@ Module CLI
         Dim logFold As Double = args.GetValue("/log_fold", 2.0R)
         Dim out As String = args.GetValue("/out", inFile.TrimSuffix & $".logFold={logFold}.csv")
         Dim diff = inFile.LoadCsv(Of RTools.DESeq2.ResultData)
-        diff = (From x In diff Where Math.Abs(x.log2FoldChange) >= logFold Select x).ToList
+        diff = (From x In diff Where Math.Abs(x.log2FoldChange) >= logFold Select x).AsList
         Return diff.SaveTo(out).CLICode
     End Function
 

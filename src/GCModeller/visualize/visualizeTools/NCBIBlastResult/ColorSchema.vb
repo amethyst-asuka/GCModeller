@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::e969502522982a17ec2bfecc8905e569, ..\GCModeller\visualize\visualizeTools\NCBIBlastResult\ColorSchema.vb"
+﻿#Region "Microsoft.VisualBasic::226043a9f87352eb56926c06e673d308, ..\visualize\visualizeTools\NCBIBlastResult\ColorSchema.vb"
 
     ' Author:
     ' 
@@ -27,9 +27,8 @@
 #End Region
 
 Imports System.Runtime.CompilerServices
-Imports Microsoft.VisualBasic.ComponentModel
+Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports Microsoft.VisualBasic.ComponentModel.Ranges
-Imports Microsoft.VisualBasic.Serialization
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
 Imports SMRUCC.genomics.Interops.NCBI.Extensions
 Imports SMRUCC.genomics.Visualize.ComparativeGenomics.ModelAPI
@@ -46,6 +45,8 @@ Namespace NCBIBlastResult
         ''' </summary>
         ''' <param name="scores">需要从这里得到分数</param>
         ''' <returns></returns>
+        ''' 
+        <Extension>
         Public Function IdentitiesBrush(scores As Func(Of Analysis.Hit, Double)) As ICOGsBrush
             Return AddressOf New __brushHelper With {
                 .scores = scores,
@@ -56,7 +57,7 @@ Namespace NCBIBlastResult
         Private Structure __brushHelper
 
             Public scores As Func(Of Analysis.Hit, Double)
-            Public colors As RangeList(Of Double, TagValue(Of Color))
+            Public colors As RangeList(Of Double, NamedValue(Of Color))
 
             Public Function GetBrush(gene As GeneBrief) As Brush
                 Dim hit As New Analysis.Hit With {.HitName = gene.Synonym}
@@ -73,7 +74,7 @@ Namespace NCBIBlastResult
         ''' <param name="Schema"></param>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        <Extension> Public Function GetColor(schema As RangeList(Of Double, TagValue(Of Color)), p As Double) As Color
+        <Extension> Public Function GetColor(schema As RangeList(Of Double, NamedValue(Of Color)), p As Double) As Color
             Return schema.GetBlastnIdentitiesColor(p * 100)
         End Function
 
@@ -84,13 +85,9 @@ Namespace NCBIBlastResult
         ''' <param name="Schema"></param>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        <Extension> Public Function GetBlastnIdentitiesColor(schema As RangeList(Of Double, TagValue(Of Color)), p As Double) As Color
+        <Extension> Public Function GetBlastnIdentitiesColor(schema As RangeList(Of Double, NamedValue(Of Color)), p As Double) As Color
             Dim success As Boolean = False
-            Dim cl As TagValue(Of Color) = schema.SelectValue(p, [throw]:=False, success:=success)
-
-#If DEBUG Then
-            ' Call $"{p} --> {cl.GetJson}".__DEBUG_ECHO
-#End If
+            Dim cl As NamedValue(Of Color) = schema.SelectValue(p, [throw]:=False, success:=success)
 
             If Not success Then
                 If p <= 0 Then
@@ -103,31 +100,31 @@ Namespace NCBIBlastResult
             End If
         End Function
 
-        Public Function IdentitiesColors() As RangeList(Of Double, TagValue(Of Color))
-            Return New RangeList(Of Double, TagValue(Of Color)) From {
-                New RangeTagValue(Of Double, TagValue(Of Color))(0, 30, New TagValue(Of Color)("<= 30%", Color.Black)),
-                New RangeTagValue(Of Double, TagValue(Of Color))(30, 55, New TagValue(Of Color)("30% - 55%", Color.Blue)),
-                New RangeTagValue(Of Double, TagValue(Of Color))(55, 70, New TagValue(Of Color)("55% - 70%", Color.Green)),
-                New RangeTagValue(Of Double, TagValue(Of Color))(70, 90, New TagValue(Of Color)("70% - 90%", Color.Purple)),
-                New RangeTagValue(Of Double, TagValue(Of Color))(90, 100000, New TagValue(Of Color)(">= 90%", Color.Red))
+        Public Function IdentitiesColors() As RangeList(Of Double, NamedValue(Of Color))
+            Return New RangeList(Of Double, NamedValue(Of Color)) From {
+                New RangeTagValue(Of Double, NamedValue(Of Color))(0, 30, New NamedValue(Of Color)("<= 30%", Color.Black)),
+                New RangeTagValue(Of Double, NamedValue(Of Color))(30, 55, New NamedValue(Of Color)("30% - 55%", Color.Blue)),
+                New RangeTagValue(Of Double, NamedValue(Of Color))(55, 70, New NamedValue(Of Color)("55% - 70%", Color.Green)),
+                New RangeTagValue(Of Double, NamedValue(Of Color))(70, 90, New NamedValue(Of Color)("70% - 90%", Color.Purple)),
+                New RangeTagValue(Of Double, NamedValue(Of Color))(90, 100000, New NamedValue(Of Color)(">= 90%", Color.Red))
             }
         End Function
 
-        Public Function IdentitiesNonColors() As RangeList(Of Double, TagValue(Of Color))
-            Return New RangeList(Of Double, TagValue(Of Color)) From {
-                New RangeTagValue(Of Double, TagValue(Of Color))(0, 50, New TagValue(Of Color)("<= 50%", Color.LightGray)),
-                New RangeTagValue(Of Double, TagValue(Of Color))(50, 75, New TagValue(Of Color)("50% - 75%", Color.DarkGray)),
-                New RangeTagValue(Of Double, TagValue(Of Color))(75, 10000, New TagValue(Of Color)("> 75%", Color.Gray))
+        Public Function IdentitiesNonColors() As RangeList(Of Double, NamedValue(Of Color))
+            Return New RangeList(Of Double, NamedValue(Of Color)) From {
+                New RangeTagValue(Of Double, NamedValue(Of Color))(0, 50, New NamedValue(Of Color)("<= 50%", Color.LightGray)),
+                New RangeTagValue(Of Double, NamedValue(Of Color))(50, 75, New NamedValue(Of Color)("50% - 75%", Color.DarkGray)),
+                New RangeTagValue(Of Double, NamedValue(Of Color))(75, 10000, New NamedValue(Of Color)("> 75%", Color.Gray))
             }
         End Function
 
-        Public Function BitScores() As RangeList(Of Double, TagValue(Of Color))
-            Return New RangeList(Of Double, TagValue(Of Color)) From {
-                New RangeTagValue(Of Double, TagValue(Of Color))(0, 40, New TagValue(Of Color)("< 40", Color.Black)),
-                New RangeTagValue(Of Double, TagValue(Of Color))(40, 50, New TagValue(Of Color)("40 - 50", Color.Blue)),
-                New RangeTagValue(Of Double, TagValue(Of Color))(50, 80, New TagValue(Of Color)("50 - 80", Color.Green)),
-                New RangeTagValue(Of Double, TagValue(Of Color))(80, 200, New TagValue(Of Color)("80 - 200", Color.Purple)),
-                New RangeTagValue(Of Double, TagValue(Of Color))(200, 10000, New TagValue(Of Color)(">= 200", Color.Red))
+        Public Function BitScores() As RangeList(Of Double, NamedValue(Of Color))
+            Return New RangeList(Of Double, NamedValue(Of Color)) From {
+                New RangeTagValue(Of Double, NamedValue(Of Color))(0, 40, New NamedValue(Of Color)("< 40", Color.Black)),
+                New RangeTagValue(Of Double, NamedValue(Of Color))(40, 50, New NamedValue(Of Color)("40 - 50", Color.Blue)),
+                New RangeTagValue(Of Double, NamedValue(Of Color))(50, 80, New NamedValue(Of Color)("50 - 80", Color.Green)),
+                New RangeTagValue(Of Double, NamedValue(Of Color))(80, 200, New NamedValue(Of Color)("80 - 200", Color.Purple)),
+                New RangeTagValue(Of Double, NamedValue(Of Color))(200, 10000, New NamedValue(Of Color)(">= 200", Color.Red))
             }
         End Function
     End Module

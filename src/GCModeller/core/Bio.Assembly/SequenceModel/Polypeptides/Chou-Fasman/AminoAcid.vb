@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::6f7ddc105eb72423faa9a1ee5eab60cc, ..\GCModeller\core\Bio.Assembly\SequenceModel\Polypeptides\Chou-Fasman\AminoAcid.vb"
+﻿#Region "Microsoft.VisualBasic::6f7ddc105eb72423faa9a1ee5eab60cc, ..\core\Bio.Assembly\SequenceModel\Polypeptides\Chou-Fasman\AminoAcid.vb"
 
     ' Author:
     ' 
@@ -32,7 +32,7 @@ Namespace SequenceModel.Polypeptides.SecondaryStructure
 
     Public Class AminoAcid
 
-        Public ReadOnly Property AminoAcid As Polypeptides.AminoAcid
+        Public ReadOnly Property AminoAcid As SequenceModel.Polypeptides.AminoAcid
 
         Protected Friend _MaskAlphaHelix As Boolean
         Protected Friend _MaskBetaSheet_ As Boolean
@@ -58,7 +58,7 @@ Namespace SequenceModel.Polypeptides.SecondaryStructure
             End Get
         End Property
 
-        Sub New(Type As Polypeptides.AminoAcid)
+        Sub New(Type As SequenceModel.Polypeptides.AminoAcid)
             _AminoAcid = Type
         End Sub
 

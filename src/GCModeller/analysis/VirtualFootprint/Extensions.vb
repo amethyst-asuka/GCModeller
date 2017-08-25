@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::d860af1842e03998d611e55e1b00daec, ..\GCModeller\analysis\VirtualFootprint\Extensions.vb"
+﻿#Region "Microsoft.VisualBasic::e6bacfe0d1cc1db2b2c61d570ba3ea67, ..\GCModeller\analysis\VirtualFootprint\Extensions.vb"
 
     ' Author:
     ' 
@@ -118,7 +118,7 @@ Public Module Extensions
         Dim out = data.Groups(offset)
 
         For Each part As GroupResult(Of TagSite(Of SimpleSegment), String) In out
-            Dim locis As Integer() = part.Group.Select(Function(x) {x.contig.Ends, x.contig.Start}).MatrixToVector
+            Dim locis As Integer() = part.Group.Select(Function(x) {x.contig.Ends, x.contig.Start}).ToVector
             Dim min As Integer = locis.Min
             Dim max As Integer = locis.Max
             Dim ref As SimpleSegment = part.Group.First.contig

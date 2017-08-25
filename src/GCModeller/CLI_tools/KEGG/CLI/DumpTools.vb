@@ -1,28 +1,28 @@
-﻿#Region "Microsoft.VisualBasic::894aaa69cac055b5933fe7441d0be102, ..\GCModeller\CLI_tools\KEGG\CLI\DumpTools.vb"
+﻿#Region "Microsoft.VisualBasic::28da660339308eb4e11f0f086b704461, ..\GCModeller\CLI_tools\KEGG\CLI\DumpTools.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -34,11 +34,42 @@ Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports Microsoft.VisualBasic.Linq.Extensions
+Imports Microsoft.VisualBasic.Language.UnixBash
 Imports SMRUCC.genomics.Assembly.KEGG.DBGET
+Imports SMRUCC.genomics.Assembly.KEGG.DBGET.bGetObject
 Imports SMRUCC.genomics.Assembly.KEGG.DBGET.bGetObject.Organism
 Imports SMRUCC.genomics.SequenceModel.FASTA
 
 Partial Module CLI
+
+    <ExportAPI("/Download.human.genes",
+               Usage:="/Download.human.genes /in <geneID.list/DIR> [/batch /out <save.DIR>]")>
+    Public Function DownloadHumanGenes(args As CommandLine) As Integer
+        Dim in$ = args <= "/in"
+        Dim batch As Boolean = args.GetBoolean("/batch")
+        Dim download = Sub(path$, out$)
+                           Dim list$() = path.ReadAllLines
+                           Dim failures$() = list.DownloadHumanGenome(EXPORT:=out)
+                           Call failures _
+                                .SaveTo(out & "/failures.txt") _
+                                .CLICode
+                       End Sub
+
+        If batch Then
+            Dim out As String = args.GetValue("/out", [in].TrimDIR & "-KEGG_human_genes/")
+            Dim EXPORT$
+
+            For Each file As String In ls - l - r - "*.list" <= [in]
+                EXPORT = $"{out}/{file.BaseName}/"
+                download(file, out:=EXPORT)
+            Next
+        Else
+            Dim out$ = args.GetValue("/out", [in].TrimSuffix & ".human_genes/")
+            Call download([in], out)
+        End If
+
+        Return 0
+    End Function
 
     <ExportAPI("--Dump.Db", Info:="", Usage:="--Dump.Db /KEGG.Pathways <DIR> /KEGG.Modules <DIR> /KEGG.Reactions <DIR> /sp <sp.Code> /out <out.Xml>")>
     Public Function DumpDb(args As CommandLine) As Integer
@@ -54,10 +85,10 @@ Partial Module CLI
     <ExportAPI("--Get.KO", Usage:="--Get.KO /in <KASS-query.txt>")>
     Public Function GetKOAnnotation(args As CommandLine) As Integer
         Dim input As String = args("/in")
-        Dim buffer = IO.File.ReadAllLines(input).ToArray(Function(x) Strings.Split(x, vbTab))
+        Dim buffer = input.ReadAllLines.ToArray(Function(x) Strings.Split(x, vbTab))
         Dim tbl = buffer.ToArray(Function(x) New KeyValuePair With {.Key = x(Scan0), .Value = x.Get(1)})
         Dim brite = BriteHEntry.Pathway.LoadDictionary
-        Dim LQuery = (From prot In tbl Select __queryKO(prot.Key, prot.Value, brite)).ToArray.MatrixToList
+        Dim LQuery = (From prot In tbl Select __queryKO(prot.Key, prot.Value, brite)).ToArray.Unlist
         Return LQuery.SaveTo(input.TrimSuffix & ".KO.csv")
     End Function
 
@@ -72,7 +103,7 @@ Partial Module CLI
             Dim out As String = args.GetValue("/out", inFile & "/PathwayInfo/")
 
             For Each file As String In files
-                Dim outFile As String = out & $"/{IO.Path.GetFileNameWithoutExtension(file)}.PathwayInfo.csv"
+                Dim outFile As String = out & $"/{file.BaseName}.PathwayInfo.csv"
                 Call __queryKO2(file, outFile, evalue)
             Next
         Else
@@ -84,12 +115,16 @@ Partial Module CLI
     End Function
 
     Private Sub __queryKO2(infile As String, out As String, evalue As Double)
-        Dim inHits = infile.LoadCsv(Of bGetObject.SSDB.BlastnHit)
-        inHits = (From x In inHits Where x.Eval <= evalue Select x).ToList
-        Dim KO As String() = inHits.ToArray([CType]:=Function(x) x.KO, where:=Function(s) Not String.IsNullOrWhiteSpace(s.KO)).Distinct.ToArray
+        Dim inHits = infile.LoadCsv(Of SSDB.BlastnHit)
+        inHits = (From x In inHits Where x.Eval <= evalue Select x).AsList
+        Dim KO As String() = inHits _
+            .ToArray([CType]:=Function(x) x.KO,
+                     where:=Function(s) Not String.IsNullOrWhiteSpace(s.KO)) _
+            .Distinct _
+            .ToArray
         Dim brite = BriteHEntry.Pathway.LoadDictionary
-        Dim name As String = IO.Path.GetFileNameWithoutExtension(infile)
-        Dim anno = KO.ToArray(Function(sKO) __queryKO(name, sKO, brite)).MatrixToList
+        Dim name As String = infile.BaseName
+        Dim anno = KO.ToArray(Function(sKO) __queryKO(name, sKO, brite)).Unlist
         Call anno.SaveTo(out)
     End Sub
 
@@ -163,7 +198,7 @@ Null:       pwyBrite = New BriteHEntry.Pathway With {
     Public Function GetSource(args As CommandLine) As Integer
         Dim source As New FastaFile(args("/source"))
         Dim ref As New FastaFile(args("/ref"))
-        Dim out As String = args.GetValue("/out", args("/source").TrimSuffix & $".{IO.Path.GetFileNameWithoutExtension(args("/ref"))}.fasta")
+        Dim out As String = args.GetValue("/out", args("/source").TrimSuffix & $".{args("/ref").BaseName}.fasta")
         Dim sourceKEGG As SMRUCC.genomics.Assembly.KEGG.Archives.SequenceDump() =
             source.ToArray(Function(x) SMRUCC.genomics.Assembly.KEGG.Archives.SequenceDump.Create(x))
         Dim refKEGG As SMRUCC.genomics.Assembly.KEGG.Archives.SequenceDump() =
@@ -174,7 +209,7 @@ Null:       pwyBrite = New BriteHEntry.Pathway With {
                           Group x By x.SpeciesId Into Group) _
                              .ToDictionary(Function(x) x.SpeciesId, elementSelector:=Function(x) x.Group.ToArray)
         Dim refId As String() = refKEGG.ToArray(Function(x) x.SpeciesId).Distinct.ToArray
-        Dim LQuery = (From sId As String In refId Where sourceDict.ContainsKey(sId) Select sourceDict(sId)).ToArray.MatrixToList
+        Dim LQuery = (From sId As String In refId Where sourceDict.ContainsKey(sId) Select sourceDict(sId)).ToArray.Unlist
         Dim outFa As FastaFile = New FastaFile(LQuery)
 
         If args.GetBoolean("/brief") Then  ' 将基因号去除，只保留三字母的基因组编号，因为在做16S_rRNA进化树的时候，只需要一个基因就可以了
@@ -185,17 +220,11 @@ Null:       pwyBrite = New BriteHEntry.Pathway With {
         Return outFa.ToUpper.Save(out).CLICode
     End Function
 
-    <ExportAPI("/Pathways.Downloads.All", Usage:="/Pathways.Downloads.All [/out <outDIR>]")>
-    Public Function DownloadsAllPathways(args As CommandLine) As Integer
-        Dim outDIR As String = args.GetValue("/out", GCModeller.FileSystem.KEGG.GetPathways)
-        Return bGetObject.Pathway.DownloadAll(outDIR)
-    End Function
-
     <ExportAPI("/Dump.sp", Usage:="/Dump.sp [/res sp.html /out <out.csv>]")>
     Public Function DumpOrganisms(args As CommandLine) As Integer
         Dim res As String = args.GetValue("/res", "http://www.kegg.jp/kegg/catalog/org_list.html")
         Dim result As KEGGOrganism = EntryAPI.FromResource(res)
-        Dim table As List(Of Prokaryote) = result.Prokaryote.ToList + result.Eukaryotes.ToArray(Function(x) New Prokaryote(x))
+        Dim table As List(Of Prokaryote) = result.Prokaryote.AsList + result.Eukaryotes.ToArray(Function(x) New Prokaryote(x))
         Dim out As String = args.GetValue("/out", App.CurrentDirectory & "/KEGG_Organism.csv")
         Return table.SaveTo(out)
     End Function

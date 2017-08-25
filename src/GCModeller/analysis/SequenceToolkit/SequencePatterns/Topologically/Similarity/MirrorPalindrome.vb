@@ -1,28 +1,28 @@
-﻿#Region "Microsoft.VisualBasic::eb94feb36b1df0852e6460626c924754, ..\GCModeller\analysis\SequenceToolkit\SequencePatterns\Topologically\Similarity\MirrorPalindrome.vb"
+﻿#Region "Microsoft.VisualBasic::5d158328771102dee12e37b61f06367f, ..\GCModeller\analysis\SequenceToolkit\SequencePatterns\Topologically\Similarity\MirrorPalindrome.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -31,7 +31,8 @@ Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Scripting.MetaData
-Imports Microsoft.VisualBasic.Text
+Imports Microsoft.VisualBasic.Text.Levenshtein
+Imports SMRUCC.genomics.Analysis.SequenceTools.SequencePatterns.Topologically.Seeding
 Imports SMRUCC.genomics.SequenceModel
 
 Namespace Topologically.SimilarityMatches
@@ -96,21 +97,21 @@ Namespace Topologically.SimilarityMatches
                           In Locations
                           Let ml As NamedValue(Of Integer) =
                               __haveMirror(l, loci, Mirror, Sequence, cut, maxDist)
-                          Where ml.x > -1
+                          Where ml.Value > -1
                           Select loci,
                               ml).ToArray
             Return Result.ToArray(
                 Function(site) New PalindromeLoci With {
                     .Loci = Segment,
                     .Start = site.loci,
-                    .PalEnd = site.ml.x,
+                    .PalEnd = site.ml.Value,
                     .Palindrome = site.ml.Name,
                     .MirrorSite = Mirror
                 })
         End Function
     End Module
 
-    Public Class FuzzyMirrors : Inherits MirrorSearchs
+    Public Class FuzzyMirrors : Inherits Topologically.MirrorPalindrome
 
         ReadOnly _maxDist As Integer, cut As Double
 
@@ -120,7 +121,7 @@ Namespace Topologically.SimilarityMatches
         ''' <param name="Sequence"></param>
         ''' <param name="Min"></param>
         ''' <param name="Max"></param>
-        Sub New(Sequence As I_PolymerSequenceModel,
+        Sub New(Sequence As IPolymerSequenceModel,
                 <Parameter("Min.Len", "The minimum length of the repeat sequence loci.")> Min As Integer,
                 <Parameter("Max.Len", "The maximum length of the repeat sequence loci.")> Max As Integer,
                 maxDist As Integer,
@@ -131,15 +132,9 @@ Namespace Topologically.SimilarityMatches
             Me._maxDist = maxDist
         End Sub
 
-        Protected Overrides Sub __postResult(currentRemoves() As String, currentStat As Microsoft.VisualBasic.List(Of String), currLen As Integer)
-            Dim Sites As PalindromeLoci() =
-                currentStat.ToArray(
-                    Function(loci) CreateMirrors(loci,
-                                                 SequenceData,
-                                                 _maxDist,
-                                                 cut),
-                                   parallel:=True).MatrixAsIterator.TrimNull
-            Call _ResultSet.Add(Sites)
+        Protected Overrides Sub DoSearch(seed As Seed)
+            Dim sites = CreateMirrors(seed.Sequence, seq.SequenceData, _maxDist, cut)
+            Call _resultSet.Add(sites)
         End Sub
     End Class
 End Namespace

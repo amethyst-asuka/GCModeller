@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::b1328b18c7989cf0c3047447aa36163a, ..\GCModeller\CLI_tools\RegPrecise\CLI\TF.vb"
+﻿#Region "Microsoft.VisualBasic::1ae74abd5eb5d9d20f7cd7844404b96a, ..\GCModeller\CLI_tools\RegPrecise\CLI\TF.vb"
 
     ' Author:
     ' 
@@ -27,7 +27,6 @@
 #End Region
 
 Imports System.Runtime.CompilerServices
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
@@ -40,10 +39,10 @@ Imports SMRUCC.genomics.Assembly.MetaCyc.File
 Imports SMRUCC.genomics.Assembly.MetaCyc.Schema
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat
-Imports SMRUCC.genomics.ContextModel
 Imports SMRUCC.genomics.Data.Regprecise
 Imports SMRUCC.genomics.Data.Xfam.Pfam.PfamString
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application
+Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH.Abstract
 Imports SMRUCC.genomics.ProteinModel
 Imports SMRUCC.genomics.SequenceModel
 
@@ -104,11 +103,11 @@ Partial Module CLI
                 .ProteinId = x.Identifier,
                 .Length = l,
                 .Description = x.Description,
-                .PfamString = motifs.ToArray(Function(d) $"{d.Identifier.Split(":"c).Last}({d.Position.Left}|{d.Position.Right})"),
+                .PfamString = motifs.ToArray(Function(d) $"{d.Name.Split(":"c).Last}({d.Position.Left}|{d.Position.Right})"),
                 .Domains =
                     LinqAPI.Exec(Of String) <= From d As ProteinModel.DomainObject
                                                In motifs
-                                               Let id As String = d.Identifier.Split(":"c).Last
+                                               Let id As String = d.Name.Split(":"c).Last
                                                Select $"{id}:{id}"
                                                Distinct
             }
@@ -126,8 +125,9 @@ Partial Module CLI
         Dim inBBH As String = args("/bbh")
         Dim inDIR As String = args.GetValue("/regprecise", GCModeller.FileSystem.RegPrecise.Directories.RegPreciseRegulations)
         Dim out As String = args.GetValue("/out", inBBH.TrimSuffix & ".FamilyHits/")
-        Dim bbh As IEnumerable(Of BBH.BBHIndex) = inBBH.LoadCsv(Of BBH.BBHIndex)
-        Dim hitsHash = (From x As BBH.BBHIndex In bbh
+        Dim bbh As IEnumerable(Of BBHIndex) = inBBH.LoadCsv(Of BBHIndex)
+        Dim hitsHash = (From x As BBHIndex
+                        In bbh
                         Where x.Matched
                         Select uid = x.HitName.Split(":"c).Last,
                             x
@@ -138,7 +138,7 @@ Partial Module CLI
         Dim all = (From x As BacteriaGenome In genomes
                    Where Not x.Regulons Is Nothing AndAlso
                        Not x.Regulons.Regulators.IsNullOrEmpty
-                   Select xx = x.Regulons.Regulators).MatrixToList
+                   Select xx = x.Regulons.Regulators).Unlist
         Dim regulators = (From regulator As Regulator In all
                           Let sid As String = regulator.LocusId
                           Where hitsHash.ContainsKey(sid)
@@ -147,11 +147,11 @@ Partial Module CLI
                               regulator.Family).ToArray
         Dim queryRegulators = (From qx In
                                    (From x In regulators
-                                    Select (From hit As BBH.BBHIndex In x.hits
-                                            Select query = hit, x.sid, x.Family).ToArray).MatrixToList
+                                    Select (From hit As BBHIndex In x.hits
+                                            Select query = hit, x.sid, x.Family).ToArray).Unlist
                                Select qx
                                Group qx By qx.query.QueryName Into Group).ToArray
-        bbh = (From x In queryRegulators Select x.Group.ToArray(Function(xx) xx.query)).MatrixToList
+        bbh = (From x In queryRegulators Select x.Group.ToArray(Function(xx) xx.query)).Unlist
         Call bbh.SaveTo(out & "/Regulators.bbh.csv") ' 将Regulators的bbh结果分离出来了
 
         Dim FamilyBriefs As IEnumerable(Of FamilyHit) =
@@ -164,7 +164,7 @@ Partial Module CLI
                                                  }
         Call FamilyBriefs.SaveTo(out & "/Regulators.FamilyHits.Csv")
 
-        hitsHash = (From x As BBH.BBHIndex
+        hitsHash = (From x As BBHIndex
                     In bbh
                     Where x.Matched
                     Select uid = x.QueryName,
@@ -176,7 +176,7 @@ Partial Module CLI
         Dim key As String = args.GetValue("/pfamKey", "query.pfam-string")
         Dim LQuery = (From x In queryRegulators
                       Let names As IEnumerable(Of String) =
-                          (From hit In x.Group Select name = hit.Family.Split("/"c)).MatrixAsIterator
+                          (From hit In x.Group Select name = hit.Family.Split("/"c)).IteratesALL
                       Select x.QueryName,
                           pfam = hitsHash(x.QueryName).First.Property(key),
                           Family = (From s As String
@@ -198,7 +198,7 @@ Partial Module CLI
             list += From x As Regulator
                     In genome.Regulons.Regulators
                     Where x.Type = Regulator.Types.TF
-                    Where Not x.Effector.IsBlank
+                    Where Not x.Effector.StringEmpty
                     Let tokens As String() = x.Effector.Split(";"c)
                     Select From name As String
                            In tokens

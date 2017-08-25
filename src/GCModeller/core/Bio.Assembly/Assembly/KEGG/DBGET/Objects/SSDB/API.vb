@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::8b709b2aad0223f2d88895cc83f3dcf5, ..\GCModeller\core\Bio.Assembly\Assembly\KEGG\DBGET\Objects\SSDB\API.vb"
+﻿#Region "Microsoft.VisualBasic::25317f412c4af23ec51926be30c27419, ..\core\Bio.Assembly\Assembly\KEGG\DBGET\Objects\SSDB\API.vb"
 
     ' Author:
     ' 
@@ -35,6 +35,10 @@ Imports Microsoft.VisualBasic.Linq.Extensions
 Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports SMRUCC.genomics.Assembly.KEGG.WebServices.InternalWebFormParsers
+Imports Microsoft.VisualBasic.Text.HtmlParser
+Imports SMRUCC.genomics.SequenceModel.FASTA
+Imports SMRUCC.genomics.ComponentModel.Loci
+Imports System.Runtime.CompilerServices
 
 Namespace Assembly.KEGG.DBGET.bGetObject.SSDB
 
@@ -43,7 +47,7 @@ Namespace Assembly.KEGG.DBGET.bGetObject.SSDB
     ''' </summary>
     ''' <remarks></remarks>
     ''' 
-    <PackageNamespace("KEGG.DBGET.SSDB", Publisher:="xie.guigang@gmail.com",
+    <Package("KEGG.DBGET.SSDB", Publisher:="xie.guigang@gmail.com",
                       Category:=APICategories.UtilityTools,
                       Description:="KEGG SSDB (Sequence Similarity DataBase) contains the information about amino acid sequence similarities among all protein-coding genes in the complete genomes, which is computationally generated from the GENES database in KEGG. All possible pairwise genome comparisons are performed by the SSEARCH program, and the gene pairs with the Smith-Waterman similarity score of 100 or more are entered in SSDB, together with the information about best hits and bidirectional best hits (best-best hits). SSDB is thus a huge weighted, directed graph, which can be used for searching orthologs and paralogs, as well as conserved gene clusters with additional consideration of positional correlations on the chromosome. 
 
@@ -108,7 +112,7 @@ both of these relationships hold
             Dim LQuery = (From EntryPoint As QueryEntry
                           In EntryList
                           Select HandleDownload(EntryPoint.LocusId)).ToArray
-            Return LQuery.MatrixToVector
+            Return LQuery.ToVector
         End Function
 
         Const GENE_ENTRY As String = "<a href=""/dbget-bin/www_bget.+?>.+?</a>" '.*?<a"
@@ -152,7 +156,7 @@ both of these relationships hold
             Dim Tokens As String() = Strings.Split(Entry, "</td>", Compare:=CompareMethod.Text)
             Dim Name As String = Tokens(1)
             Entry = Regex.Match(Name, GENE_ENTRY, RegexOptions.IgnoreCase).Value
-            Name = Trim(Strings.Split(Name, "</a>", Compare:=CompareMethod.Text).LastOrDefault.TrimHTMLTag)
+            Name = Trim(Strings.Split(Name, "</a>", Compare:=CompareMethod.Text).LastOrDefault.StripHTMLTags)
 
             If Not String.IsNullOrEmpty(Name) AndAlso (Name.First = "("c AndAlso Name.Last = ")"c) Then
                 Name = Mid(Name, 2, Len(Name) - 2)
@@ -180,20 +184,21 @@ both of these relationships hold
             }
 
             If Not String.IsNullOrEmpty(Orthology.Entry) Then
-                Orthology.Entry = Regex.Match(Orthology.Entry, "[A-Z]\d{5}").Value
+                Orthology.Entry = Regex.Match(Orthology.Entry, "[A-Z]+\d{5}").Value
             End If
 
             Orthology.xRefEntry = xRefParser(WebForm.GetRaw("Other DBs"))
             Orthology.References = WebForm.References
-            Orthology.Module = KEGG.DBGET.bGetObject.Pathway.__parseHTML_ModuleList(WebForm.GetValue("Module").FirstOrDefault, DBGET.bGetObject.Pathway.LIST_TYPES.Module)
-            Orthology.Definition = WebForm.GetValue("Definition").FirstOrDefault
-            Orthology.Name = WebForm.GetValue("Name").FirstOrDefault
-            Orthology.Pathway = KEGG.DBGET.bGetObject.Pathway.__parseHTML_ModuleList(WebForm.GetValue("Pathway").FirstOrDefault, DBGET.bGetObject.Pathway.LIST_TYPES.Pathway)
-            Orthology.Disease = KEGG.DBGET.bGetObject.Pathway.__parseHTML_ModuleList(WebForm.GetValue("Disease").FirstOrDefault, DBGET.bGetObject.Pathway.LIST_TYPES.Disease)
+            Orthology.Module = PathwayWebParser.__parseHTML_ModuleList(WebForm.GetValue("Module").FirstOrDefault, LIST_TYPES.Module)
+            Orthology.Definition = WebForm.GetValue("Definition").FirstOrDefault.StripHTMLTags
+            Orthology.Name = WebForm.GetValue("Name").FirstOrDefault.TrimNewLine.Trim
+            Orthology.Pathway = PathwayWebParser.__parseHTML_ModuleList(WebForm.GetValue("Pathway").FirstOrDefault, LIST_TYPES.Pathway)
+            Orthology.Disease = PathwayWebParser.__parseHTML_ModuleList(WebForm.GetValue("Disease").FirstOrDefault, LIST_TYPES.Disease)
             Orthology.Genes = __genesParser(WebForm, Orthology.Entry)
-            Orthology.Name = Orthology.Name.TrimHTMLTag
-            Orthology.Definition = Orthology.Definition.TrimHTMLTag
+            Orthology.Name = Orthology.Name.StripHTMLTags.GetTagValue(, True).Value
+            Orthology.Definition = Orthology.Definition.StripHTMLTags.TrimNewLine.Trim.GetTagValue(, True).Value
             Orthology.EC = Regex.Match(Orthology.Definition, "\[EC.+?\]", RegexOptions.IgnoreCase).Value
+
             If Not String.IsNullOrEmpty(Orthology.EC) Then
                 Orthology.EC = Mid(Orthology.EC, 5, Len(Orthology.EC) - 5)
             End If
@@ -211,8 +216,8 @@ both of these relationships hold
                                    In str
                                    Select (From m As Match
                                            In Regex.Matches(ss, xRef, RegexOptions.IgnoreCase + RegexOptions.Singleline)
-                                           Select m.Value)).MatrixToVector
-            Dim Values = DBs.ToArray(Function(lnk) __xRefParser(lnk)).MatrixToVector
+                                           Select m.Value)).ToVector
+            Dim Values = DBs.ToArray(Function(lnk) __xRefParser(lnk)).ToVector
             Return Values
         End Function
 
@@ -223,7 +228,8 @@ both of these relationships hold
                 Function(ss) New TripleKeyValuesPair With {
                     .Key = Name,
                     .Value1 = ss.href,
-                    .Value2 = ss.GetValue})
+                    .Value2 = ss.GetValue
+                })
             Return values
         End Function
 
@@ -235,10 +241,42 @@ both of these relationships hold
         <ExportAPI("ImportsDB")>
         Public Function Transform(<Parameter("source.DIR")> source As String) As SSDB.Ortholog()
             Dim Xmls As IEnumerable(Of String) = ls - l - wildcards("*.xml") <= source
-            Dim LQuery = (From xml As String In Xmls.AsParallel
+            Dim LQuery = (From xml As String
+                          In Xmls.AsParallel
                           Let result As SSDB.OrthologREST = xml.LoadXml(Of SSDB.OrthologREST)
-                          Select SSDB.Ortholog.CreateObjects(result)).MatrixToVector
+                          Select SSDB.Ortholog.CreateObjects(result)).ToVector
             Return LQuery
+        End Function
+
+        ''' <summary>
+        ''' <paramref name="vector"/>参数表示核酸链的方向，1表示正义链，-1表示互补链
+        ''' </summary>
+        ''' <param name="loci"></param>
+        ''' <param name="org$"></param>
+        ''' <param name="vector$"></param>
+        ''' <returns></returns>
+        <Extension>
+        Public Function CutSequence(loci As Location, org$, Optional vector% = 1) As FastaToken
+            With loci.Normalization
+                Dim url$ = $"http://www.genome.jp/dbget-bin/cut_sequence_genes.pl?FROM={ .Left}&TO={ .Right}&VECTOR={vector}&ORG={org}"
+                Dim html$ = url.GET
+                Dim seq$
+
+                seq = Regex.Match(html, "<PRE>.+</PRE>", RegexICSng).Value
+                seq = seq _
+                    .StripHTMLTags _
+                    .StripBlank _
+                    .lTokens _
+                    .Skip(1) _
+                    .JoinBy("")
+
+                Return New FastaToken With {
+                    .Attributes = {
+                        url
+                    },
+                    .SequenceData = seq
+                }
+            End With
         End Function
     End Module
 End Namespace

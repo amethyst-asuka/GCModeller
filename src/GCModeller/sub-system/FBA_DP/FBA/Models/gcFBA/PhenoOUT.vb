@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::7726efe5a937f65322af687045666d85, ..\GCModeller\sub-system\FBA_DP\FBA\Models\gcFBA\PhenoOUT.vb"
+﻿#Region "Microsoft.VisualBasic::0f58e94aee1ba407166396ab669b4c26, ..\GCModeller\sub-system\FBA_DP\FBA\Models\gcFBA\PhenoOUT.vb"
 
     ' Author:
     ' 
@@ -75,10 +75,10 @@ Namespace Models.rFBA
     End Class
 
     Public Class RPKMStat : Inherits DynamicPropertyBase(Of Double)
-        Implements sIdEnumerable
+        Implements INamedValue
         Implements IPhenoOUT
 
-        Public Property Locus As String Implements sIdEnumerable.Identifier
+        Public Property Locus As String Implements INamedValue.Key
         <Meta(GetType(Double))> Public Overrides Property Properties As Dictionary(Of String, Double)
             Get
                 Return MyBase.Properties

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::2c7b169bf74def3a2af8c8593a8a3928, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Slots\Protein.vb"
+﻿#Region "Microsoft.VisualBasic::a79b2adb48f7416991ca39e9ac823de2, ..\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Slots\Protein.vb"
 
     ' Author:
     ' 
@@ -26,10 +26,10 @@
 
 #End Region
 
+Imports System.Xml.Serialization
+Imports Microsoft.VisualBasic.Language
 Imports SMRUCC.genomics.Assembly.MetaCyc.File.DataFiles.Reflection
 Imports SMRUCC.genomics.Assembly.MetaCyc.Schema.Reflection
-Imports System.Xml.Serialization
-Imports Microsoft.VisualBasic
 
 Namespace Assembly.MetaCyc.File.DataFiles.Slots
 
@@ -226,7 +226,7 @@ Namespace Assembly.MetaCyc.File.DataFiles.Slots
 
         '    NewObj.UnmodifiedForm = StringQuery(NewObj.Object, "UNMODIFIED-FORM( \d+)?")
         '    NewObj.GoTerms = StringQuery(NewObj.Object, "GO-TERMS( \d+)?")
-        '    NewObj.Regulates = StringQuery(NewObj.Object, "REGULATES( \d+)?").ToList
+        '    NewObj.Regulates = StringQuery(NewObj.Object, "REGULATES( \d+)?").AsList
         '    NewObj.DBLinks = StringQuery(NewObj.Object, "DBLINKS( \d+)?")
         '    NewObj.Features = StringQuery(NewObj.Object, "FEATURES( \d+)?")
         '    NewObj.ComponentOf = StringQuery(NewObj.Object, "COMPONENT-OF( \d+)?")

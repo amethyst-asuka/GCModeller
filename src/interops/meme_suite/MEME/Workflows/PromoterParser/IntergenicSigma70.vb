@@ -78,7 +78,7 @@ Namespace Workflows.PromoterParser
     ''' 黄单胞菌应该长一点150bp，非严格重叠？？？？
     ''' </remarks>
     ''' 
-    <[PackageNamespace]("Sigma70",
+    <Package("Sigma70",
                         Description:="Initially, all 100 nt regions upstream of all protein encoding genes were selected from the genome. 
 Subsequently, these sequences were evaluated for their potential overlap With a preceding gene, 
 And In such cases, only the intergenic sequence was used For analysis, provided they were 25 nt Or longer.
@@ -201,11 +201,10 @@ PWM models were constructed For the most abundantly encountered motifs, includin
                                       PTT As PTT,
                                       Optional StrictOverlap As Boolean = False,
                                       Optional Length As Integer = 100) As FASTA.FastaFile
-            Dim Reader As New SegmentReader(genomeOS, False)
             Dim GetFastaSegment As GetFastaToken = StrictOverlap.[If](Of GetFastaToken)([True]:=AddressOf TrimStrictOverlap, [False]:=AddressOf TrimNotStrictOverlap)
             Dim LQuery = (From Gene As GeneBrief
                           In PTT.GeneObjects.AsParallel
-                          Let Segment = GetFastaSegment(Reader, PTT, Gene, Length)
+                          Let Segment = GetFastaSegment(genomeOS, PTT, Gene, Length)
                           Where Not Segment Is Nothing
                           Select Segment).ToArray
 
@@ -252,7 +251,7 @@ PWM models were constructed For the most abundantly encountered motifs, includin
             Return True
         End Function
 
-        Delegate Function GetFastaToken(Reader As SegmentReader, PTT As PTT, GeneObject As GeneBrief, Length As Integer) As FASTA.FastaToken
+        Delegate Function GetFastaToken(Reader As IPolymerSequenceModel, PTT As PTT, GeneObject As GeneBrief, Length As Integer) As FASTA.FastaToken
 
         ''' <summary>
         ''' 不管链的方向，只要发生了重叠就必须要剪裁
@@ -261,7 +260,7 @@ PWM models were constructed For the most abundantly encountered motifs, includin
         ''' <param name="PTT"></param>
         ''' <param name="GeneObject"></param>
         ''' <returns></returns>
-        Public Function TrimStrictOverlap(Reader As SegmentReader, PTT As PTT, GeneObject As GeneBrief, Length As Integer) As FASTA.FastaToken
+        Public Function TrimStrictOverlap(Reader As IPolymerSequenceModel, PTT As PTT, GeneObject As GeneBrief, Length As Integer) As FASTA.FastaToken
             Return OverlapCommon(PTT.GeneObjects, Reader, GeneObject, Length)
         End Function
 
@@ -274,7 +273,7 @@ PWM models were constructed For the most abundantly encountered motifs, includin
         ''' <param name="Reader"></param>
         ''' <param name="GeneObject"></param>
         ''' <returns></returns>
-        Private Function OverlapCommon(Genes As GeneBrief(), Reader As SegmentReader, GeneObject As GeneBrief, Length As Integer) As FASTA.FastaToken
+        Private Function OverlapCommon(Genes As GeneBrief(), Reader As IPolymerSequenceModel, GeneObject As GeneBrief, Length As Integer) As FASTA.FastaToken
             Dim Loci As NucleotideLocation = GeneObject.Location.GetUpStreamLoci(Length)
             'Dim RelatedGenes = Genes.GetRelatedGenes(Loci.Left, Loci.Right, 0)
 
@@ -347,7 +346,7 @@ PWM models were constructed For the most abundantly encountered motifs, includin
         ''' <param name="PTT"></param>
         ''' <param name="GeneObject"></param>
         ''' <returns></returns>
-        Public Function TrimNotStrictOverlap(Reader As SegmentReader, PTT As PTT, GeneObject As GeneBrief, Length As Integer) As FASTA.FastaToken
+        Public Function TrimNotStrictOverlap(Reader As IPolymerSequenceModel, PTT As PTT, GeneObject As GeneBrief, Length As Integer) As FASTA.FastaToken
             Dim Genes As GeneBrief() =
                 (GeneObject.Location.Strand = Strands.Forward).[If](PTT.forwards, PTT.reversed)
             Return OverlapCommon(Genes, Reader, GeneObject, Length)
@@ -433,14 +432,14 @@ PWM models were constructed For the most abundantly encountered motifs, includin
                                                       MEME As IEnumerable(Of Motif),
                                                       Optional Length As Integer = 150) As Transcript()
             Dim MEMESites = (From site As Site
-                             In (From obj As Motif In MEME.AsParallel Select obj.Sites).MatrixAsIterator
+                             In (From obj As Motif In MEME.AsParallel Select obj.Sites).IteratesALL
                              Select site
                              Group site By site.Site Into Group) _
                                   .ToDictionary(Function(obj) obj.Site,
                                                 Function(obj) obj.Group.ToArray)
             Dim LQuery = (From Transcript As Transcript
                           In Transcripts.AsParallel
-                          Select MEMEPredictedTSSsAssociations(Transcript, PTT, MEMESites, Length)).MatrixToVector
+                          Select MEMEPredictedTSSsAssociations(Transcript, PTT, MEMESites, Length)).ToVector
             Return LQuery
         End Function
 

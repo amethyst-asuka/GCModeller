@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::7113cbaa8ac8d72caa82761f202651de, ..\GCModeller\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\TabularFormat\FeatureBriefs\GFF\FeatureKeys.vb"
+﻿#Region "Microsoft.VisualBasic::b2f55029f9c3406cdbcff006c843861f, ..\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\TabularFormat\FeatureBriefs\GFF\FeatureKeys.vb"
 
     ' Author:
     ' 
@@ -26,14 +26,11 @@
 
 #End Region
 
-Imports System.Text.RegularExpressions
-Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels
-Imports System.Text
-Imports SMRUCC.genomics.ComponentModel.Loci
 Imports System.Runtime.CompilerServices
 Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Linq
 
-Namespace Assembly.NCBI.GenBank.TabularFormat
+Namespace Assembly.NCBI.GenBank.TabularFormat.GFF
 
     Public Module FeatureKeys
 
@@ -46,7 +43,7 @@ Namespace Assembly.NCBI.GenBank.TabularFormat
         Public Const region As String = "region"
 
         Public Enum Features As Integer
-            UnDefine = -1
+            Undefine = -1
             CDS
             gene
             tRNA
@@ -60,7 +57,7 @@ Namespace Assembly.NCBI.GenBank.TabularFormat
         Public Function [GetFeatureType](x As Feature) As Features
             If String.IsNullOrEmpty(x.Feature) OrElse
                 Not FeatureKeys.FeaturesHash.ContainsKey(x.Feature) Then
-                Return Features.UnDefine
+                Return Features.Undefine
             Else
                 Return FeatureKeys.FeaturesHash(x.Feature)
             End If
@@ -75,7 +72,7 @@ Namespace Assembly.NCBI.GenBank.TabularFormat
         End Function
 
         <Extension>
-        Public Function GetsAllFeatures(gff As GFF, type As Features) As Feature()
+        Public Function GetsAllFeatures(gff As GFFTable, type As Features) As Feature()
             Return gff.Features.GetsAllFeatures(type)
         End Function
 
@@ -90,5 +87,51 @@ Namespace Assembly.NCBI.GenBank.TabularFormat
             {FeatureKeys.tmRNA, Features.tmRNA},
             {FeatureKeys.tRNA, Features.tRNA}
         }
+
+        ''' <summary>
+        ''' 获取所有的CDS的基因编号列表
+        ''' </summary>
+        ''' <param name="gff"></param>
+        ''' <param name="feature">默认是使用所有的feature类型来用作为数据源</param>
+        ''' <returns></returns>
+        ''' <remarks>这个函数似乎有问题，因为使用人类基因组的第一条染色体的GFF测试才2000多个基因</remarks>
+        <Extension>
+        Public Function GetAllGeneIDs(gff As GFFTable, Optional feature As Features = Features.Undefine) As String()
+            Dim fs As Feature() = If(
+                feature = Features.Undefine,
+                gff.Features,
+                gff.GetsAllFeatures(feature))
+            Dim geneIDs As String() = fs _
+                .Where(Function(f) f.attributes.ContainsKey("dbxref")) _
+                .Select(Function(f) f.attributes("dbxref")) _
+                .Distinct _
+                .ToArray
+            geneIDs = geneIDs _
+                .Select(AddressOf DbXref) _
+                .Where(Function(s) s.ContainsKey("GeneID")) _
+                .Select(Function(s) s("GeneID")) _
+                .IteratesALL _
+                .Distinct _
+                .ToArray
+
+            Return geneIDs
+        End Function
+
+        ''' <summary>
+        ''' 解析出DbXref属性之中的外部数据库连接
+        ''' </summary>
+        ''' <param name="value$"></param>
+        ''' <returns></returns>
+        <Extension>
+        Public Function DbXref(value$) As Dictionary(Of String, String())
+            Dim t$() = value.Split(","c)
+            Dim d As Dictionary(Of String, String()) =
+                t _
+                .Select(Function(s) s.GetTagValue(":", trim:=True)) _
+                .GroupBy(Function(o) o.Name) _
+                .ToDictionary(Function(k) k.Key,
+                              Function(v) v.ToArray(Function(x) x.Value))
+            Return d
+        End Function
     End Module
 End Namespace

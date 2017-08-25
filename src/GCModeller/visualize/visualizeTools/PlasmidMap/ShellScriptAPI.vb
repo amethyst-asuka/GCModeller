@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::50be803fc8accc9ebd2f1b29c83f19ab, ..\GCModeller\visualize\visualizeTools\PlasmidMap\ShellScriptAPI.vb"
+﻿#Region "Microsoft.VisualBasic::50be803fc8accc9ebd2f1b29c83f19ab, ..\visualize\visualizeTools\PlasmidMap\ShellScriptAPI.vb"
 
     ' Author:
     ' 
@@ -31,7 +31,7 @@ Imports Microsoft.VisualBasic.Scripting.MetaData
 
 Namespace PlasmidMap
 
-    <[PackageNamespace]("Data.Visualization.Plasmid_Map", Description:="Data visualization module for the bacteria plasmid object.", Category:=APICategories.UtilityTools)>
+    <Package("Data.Visualization.Plasmid_Map", Description:="Data visualization module for the bacteria plasmid object.", Category:=APICategories.UtilityTools)>
     Public Module ShellScriptAPI
 
 #Const DEBUG = 1

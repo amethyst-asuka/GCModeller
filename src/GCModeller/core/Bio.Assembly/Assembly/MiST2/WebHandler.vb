@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::1f2545c4949e164c3916b28ed954eec8, ..\GCModeller\core\Bio.Assembly\Assembly\MiST2\WebHandler.vb"
+﻿#Region "Microsoft.VisualBasic::e3d29bc98b6a93efb66ea5e5861c02ff, ..\core\Bio.Assembly\Assembly\MiST2\WebHandler.vb"
 
     ' Author:
     ' 
@@ -31,10 +31,11 @@ Imports SMRUCC.genomics.SequenceModel
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports Microsoft.VisualBasic
+Imports Microsoft.VisualBasic.Language
 
 Namespace Assembly.MiST2
 
-    <PackageNamespace("MiST2.WebServices")>
+    <Package("MiST2.WebServices")>
     Public Module WebServices
 
         Const SignalTransductionProfileComment As String = "<!-- Signal transduction profile -->"
@@ -73,31 +74,31 @@ Namespace Assembly.MiST2
         Private Sub ParseGenomeSummary(Profile As MiST2, pageContent As String)
             Dim summary As String = Mid(pageContent, InStr(pageContent, "<!-- Genome summary -->") + 25)
             Dim items = (From m As Match In Regex.Matches(summary, SUMMARY_ITEM, RegexOptions.Singleline + RegexOptions.IgnoreCase) Select m.Value).ToArray
-            Dim p As Integer
+            Dim p As int = Scan0
 
             Const VALUE_SECTION As String = ">[^<]+</td>"
 
             Static Dim GetValue As Func(Of String, String) = Function(str As String) Mid(str, 2, Len(str) - 6)
 
-            Profile.Organism = Regex.Match(items(p.MoveNext), VALUE_SECTION).Value
+            Profile.Organism = Regex.Match(items(++p), VALUE_SECTION).Value
             Profile.Organism = GetValue(Profile.Organism)
 
-            Profile.Taxonomy = Regex.Match(items(p.MoveNext), VALUE_SECTION).Value
+            Profile.Taxonomy = Regex.Match(items(++p), VALUE_SECTION).Value
             Profile.Taxonomy = GetValue(Profile.Taxonomy)
 
-            Profile.Size = Regex.Match(items(p.MoveNext), VALUE_SECTION).Value
+            Profile.Size = Regex.Match(items(++p), VALUE_SECTION).Value
             Profile.Size = GetValue(Profile.Size)
 
-            Profile.Status = Regex.Match(items(p.MoveNext), VALUE_SECTION).Value
+            Profile.Status = Regex.Match(items(++p), VALUE_SECTION).Value
             Profile.Status = GetValue(Profile.Status)
 
-            Profile.Replicons = Regex.Match(items(p.MoveNext), VALUE_SECTION).Value
+            Profile.Replicons = Regex.Match(items(++p), VALUE_SECTION).Value
             Profile.Replicons = GetValue(Profile.Replicons)
 
-            Profile.Genes = Regex.Match(items(p.MoveNext), VALUE_SECTION).Value
+            Profile.Genes = Regex.Match(items(++p), VALUE_SECTION).Value
             Profile.Genes = GetValue(Profile.Genes)
 
-            Profile.Proteins = Regex.Match(items(p.MoveNext), VALUE_SECTION).Value
+            Profile.Proteins = Regex.Match(items(++p), VALUE_SECTION).Value
             Profile.Proteins = GetValue(Profile.Proteins)
 
             Profile.GC = Regex.Match(summary, GCCONTENT, RegexOptions.IgnoreCase).Value
@@ -124,7 +125,7 @@ Namespace Assembly.MiST2
 
             Call $"[MiST2 web_request handler] Loading data from {proteinCounts}...".__DEBUG_ECHO
 
-            Dim proteinArray As List(Of Transducin) = (From strItem As String In matchs Select Match(strItem)).ToList
+            Dim proteinArray As List(Of Transducin) = (From strItem As String In matchs Select Match(strItem)).AsList
 
             '查找NEXT标签所指向的页面
             Const NEXT_PAGE As String = "<a href=""[^>]+?"">Next</a>"
@@ -143,23 +144,23 @@ Namespace Assembly.MiST2
         Public Function Match(strText As String) As Transducin
             Dim Protein As Transducin = New Transducin
             Dim Tokens = Strings.Split(strText, "</td>").Skip(3).ToArray
-            Dim p As Integer
+            Dim p As int = Scan0
 
-            Protein.Identifier = Regex.Match(Tokens(p.MoveNext), ">[^>]+?</").Value
+            Protein.Identifier = Regex.Match(Tokens(++p), ">[^>]+?</").Value
             Protein.Identifier = GetValue(Protein.Identifier)
 
-            Protein.GeneName = Regex.Match(Tokens(p.MoveNext), ">[^>]+?</").Value
+            Protein.GeneName = Regex.Match(Tokens(++p), ">[^>]+?</").Value
             Protein.GeneName = GetValue(Protein.GeneName)
 
-            Protein.Class = Regex.Match(Tokens(p.MoveNext), ">[^>]+?</").Value
+            Protein.Class = Regex.Match(Tokens(++p), ">[^>]+?</").Value
             Protein.Class = GetValue(Protein.Class)
 
-            Protein.Inputs = Strings.Split(Mid(Tokens(p.MoveNext), InStr(Tokens(p - 1), ">") + 1), ", ")
-            Protein.Outputs = Strings.Split(Mid(Tokens(p.MoveNext), InStr(Tokens(p - 1), ">") + 1), ", ")
+            Protein.Inputs = Strings.Split(Mid(Tokens(++p), InStr(Tokens(p - 1), ">") + 1), ", ")
+            Protein.Outputs = Strings.Split(Mid(Tokens(++p), InStr(Tokens(p - 1), ">") + 1), ", ")
 
             Const IMAGE_SOURCE As String = "<div class=""arch_img_cont""><img src="".+?"""
 
-            Protein.ImageUrl = Regex.Match(Tokens(p.MoveNext), IMAGE_SOURCE, RegexOptions.IgnoreCase).Value
+            Protein.ImageUrl = Regex.Match(Tokens(++p), IMAGE_SOURCE, RegexOptions.IgnoreCase).Value
             Protein.ImageUrl = Regex.Match(Protein.ImageUrl, "src="".+?""").Value
             Protein.ImageUrl = "http://mistdb.com" & Mid(Protein.ImageUrl, 6, Len(Protein.ImageUrl) - 6)
 

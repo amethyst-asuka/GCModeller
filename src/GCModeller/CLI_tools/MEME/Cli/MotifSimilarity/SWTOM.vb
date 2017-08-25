@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::55cf0072ab082e902f9ecb316fdd02b8, ..\GCModeller\CLI_tools\MEME\Cli\MotifSimilarity\SWTOM.vb"
+﻿#Region "Microsoft.VisualBasic::182c873f15be14ab7e83feb482193fd0, ..\GCModeller\CLI_tools\MEME\Cli\MotifSimilarity\SWTOM.vb"
 
     ' Author:
     ' 
@@ -32,7 +32,7 @@ Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Linq.Extensions
 Imports Microsoft.VisualBasic.Text
 Imports SMRUCC.genomics.Assembly.KEGG.DBGET.BriteHEntry
@@ -88,7 +88,7 @@ Partial Module CLI
         Dim inQuery As String = args("/query")
         Dim inSubject As String = args("/subject")
         Dim method As String = args.GetValue("/method", "pcc")
-        Dim out As String = args.GetValue("/out", inQuery.TrimSuffix & "-" & IO.Path.GetFileNameWithoutExtension(inSubject) & "." & method)
+        Dim out As String = args.GetValue("/out", inQuery.TrimSuffix & "-" & basename(inSubject) & "." & method)
         Dim query = inQuery.LoadXml(Of AnnotationModel)
         Dim subject = inSubject.LoadXml(Of AnnotationModel)
         Dim result = SWTom.Compare(query, subject, method)
@@ -138,7 +138,7 @@ Partial Module CLI
 
         Dim LQuery = (From x As Output
                       In result
-                      Select x.HSP.ToArray(Function(hsp) CreateResult(x.Query, x.Subject, hsp.Alignment))).MatrixToList
+                      Select x.HSP.ToArray(Function(hsp) CreateResult(x.Query, x.Subject, hsp.Alignment))).Unlist
         Call LQuery.SaveTo(out & "/Query.Csv")
 
         hits = result.ToArray(Function(x) MotifHit.CreateObject(x))
@@ -159,15 +159,15 @@ Partial Module CLI
     Public Function SWTomComparesBatch(args As CommandLine) As Integer
         Dim query As String = args("/query")
         Dim subject As String = args("/subject")
-        Dim outDIR As String = args.GetValue("/out", query.TrimSuffix & "." & IO.Path.GetFileNameWithoutExtension(subject))
+        Dim outDIR As String = args.GetValue("/out", query.TrimSuffix & "." & basename(subject))
         Dim subjects = subject.LoadSourceEntryList({"*.txt"})
         Dim params As New Parameters
         Dim results As New List(Of Output)
 
         For Each qx As String In FileIO.FileSystem.GetFiles(query, FileIO.SearchOption.SearchTopLevelOnly, "*.txt")
             Dim queryLDM = AnnotationModel.LoadDocument(qx)
-            Dim qName As String = IO.Path.GetFileNameWithoutExtension(qx)
-            Dim subjectLDM = (From file In subjects Where InStr(file.Key, qName) = 1 Select AnnotationModel.LoadDocument(file.Value)).MatrixToList
+            Dim qName As String = basename(qx)
+            Dim subjectLDM = (From file In subjects Where InStr(file.Key, qName) = 1 Select AnnotationModel.LoadDocument(file.Value)).Unlist
 
             For Each x In queryLDM
                 For Each y In subjectLDM
@@ -181,7 +181,7 @@ Partial Module CLI
 
         Dim LQuery = (From x As Output
                       In results
-                      Select x.HSP.ToArray(Function(hsp) CreateResult(x.Query, x.Subject, hsp.Alignment))).MatrixToList
+                      Select x.HSP.ToArray(Function(hsp) CreateResult(x.Query, x.Subject, hsp.Alignment))).Unlist
         Call LQuery.SaveTo(outDIR & "/Compares.Csv")
 
         Dim hits = results.ToArray(Function(x) MotifHit.CreateObject(x))
@@ -192,7 +192,7 @@ Partial Module CLI
     Public Function SWTomCompares(args As CommandLine) As Integer
         Dim query As String = args("/query")
         Dim subject As String = args("/subject")
-        Dim outDIR As String = args.GetValue("/out", query.TrimSuffix & "." & IO.Path.GetFileNameWithoutExtension(subject))
+        Dim outDIR As String = args.GetValue("/out", query.TrimSuffix & "." & basename(subject))
         Dim queryLDM = AnnotationModel.LoadDocument(query)
         Dim subjectLDM = AnnotationModel.LoadDocument(subject)
         Dim params As New Parameters
@@ -209,7 +209,7 @@ Partial Module CLI
 
         Dim LQuery = (From x As Output
                       In results
-                      Select x.HSP.ToArray(Function(hsp) CreateResult(x.Query, x.Subject, hsp.Alignment))).MatrixToList
+                      Select x.HSP.ToArray(Function(hsp) CreateResult(x.Query, x.Subject, hsp.Alignment))).Unlist
         Call LQuery.SaveTo(outDIR & "/Compares.Csv")
 
         Dim hits = results.ToArray(Function(x) MotifHit.CreateObject(x))
@@ -253,8 +253,8 @@ Partial Module CLI
                              params,
                              noHTML,
                              out)).ToArray
-        Call BatchTask.ToArray(Function(x) x.out).MatrixToList.SaveTo(out & "/SW-TOM.Query.csv")
-        Call BatchTask.ToArray(Function(x) x.hits).MatrixToList.SaveTo(out & "/SW-TOM.Hits.Csv")
+        Call BatchTask.ToArray(Function(x) x.out).Unlist.SaveTo(out & "/SW-TOM.Query.csv")
+        Call BatchTask.ToArray(Function(x) x.hits).Unlist.SaveTo(out & "/SW-TOM.Hits.Csv")
 
         Return 0
     End Function
@@ -264,7 +264,7 @@ Partial Module CLI
         Public out As CompareResult() = Nothing
 
         Sub New(memeText As String, params As Parameters, noHTML As Boolean, out As String)
-            Dim sId As String = IO.Path.GetFileNameWithoutExtension(memeText)
+            Dim sId As String = basename(memeText)
             Me.out = __SWQueryCommon(memeText, params, noHTML, out & "/" & sId, Me.hits)
         End Sub
     End Class
@@ -273,7 +273,7 @@ Partial Module CLI
     Public Function SiteScan(args As CommandLine) As Integer
         Dim query As String = args("/query")
         Dim subject As String = args("/subject")
-        Dim out As String = args.GetValue("/out", query.TrimSuffix & "-" & IO.Path.GetFileNameWithoutExtension(subject))
+        Dim out As String = args.GetValue("/out", query.TrimSuffix & "-" & basename(subject))
         Dim profiles = Parameters.SiteScanProfile
         Dim reuslt = SiteScanner.Scan(query.LoadXml(Of AnnotationModel), New FastaToken(subject), profiles)
         Return TomReport.WriteHTML(reuslt, outDIR:=out).CLICode

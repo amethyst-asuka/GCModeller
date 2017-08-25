@@ -1,28 +1,28 @@
-﻿#Region "Microsoft.VisualBasic::0bfec34cba97882f9f21851bdded630b, ..\GCModeller\engine\GCModeller.DynamicsCell\Engine.vb"
+﻿#Region "Microsoft.VisualBasic::9a261e908552826e7062d96a15d89561, ..\GCModeller\engine\GCModeller.DynamicsCell\Engine.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -32,15 +32,16 @@ Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.Data.visualize.Network
 Imports Microsoft.VisualBasic.Data.visualize.Network.Canvas
 Imports Microsoft.VisualBasic.Data.visualize.Network.Graph
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
-Imports Microsoft.VisualBasic.Mathematical
+Imports Microsoft.VisualBasic.Math.Scripting.Types
 Imports Microsoft.VisualBasic.Parallel
 Imports Microsoft.VisualBasic.Scripting.TokenIcer
 Imports SMRUCC.genomics.Analysis.SSystem
 Imports SMRUCC.genomics.Analysis.SSystem.Kernel
 Imports SMRUCC.genomics.Analysis.SSystem.Kernel.ObjectModels
+Imports Microsoft.VisualBasic.Math.Scripting
 
 Public Class Engine : Implements IDisposable
 
@@ -78,7 +79,7 @@ Public Class Engine : Implements IDisposable
             From x As Script.SEquation
             In model.sEquations
             Where nodeTbl & x.x
-            Let tokens As List(Of Token(Of Tokens)) =
+            Let tokens As List(Of Token(Of ExpressionTokens)) =
                 ExpressionParser.GetTokens(x.Expression)
             Select __innerNET(x.x, tokens, nodeTbl)
 
@@ -106,13 +107,13 @@ Public Class Engine : Implements IDisposable
     ''' <param name="x"></param>
     ''' <param name="tokens">右边的表达式</param>
     ''' <returns></returns>
-    Private Shared Function __innerNET(x As String, tokens As List(Of Token(Of Tokens)), nodes As Dictionary(Of Node)) As Edge()
+    Private Shared Function __innerNET(x As String, tokens As List(Of Token(Of ExpressionTokens)), nodes As Dictionary(Of Node)) As Edge()
         Dim xlst As String() = LinqAPI.Exec(Of String) <=
  _
-            From t As Token(Of Tokens)
+            From t As Token(Of ExpressionTokens)
             In tokens
-            Where t.Type = Mathematical.Tokens.UNDEFINE
-            Select t.TokenValue
+            Where t.Type = ExpressionTokens.UNDEFINE
+            Select t.Value
             Distinct
 
         Return LinqAPI.Exec(Of Edge) <= From t As String
@@ -158,4 +159,3 @@ Public Class Engine : Implements IDisposable
     End Sub
 #End Region
 End Class
-

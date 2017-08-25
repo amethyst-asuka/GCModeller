@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::5c6d2b2ed235cf6c0f3b51fbf35c8a2c, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\ScriptBuilder\ScriptBuilder.vb"
+﻿#Region "Microsoft.VisualBasic::b203903733d70367e0829c23c6369344, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\ScriptBuilder\ScriptBuilder.vb"
 
     ' Author:
     ' 
@@ -26,63 +26,27 @@
 
 #End Region
 
-Imports System.Text
 Imports RDotNET.Extensions.VisualBasic.SymbolBuilder.Abstract
 
 Namespace SymbolBuilder
 
-    Public Class ScriptBuilder
+    Public Class ScriptBuilder : Inherits Scripting.SymbolBuilder.ScriptBuilder
 
-        Public ReadOnly Property Script As StringBuilder
-
-        Sub New(sb As StringBuilder)
-            Script = sb
-        End Sub
-
-        Sub New(capacity As Integer)
-            Script = New StringBuilder(capacity)
+        Sub New(capacity%)
+            Call MyBase.New(capacity)
         End Sub
 
         Sub New()
+            Call MyBase.New(1024)
         End Sub
 
-        Public Overrides Function ToString() As String
-            Return Script.ToString
-        End Function
-
-        Public Shared Narrowing Operator CType(sb As ScriptBuilder) As String
-            Return sb.Script.ToString
-        End Operator
-
-        ''' <summary>
-        ''' Append
-        ''' </summary>
-        ''' <param name="sb"></param>
-        ''' <param name="s"></param>
-        ''' <returns></returns>
-        Public Shared Operator &(sb As ScriptBuilder, s As String) As ScriptBuilder
-            Call sb.Script.Append(s)
-            Return sb
-        End Operator
-
         ''' <summary>
         ''' AppendLine
         ''' </summary>
         ''' <param name="sb"></param>
         ''' <param name="s"></param>
         ''' <returns></returns>
-        Public Shared Operator +(sb As ScriptBuilder, s As String) As ScriptBuilder
-            Call sb.Script.AppendLine(s)
-            Return sb
-        End Operator
-
-        ''' <summary>
-        ''' AppendLine
-        ''' </summary>
-        ''' <param name="sb"></param>
-        ''' <param name="s"></param>
-        ''' <returns></returns>
-        Public Shared Operator +(sb As ScriptBuilder, s As IRToken) As ScriptBuilder
+        Public Overloads Shared Operator +(sb As ScriptBuilder, s As IRToken) As ScriptBuilder
             Call sb.Script.AppendLine(s.RScript)
             Return sb
         End Operator

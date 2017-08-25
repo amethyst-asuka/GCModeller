@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::1c79cb2185f7d0b3bc497c55b6d1c9d9, ..\GCModeller\engine\GCTabular\Compiler\KEGG.Compiler\Compiler.vb"
+﻿#Region "Microsoft.VisualBasic::f5e14349c0680311fd4eaf54cc533aca, ..\GCModeller\engine\GCTabular\Compiler\KEGG.Compiler\Compiler.vb"
 
     ' Author:
     ' 
@@ -26,7 +26,6 @@
 
 #End Region
 
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Data.csv.Extensions
@@ -38,14 +37,16 @@ Imports SMRUCC.genomics.Assembly.KEGG.DBGET
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat
 Imports SMRUCC.genomics.Data
 Imports SMRUCC.genomics.Data.Regprecise
+Imports SMRUCC.genomics.Data.STRING
 Imports SMRUCC.genomics.GCModeller.Assembly.GCMarkupLanguage.GCML_Documents.ComponentModels
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.RpsBLAST
+Imports SMRUCC.genomics.Model.Network.STRING.Models
 Imports SMRUCC.genomics.Model.Network.VirtualFootprint.DocumentFormat
 Imports SMRUCC.genomics.Model.SBML
 
 Namespace KEGG.Compiler
 
-    <[PackageNamespace]("GCModeller.KEGG.Compiler", Category:=APICategories.UtilityTools,
+    <Package("GCModeller.KEGG.Compiler", Category:=APICategories.UtilityTools,
                         Description:="For the first time of the model compiles operation, a active network connection to the KEGG database server maybe required.")>
     Public Class Compiler : Inherits GCTabular.Compiler.Compiler
 
@@ -92,9 +93,9 @@ Namespace KEGG.Compiler
             Me._ModelIO = FileStream.IO.XmlresxLoader.CreateObject
             Me._ModelIO.MisT2 = argvs("-mist2").LoadXml(Of MiST2.MiST2)()
             Me._ModelIO.SetExportDirectory(argvs("-export"))
-            Me._ModelIO.SystemVariables = SystemVariables.CreateDefault.ToList
+            Me._ModelIO.SystemVariables = SystemVariables.CreateDefault.AsList
 
-            Dim Door = SMRUCC.genomics.Assembly.DOOR.Load(FilePath:=argvs("-door"))
+            Dim Door = SMRUCC.genomics.Assembly.DOOR.Load(path:=argvs("-door"))
             Dim Footprints = argvs("-footprints").LoadCsv(Of RegulatesFootprints)(False)
 
             'Me.PccMatrix = SMRUCC.genomics.Toolkits.RNASeq.ChipData.LoadChipData(argvs("-chipdata")).CalculatePccMatrix
@@ -112,7 +113,7 @@ Namespace KEGG.Compiler
             Call _Logging.WriteLine("Start to load compounds data from filesystem, this may take a while....")
             Dim KEGGCompounds = (From path As String
                                  In FileIO.FileSystem.GetFiles(sPath, FileIO.SearchOption.SearchAllSubDirectories, "C*.xml").AsParallel
-                                 Select path.LoadXml(Of SMRUCC.genomics.Assembly.KEGG.DBGET.bGetObject.Compound)()).ToList
+                                 Select path.LoadXml(Of SMRUCC.genomics.Assembly.KEGG.DBGET.bGetObject.Compound)()).AsList
             Call KEGGCompounds.AddRange((From path As String
                                          In FileIO.FileSystem.GetFiles(sPath, FileIO.SearchOption.SearchAllSubDirectories, "G*.xml").AsParallel
                                          Select path.LoadXml(Of SMRUCC.genomics.Assembly.KEGG.DBGET.bGetObject.Glycan)().ToCompound).ToArray)
@@ -156,14 +157,14 @@ Namespace KEGG.Compiler
                                                                                 Me._ModelIO,
                                                                                 KEGGReactions.Key,
                                                                                 KEGGCompounds.Key,
-                                                                                Me._Logging).ToList
-            Me._ModelIO.EffectorMapping = Effectors.MappingEffectors(MetaCycAll, _ModelIO.MetabolitesModel.Values.ToList, argvs("-regprecise").LoadXml(Of TranscriptionFactors))
+                                                                                Me._Logging).AsList
+            Me._ModelIO.EffectorMapping = Effectors.MappingEffectors(MetaCycAll, _ModelIO.MetabolitesModel.Values.AsList, argvs("-regprecise").LoadXml(Of TranscriptionFactors))
             Me._RegpreciseRegulatorBh = argvs("-regulator_bh").LoadCsv(Of RegpreciseMPBBH)(False).ToArray
             'Me._ModelIO.EffectorMapping = MappingKEGGCompoundsRegprecise(KEGGCompounds:=_ModelIO.MetabolitesModel.Values.ToArray, Regprecise:=_RegpreciseRegulatorBh)
 
-            Me._ModelIO.StringInteractions = argvs("-string-db").LoadXml(Of StringDB.SimpleCsv.Network)()
-            Me._CrossTalks = DocumentStream.File.Load(argvs("-cross_talks"))
-            Me._ModelIO.STrPModel = argvs("-mist2_strp").LoadXml(Of StringDB.StrPNet.Network)()
+            Me._ModelIO.StringInteractions = argvs("-string-db").LoadXml(Of SimpleCsv.Network)()
+            Me._CrossTalks = IO.File.Load(argvs("-cross_talks"))
+            Me._ModelIO.STrPModel = argvs("-mist2_strp").LoadXml(Of Network)()
             Me._MetabolismNetwork = Level2.XmlFile.Load(Me._MetaCyc.SBMLMetabolismModel)
             Me._ModelIO.ProteinAssembly = _createProteinAssembly(Me._ModelIO.Regulators, Me._ModelIO.MetabolitesModel)
 
@@ -176,7 +177,7 @@ Namespace KEGG.Compiler
             Dim EC = argvs("-ec").LoadCsv(Of SMRUCC.genomics.Assembly.Expasy.AnnotationsTool.T_EnzymeClass_BLAST_OUT)(False)
 
             Using MappingCreator = New Mapping(_MetaCyc, Me._ModelIO.MetabolitesModel.Values.ToArray)
-                Me._ModelIO.EnzymeMapping = MappingCreator.CreateEnzrxnGeneMap.ToList
+                Me._ModelIO.EnzymeMapping = MappingCreator.CreateEnzrxnGeneMap.AsList
                 Call _Logging.WriteLine(Me._ModelIO.EnzymeMapping.Count & " enzymatic reaction mapping was created!")
             End Using
 
@@ -223,7 +224,7 @@ Namespace KEGG.Compiler
             Call _createEnzymeObjects()
 
             '通过MetaCyc编号来连接KEGGCompound
-            Me._ModelIO.ConstraintMetabolites = ConstraintMetaboliteMap.CreateObjectsWithMetaCyc.ToList
+            Me._ModelIO.ConstraintMetabolites = ConstraintMetaboliteMap.CreateObjectsWithMetaCyc.AsList
             For i As Integer = 0 To Me._ModelIO.ConstraintMetabolites.Count - 1
                 Dim CM = Me._ModelIO.ConstraintMetabolites(i)
                 Dim Metabolites = (From item In Me._ModelIO.MetabolitesModel.AsParallel
@@ -286,7 +287,7 @@ Namespace KEGG.Compiler
                 Call ReactionList.Add(Reaction)
             Next
 
-            Me._ModelIO.MetabolismModel = (From item In ReactionList Select item Order By item.EnzymeClass Ascending).ToList
+            Me._ModelIO.MetabolismModel = (From item In ReactionList Select item Order By item.EnzymeClass Ascending).AsList
         End Sub
 
         Private Sub RemoveNotUsedCompounds()
@@ -338,7 +339,7 @@ Namespace KEGG.Compiler
                 Call ModuleDictionary.Add(item.ModuleId, item.ReactionIdlist)
             Next
 
-            Dim LQuery = (From Pathway In PathwayInformation Select __pathway(Pathway.PathwayId, Pathway.Comments, Pathway.ModuleList, ModuleDictionary)).ToList
+            Dim LQuery = (From Pathway In PathwayInformation Select __pathway(Pathway.PathwayId, Pathway.Comments, Pathway.ModuleList, ModuleDictionary)).AsList
             Return LQuery
         End Function
 
@@ -359,7 +360,7 @@ Namespace KEGG.Compiler
         End Function
 
         Private Function CheckRequiredParameter(argvs As CommandLine.CommandLine, list As String(), head As String) As Boolean
-            Dim required As String() = argvs.CheckMissingRequiredParameters(list)
+            Dim required As String() = argvs.CheckMissingRequiredArguments(list)
 
             Call _Logging.WriteLine(argvs.GetCommandsOverview)
 

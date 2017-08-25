@@ -1,36 +1,34 @@
 ﻿#Region "Microsoft.VisualBasic::a2a10675a00b99e7aa2a1d2cb98d83ca, ..\interops\visualize\Circos\Circos\TrackDatas\Adapter\NtProps\GCSkew.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
-Imports SMRUCC.genomics.SequenceModel.ISequenceModel
-Imports System.Text
+Imports Microsoft.VisualBasic.Language
 Imports SMRUCC.genomics.SequenceModel
 Imports SMRUCC.genomics.SequenceModel.FASTA
-Imports Microsoft.VisualBasic
 
 Namespace TrackDatas.NtProps
 
@@ -40,18 +38,15 @@ Namespace TrackDatas.NtProps
     ''' <remarks></remarks>
     Public Class GCSkew : Inherits data(Of ValueTrackData)
 
-        Sub New(SequenceModel As I_PolymerSequenceModel,
-                SlideWindowSize As Integer,
-                Steps As Integer,
-                Circular As Boolean,
+        Sub New(nt As IPolymerSequenceModel,
+                slideWinSize As Integer,
+                steps As Integer,
+                isCircular As Boolean,
                 Optional chr As String = "chr1")
-            Call MyBase.New(
-                __sourceGC(chr,
-                         NucleotideModels.GCSkew(SequenceModel,
-                                                 SlideWindowSize,
-                                                 Steps,
-                                                 Circular),
-                         Steps))
+            Call MyBase.New(__sourceGC(
+                 chr,
+                 NucleotideModels.GCSkew(nt, slideWinSize, steps, isCircular),
+                 steps))
         End Sub
 
         Sub New(data As IEnumerable(Of Double), [step] As Integer, Optional chr As String = "chr1")

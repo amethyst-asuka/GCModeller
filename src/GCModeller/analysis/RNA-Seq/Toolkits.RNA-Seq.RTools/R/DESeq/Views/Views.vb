@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::f776b5cd8832bf7354387b493c1d21b5, ..\GCModeller\analysis\RNA-Seq\Toolkits.RNA-Seq.RTools\R\DESeq\Views\Views.vb"
+﻿#Region "Microsoft.VisualBasic::652867e97391deab2f226ce80b2625d2, ..\GCModeller\analysis\RNA-Seq\Toolkits.RNA-Seq.RTools\R\DESeq\Views\Views.vb"
 
     ' Author:
     ' 
@@ -38,9 +38,9 @@ Namespace DESeq2
     ''' <remarks>
     ''' 请注意在这里面的treated vs untreated就是~condition的对比，可以看作为NY vs MMX
     ''' </remarks>
-    Public Class DESeq2Diff : Implements sIdEnumerable
+    Public Class DESeq2Diff : Implements INamedValue
 
-        Public Overridable Property locus_tag As String Implements sIdEnumerable.Identifier
+        Public Overridable Property locus_tag As String Implements INamedValue.Key
         ''' <summary>
         ''' The base mean over all rows.
         ''' (表达量变化是identical的基因可以直接使用这个值来作为表达量)

@@ -1,38 +1,39 @@
-﻿#Region "Microsoft.VisualBasic::c9e3ae42e085e4cb9bb12c37d5971949, ..\GCModeller\analysis\SequenceToolkit\SequencePatterns\Topologically\Exactly\RepeatPlant.vb"
+﻿#Region "Microsoft.VisualBasic::4765305de18e2dd008c6543107898a24, ..\GCModeller\analysis\SequenceToolkit\SequencePatterns\Topologically\Exactly\RepeatPlant.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.ComponentModel.DataStructures
+Imports Microsoft.VisualBasic.ComponentModel.Algorithm.base
 Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq.Extensions
 Imports SMRUCC.genomics.ComponentModel.Loci.Abstract
 Imports SMRUCC.genomics.SequenceModel
+Imports SMRUCC.genomics.SequenceModel.NucleotideModels
 
 Namespace Topologically
 
@@ -59,16 +60,18 @@ Namespace Topologically
     ''' 正向重复位点的序列模型
     ''' </summary>
     Public Class RepeatsView : Implements ILoci
-        Implements I_PolymerSequenceModel
+        Implements IPolymerSequenceModel
 
         Public Property Left As Integer Implements ILoci.Left
-        Public Property SequenceData As String Implements I_PolymerSequenceModel.SequenceData
+        Public Property SequenceData As String Implements IPolymerSequenceModel.SequenceData
         Public Property Locis As Integer()
         Public ReadOnly Property Length As Integer
             Get
                 Return Len(SequenceData)
             End Get
         End Property
+
+        Public Property Data As Dictionary(Of String, String)
 
         ''' <summary>
         ''' 每个重复的片段之间平均的间隔长度
@@ -128,7 +131,7 @@ Namespace Topologically
                            Select (From site As Integer
                                    In obj.LociProvider
                                    Select site,
-                                       obj.Hot).ToArray).MatrixToList
+                                       obj.Hot).ToArray).Unlist
             Dim src = (From t In (From site In Extract
                                   Select site
                                   Group site By site.site Into Group)
@@ -157,9 +160,9 @@ Namespace Topologically
                                 Order By n Ascending).CreateSlideWindows(2)
                 Dim avgDist As Double = ordLocis.ToArray(
                     Function(loci) _
-                        If(loci.Elements.IsNullOrEmpty OrElse
-                        loci.Elements.Length = 1, 1,
-                        loci.Elements.Last - loci.Elements.First)).Average
+                        If(loci.Items.IsNullOrEmpty OrElse
+                        loci.Items.Length = 1, 1,
+                        loci.Items.Last - loci.Items.First)).Average
                 avgDist = Len(SequenceData) / avgDist  ' 表达式的含义： 片段越长，热度越高，  平均距离越短，热度越高
                 Dim lociCounts As Double = LociProvider.Length
                 lociCounts = lociCounts / 10
@@ -172,6 +175,26 @@ Namespace Topologically
                 Return Me.LociProvider.Length
             End Get
         End Property
+
+        Public Overridable Function ToLoci() As SimpleSegment
+            Dim id$ = ""
+
+            If Not Data Is Nothing Then
+                If Data.ContainsKey("seq") Then
+                    id = Data("seq") & "-"
+                End If
+            End If
+
+            id &= $"{Left},{Left + Length}"
+
+            Return New SimpleSegment With {
+                .SequenceData = SequenceData,
+                .ID = id,
+                .Start = Left,
+                .Ends = Left + Length,
+                .Strand = "+"
+            }
+        End Function
     End Class
 
     ''' <summary>
@@ -179,7 +202,7 @@ Namespace Topologically
     ''' </summary>
     Public Class RevRepeatsView : Inherits RepeatsView
         Implements ILoci
-        Implements I_PolymerSequenceModel
+        Implements IPolymerSequenceModel
 
         Public Property RevLocis As Integer()
         Public Property RevSegment As String
@@ -215,9 +238,9 @@ Namespace Topologically
                             Order By n Ascending).CreateSlideWindows(2)
                 Dim avgDist As Double = loci.ToArray(
                     Function(lo) _
-                        If(lo.Elements.IsNullOrEmpty OrElse
-                        lo.Elements.Length = 1,
-                        1, lo.Elements.Last - lo.Elements.First)).Average
+                        If(lo.Items.IsNullOrEmpty OrElse
+                        lo.Items.Length = 1,
+                        1, lo.Items.Last - lo.Items.First)).Average
                 Return MyBase.Hot + Len(RevSegment) / avgDist
             End Get
         End Property

@@ -1,28 +1,28 @@
-﻿#Region "Microsoft.VisualBasic::027b4d48d1eefc52e8a173dec27472aa, ..\GCModeller\core\Bio.Assembly\Assembly\KEGG\DBGET\Objects\SSDB\ProtMotifs.vb"
+﻿#Region "Microsoft.VisualBasic::1dc62cddef0b532e9e0ea696edccda70, ..\core\Bio.Assembly\Assembly\KEGG\DBGET\Objects\SSDB\ProtMotifs.vb"
 
-' Author:
-' 
-'       asuka (amethyst.asuka@gcmodeller.org)
-'       xieguigang (xie.guigang@live.com)
-'       xie (genetics@smrucc.org)
-' 
-' Copyright (c) 2016 GPL3 Licensed
-' 
-' 
-' GNU GENERAL PUBLIC LICENSE (GPL3)
-' 
-' This program is free software: you can redistribute it and/or modify
-' it under the terms of the GNU General Public License as published by
-' the Free Software Foundation, either version 3 of the License, or
-' (at your option) any later version.
-' 
-' This program is distributed in the hope that it will be useful,
-' but WITHOUT ANY WARRANTY; without even the implied warranty of
-' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-' GNU General Public License for more details.
-' 
-' You should have received a copy of the GNU General Public License
-' along with this program. If not, see <http://www.gnu.org/licenses/>.
+    ' Author:
+    ' 
+    '       asuka (amethyst.asuka@gcmodeller.org)
+    '       xieguigang (xie.guigang@live.com)
+    '       xie (genetics@smrucc.org)
+    ' 
+    ' Copyright (c) 2016 GPL3 Licensed
+    ' 
+    ' 
+    ' GNU GENERAL PUBLIC LICENSE (GPL3)
+    ' 
+    ' This program is free software: you can redistribute it and/or modify
+    ' it under the terms of the GNU General Public License as published by
+    ' the Free Software Foundation, either version 3 of the License, or
+    ' (at your option) any later version.
+    ' 
+    ' This program is distributed in the hope that it will be useful,
+    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
+    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    ' GNU General Public License for more details.
+    ' 
+    ' You should have received a copy of the GNU General Public License
+    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -30,6 +30,7 @@ Imports System.Runtime.CompilerServices
 Imports System.Text.RegularExpressions
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Text
+Imports Microsoft.VisualBasic.Text.HtmlParser
 Imports SMRUCC.genomics.ComponentModel.Loci
 
 Namespace Assembly.KEGG.DBGET.bGetObject.SSDB
@@ -77,7 +78,7 @@ Namespace Assembly.KEGG.DBGET.bGetObject.SSDB
             Dim cols As String() = HtmlParser.GetColumnsHTML(row)
             Dim motif As New ProteinModel.DomainObject
 
-            motif.Identifier = cols(0).GetValue
+            motif.Name = cols(0).GetValue
             motif.Describes = cols(3)
             motif.EValue = Val(cols(4))
             motif.BitScore = cols(5)

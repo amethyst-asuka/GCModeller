@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::bec40e412412dcb3f68adfe29e6d6af5, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\Schemas\PathwayBrief\PwyFilters.vb"
+﻿#Region "Microsoft.VisualBasic::bec40e412412dcb3f68adfe29e6d6af5, ..\core\Bio.Assembly\Assembly\MetaCyc\Schemas\PathwayBrief\PwyFilters.vb"
 
     ' Author:
     ' 
@@ -99,7 +99,7 @@ Namespace Assembly.MetaCyc.Schema.PathwayBrief
         '        Dim GeneCollection = (From gene In Genes.Takes(pwy.AssociatedGenes) Select gene.Accession1).ToArray  '
         '        Call List.AddRange(GeneCollection)
         '    Next
-        '    List = List.Distinct.ToList
+        '    List = List.Distinct.AsList
 
         '    Dim File = New Microsoft.VisualBasic.DocumentFormat.Csv.DocumentStream.File
         '    Call File.AppendLine(New String() {"AccessionId", "Common_name", "Description", "Pfam_domains", "Sequence"})

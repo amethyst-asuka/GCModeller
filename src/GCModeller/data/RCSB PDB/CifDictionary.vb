@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::a8d59d225618d039898c5fe1045a0a5a, ..\GCModeller\data\RCSB PDB\CifDictionary.vb"
+﻿#Region "Microsoft.VisualBasic::9b653cfb7bac24502966493abf293b11, ..\GCModeller\data\RCSB PDB\CifDictionary.vb"
 
     ' Author:
     ' 
@@ -41,7 +41,7 @@ Public Class CifDictionary
 
         Protected Friend Shared Function TryParse(strData As String) As Section
             Dim Tokens As String() = (From strLine As String In Strings.Split(strData, vbLf)
-                                      Let str As String = strLine.TrimA
+                                      Let str As String = strLine.TrimNewLine
                                       Where Not String.IsNullOrEmpty(str)
                                       Select str).ToArray
             Dim PairList As List(Of KeyValuePair(Of String, String)) =

@@ -1,4 +1,5 @@
 ﻿Imports System.Drawing
+Imports System.Runtime.CompilerServices
 Imports System.Text
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Language.UnixBash
@@ -8,7 +9,7 @@ Imports Microsoft.VisualBasic.Scripting.MetaData
 ''' 内部的一些简单的常用命令
 ''' </summary>
 ''' 
-<PackageNamespace("System.Extensions",
+<Package("System.Extensions",
                   Description:="Shoal system internal plugins module to provides some basically operation on your file system or scripting.",
                   Publisher:="xie.guigang@gmail.com",
                   Url:="http://SourceForge.net/projects/shoal")>
@@ -19,6 +20,10 @@ Public Module InternalExtension
             Return My.Resources.license
         End Get
     End Property
+
+    <Extension> Friend Function [As](Of T, V)(o As T) As V
+        Return DirectCast(CObj(o), V)
+    End Function
 
     ''' <summary>
     ''' 脚本的执行入口点的定义
@@ -35,7 +40,7 @@ Public Module InternalExtension
         If FileIO.FileSystem.DirectoryExists(path) Then
             Return FileIO.FileSystem.GetDirectoryInfo(path).Name
         Else
-            Return IO.Path.GetFileNameWithoutExtension(path)
+            Return basename(path)
         End If
     End Function
 

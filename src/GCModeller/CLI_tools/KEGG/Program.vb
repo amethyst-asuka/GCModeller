@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::135762dd6a2a19ebf31fce9a58eba2a1, ..\GCModeller\CLI_tools\KEGG\Program.vb"
+﻿#Region "Microsoft.VisualBasic::5d5e2f08be47ff11bb1c2b617cfe8269, ..\GCModeller\CLI_tools\KEGG\Program.vb"
 
     ' Author:
     ' 
@@ -26,9 +26,7 @@
 
 #End Region
 
-Imports System.Text
-Imports Microsoft.VisualBasic.CommandLine.Reflection
-Imports Microsoft.VisualBasic.Scripting.MetaData
+Imports SMRUCC.genomics.Assembly.KEGG.DBGET.BriteHEntry
 
 Module Program
 

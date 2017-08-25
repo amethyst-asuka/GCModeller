@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::73d44e55395a76b77eb43a48b951dd69, ..\GCModeller\analysis\SequenceToolkit\Pfam-HMM\PfamHMMScan\Pfam.hmm\HMMParser\HMMParserAPI.vb"
+﻿#Region "Microsoft.VisualBasic::05a8d126e6ea92f9dc781016f035ff67, ..\GCModeller\analysis\SequenceToolkit\Pfam-HMM\PfamHMMScan\Pfam.hmm\HMMParser\HMMParserAPI.vb"
 
     ' Author:
     ' 
@@ -29,6 +29,7 @@
 Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.Linq
+Imports Microsoft.VisualBasic.Language
 
 Public Module HMMParserAPI
 
@@ -48,7 +49,7 @@ Public Module HMMParserAPI
             Dim blocks As String()() = lines.Split("//").ToArray
 
             blocks(Scan0) = last + blocks(Scan0)
-            last = blocks.Last.ToList
+            last = blocks.Last.AsList
 
             For Each block As String() In blocks.Take(blocks.Length - 1)
                 Yield StreamParser(block)

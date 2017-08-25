@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::c483957d2061c826f847cb57313a2764, ..\GCModeller\CLI_tools\RegPrecise\CLI\Regulon.vb"
+﻿#Region "Microsoft.VisualBasic::d8360948c41e85969a1455c85b4d4416, ..\GCModeller\CLI_tools\RegPrecise\CLI\Regulon.vb"
 
     ' Author:
     ' 
@@ -26,13 +26,13 @@
 
 #End Region
 
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
+Imports Microsoft.VisualBasic.Language
 Imports SMRUCC.genomics.Analysis.SequenceTools.SequencePatterns
 Imports SMRUCC.genomics.Data.Regprecise
-Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH
+Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH.Abstract
 
 Partial Module CLI
 
@@ -96,7 +96,7 @@ Partial Module CLI
                     Group x By x.Regulog.Key Into Group) _
                          .ToDictionary(Function(x) x.Key,
                                        Function(x) x.Group.ToArray)
-        result = result.OrderBy(Function(x) x.ID).ToList
+        result = New List(Of MotifLog)(result.OrderBy(Function(x) x.ID))
 #End If
         Return result.SaveTo(out)
     End Function

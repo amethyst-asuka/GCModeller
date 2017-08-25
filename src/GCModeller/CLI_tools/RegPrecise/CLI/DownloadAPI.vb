@@ -1,51 +1,51 @@
-﻿#Region "Microsoft.VisualBasic::086d80d8e6d025d33dc0fc6910ac7319, ..\GCModeller\CLI_tools\RegPrecise\CLI\DownloadAPI.vb"
+﻿#Region "Microsoft.VisualBasic::d85cb3df81a2411a25a1dd7c958b24a8, ..\GCModeller\CLI_tools\RegPrecise\CLI\DownloadAPI.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine
+Imports Microsoft.VisualBasic.CommandLine.InteropService.SharedORM
 Imports Microsoft.VisualBasic.CommandLine.Reflection
+Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
+Imports Microsoft.VisualBasic.Language.UnixBash.FileSystem
 Imports Microsoft.VisualBasic.Linq
-Imports Microsoft.VisualBasic.Parallel
 Imports Microsoft.VisualBasic.Parallel.Linq
 Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports Microsoft.VisualBasic.Serialization.JSON
 Imports Microsoft.VisualBasic.Text
 Imports Microsoft.VisualBasic.Text.Similarity
-Imports SMRUCC.genomics.Assembly.KEGG.DBGET.bGetObject.Organism
 Imports SMRUCC.genomics.Assembly.KEGG.WebServices
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank
 Imports SMRUCC.genomics.Data
 Imports SMRUCC.genomics.Data.Regprecise
 Imports SMRUCC.genomics.SequenceModel
 
-<PackageNamespace("RegPrecise.CLI", Category:=APICategories.CLI_MAN)>
-Public Module CLI
+<Package("RegPrecise.CLI", Category:=APICategories.CLI_MAN)>
+<CLI> Public Module CLI
 
     <ExportAPI("/Repository.Fetch",
                Usage:="/Repository.Fetch /imports <RegPrecise.Xml> /genbank <NCBI_Genbank_DIR> [/full /out <outDIR>]")>
@@ -229,7 +229,7 @@ Public Module CLI
             Dim exists As String = existsDIR & "/" & genome.BacteriaGenome.name.NormalizePathString(True)
             Dim query = genome.CreateKEGGQuery
             Dim queryFile As String = outDIR & "/query.txt"
-            Dim CLI As String = $"Download.Sequence /query {queryFile.CLIPath} /out {outDIR.CliToken} /source {exists.CliToken}"
+            Dim CLI As String = $"Download.Sequence /query {queryFile.CLIPath} /out {outDIR.CLIToken} /source {exists.CLIToken}"
 
             Call query.GetDoc.SaveTo(queryFile)
             Call New IORedirectFile(KEGG, CLI).Run()
@@ -278,14 +278,14 @@ Public Module CLI
             Function(g) g.Regulons.Regulators.ToArray(
             Function(x) x.SiteMore),
             Function(g) Not g.Regulons Is Nothing AndAlso
-                        Not g.Regulons.Regulators.IsNullOrEmpty).MatrixAsIterator.Distinct.ToArray
-        Dim list As List(Of String) = (App.SysTemp & "/process.txt").ReadAllLines.ToList
+                        Not g.Regulons.Regulators.IsNullOrEmpty).IteratesALL.Distinct.ToArray
+        Dim list As New List(Of String)((App.SysTemp & "/process.txt").ReadAllLines)
 
         For Each url In sites.SeqIterator
-            If String.Equals(url.obj, MotifWebAPI.RegPrecise, StringComparison.OrdinalIgnoreCase) Then
+            If String.Equals(url.value, MotifWebAPI.RegPrecise, StringComparison.OrdinalIgnoreCase) Then
                 Continue For
             End If
-            If list.IndexOf(url.obj) > -1 Then
+            If list.IndexOf(url.value) > -1 Then
                 Continue For
             End If
 
@@ -295,7 +295,7 @@ Public Module CLI
             Call motif.SaveAsXml(path)
             Call motif.logo.DownloadFile(name & ".png")
 
-            list += url.obj
+            list += url.value
             Call list.FlushAllLines(App.SysTemp & "/process.txt")
         Next
 

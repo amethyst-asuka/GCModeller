@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::b6c873274d070adc52ce62ac77f2a9bc, ..\GCModeller\core\Bio.Assembly\ComponentModel\Equations\Equivalence.vb"
+﻿#Region "Microsoft.VisualBasic::b94dd325e5e61bd704be0ce3b14cb36c, ..\core\Bio.Assembly\ComponentModel\Equations\Equivalence.vb"
 
     ' Author:
     ' 
@@ -43,9 +43,9 @@ Namespace ComponentModel.EquaionModel
             End If
 
             If strict Then
-                Return String.Equals(b.Identifier, a.Identifier, StringComparison.Ordinal)
+                Return b.Key = a.Key
             Else
-                Return String.Equals(b.Identifier, a.Identifier, StringComparison.OrdinalIgnoreCase)
+                Return String.Equals(b.Key, a.Key, StringComparison.OrdinalIgnoreCase)
             End If
         End Function
 

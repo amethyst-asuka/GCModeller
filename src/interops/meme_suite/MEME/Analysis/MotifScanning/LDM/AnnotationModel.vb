@@ -40,7 +40,7 @@ Namespace Analysis.MotifScans
     ''' <summary>
     ''' MAST_LDM for motif annotation.
     ''' </summary>
-    Public Class AnnotationModel : Implements sIdEnumerable
+    Public Class AnnotationModel : Implements INamedValue
 
         <XmlAttribute> Public Property Evalue As Double
         Public Property Sites As Site()
@@ -58,7 +58,7 @@ Namespace Analysis.MotifScans
         End Property
         <XmlAttribute> Public Property Width As Integer
         Public Property PWM As ResidueSite()
-        <XmlAttribute> Public Property Uid As String Implements sIdEnumerable.Identifier
+        <XmlAttribute> Public Property Uid As String Implements INamedValue.Key
         <XmlAttribute> Public Property Expression As String
         <XmlAttribute("bp")> Public Property SourceLen As Integer
 
@@ -87,7 +87,7 @@ Namespace Analysis.MotifScans
         Public Function Complement() As AnnotationModel
             Dim motif = PWM.ToArray(Function(x) x.Complement)
             Call Array.Reverse(motif)
-            Call motif.AddHandle
+            Call motif.WriteAddress
 
             Dim LDM As New AnnotationModel With {
                 .Evalue = Evalue,
@@ -128,7 +128,7 @@ Namespace Analysis.MotifScans
         ''' <param name="memeText">meme_out.txt的文件路径</param>
         ''' <returns></returns>
         Public Shared Function LoadDocument(memeText As String, Optional uidPrefix As String = "") As AnnotationModel()
-            Dim uid As String = System.IO.Path.GetFileNameWithoutExtension(memeText)
+            Dim uid As String = BaseName(memeText)
             If Not String.IsNullOrEmpty(uidPrefix) Then
                 uid = uidPrefix & "::" & uid
             End If
@@ -200,9 +200,9 @@ Namespace Analysis.MotifScans
                             Let parent As String = file.ParentDirName
                             Let LDM As AnnotationModel() = AnnotationModel.LoadDocument(file, uidPrefix:=parent)
                             Select LDM)
-                models = LDMs.MatrixToList
+                models = LDMs.Unlist
             Else
-                models = files.ToArray(Function(x) AnnotationModel.LoadDocument(x), Parallel:=True).MatrixToList
+                models = files.ToArray(Function(x) AnnotationModel.LoadDocument(x), Parallel:=True).Unlist
             End If
 
             If trimMotifId Then

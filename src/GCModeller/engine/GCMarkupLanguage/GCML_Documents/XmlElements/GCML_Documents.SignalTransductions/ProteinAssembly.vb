@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::3c6dd3163912a50dfd95b0cfbc4bbca3, ..\GCModeller\engine\GCMarkupLanguage\GCML_Documents\XmlElements\GCML_Documents.SignalTransductions\ProteinAssembly.vb"
+﻿#Region "Microsoft.VisualBasic::e3be1c938af37d8d3ebae9482c5c3d9b, ..\GCModeller\engine\GCMarkupLanguage\GCML_Documents\XmlElements\GCML_Documents.SignalTransductions\ProteinAssembly.vb"
 
     ' Author:
     ' 
@@ -37,7 +37,7 @@ Namespace GCML_Documents.XmlElements.SignalTransductions
     ''' </summary>
     ''' <remarks></remarks>
     Public Class ProteinAssembly : Inherits Reaction
-        Implements sIdEnumerable
+        Implements INamedValue
 
 #Region "Public Properties"
         ''' <summary>

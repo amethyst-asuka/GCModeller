@@ -1,28 +1,28 @@
-﻿#Region "Microsoft.VisualBasic::3d4ba23af3f3f1bc6562784bcc4396b8, ..\GCModeller\CLI_tools\MEME\Cli\SeqParser.vb"
+﻿#Region "Microsoft.VisualBasic::920c0ec2cfba4f97836670274d0e1e7f, ..\GCModeller\CLI_tools\MEME\Cli\SeqParser.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -42,6 +42,7 @@ Imports SMRUCC.genomics.Assembly.DOOR
 Imports SMRUCC.genomics.Assembly.NCBI
 Imports SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat
 Imports SMRUCC.genomics.ComponentModel.Loci
+Imports SMRUCC.genomics.ContextModel
 Imports SMRUCC.genomics.Data.Regprecise
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.GenomeMotifFootPrints
@@ -49,6 +50,7 @@ Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.MotifScans
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Workflows.PromoterParser
 Imports SMRUCC.genomics.Model.Network
 Imports SMRUCC.genomics.Model.Network.VirtualFootprint
+Imports SMRUCC.genomics.SequenceModel
 Imports SMRUCC.genomics.SequenceModel.FASTA
 Imports SMRUCC.genomics.SequenceModel.NucleotideModels
 
@@ -61,6 +63,7 @@ Partial Module CLI
     ''' <returns></returns>
     <ExportAPI("/Parser.RegPrecise.Operons",
                Usage:="/Parser.RegPrecise.Operons /operon <operons.Csv> /PTT <PTT_DIR> [/corn /DOOR <genome.opr> /id <null> /locus <union/initx/locus, default:=union> /out <outDIR>]")>
+    <Group(CLIGrouping.MEMESeqParser)>
     Public Function ParserRegPreciseOperon(args As CommandLine) As Integer
         Dim [in] As String = args - "/operon"
         Dim PTT_DIR As String = args - "/PTT"
@@ -72,7 +75,7 @@ Partial Module CLI
         Dim PTT As PTT = PTTDb.ORF_PTT
         Dim fa As FastaToken = PTTDb.GenomeFasta
         Dim opr As String = args("/door")
-        Dim Parser As New GenePromoterParser(fa, PTTDb.ORF_PTT)
+        Dim Parser As New PromoterRegionParser(fa, PTTDb.ORF_PTT)
 
         If args.GetBoolean("/corn") Then
             Return __cornParser(operons, Parser, PTT, out)
@@ -82,7 +85,7 @@ Partial Module CLI
     End Function
 
     Private Function __TFoperonsParser(operons As IEnumerable(Of RegPreciseOperon),
-                                       Parser As GenePromoterParser,
+                                       Parser As PromoterRegionParser,
                                        id As String,
                                        type As String,
                                        opr As String,
@@ -97,7 +100,7 @@ Partial Module CLI
                         Select (From TF As String
                                 In x.Regulators
                                 Select TF,
-                                    sid = locus)).MatrixAsIterator
+                                    sid = locus)).IteratesALL
         Dim Groups = (From x In regulons
                       Select x  ' 对每一个operon的第一个基因按照TF进行分组
                       Group x By x.TF Into Group) _
@@ -112,11 +115,11 @@ Partial Module CLI
 
         If Not String.IsNullOrEmpty(id) Then
             Dim locus As String() = Groups(id)
-            Call GenePromoterParser.ParsingList(Parser, DOOR, locus, EXPORT:=out, tag:="", method:=method)
+            Call GenePromoterRegions.ParsingList(Parser, DOOR, locus, EXPORT:=out, tag:="", method:=method)
         Else
             For Each Group In Groups
                 Dim locus As String() = Group.Value
-                Call GenePromoterParser.ParsingList(Parser, DOOR, locus, EXPORT:=out, tag:=Group.Key, method:=method)
+                Call GenePromoterRegions.ParsingList(Parser, DOOR, locus, EXPORT:=out, tag:=Group.Key, method:=method)
             Next
         End If
 
@@ -124,7 +127,7 @@ Partial Module CLI
     End Function
 
     Private Function __cornParser(operons As IEnumerable(Of RegPreciseOperon),
-                                  Parser As GenePromoterParser,
+                                  Parser As PromoterRegionParser,
                                   PTT As PTT,
                                   EXPORT As String) As Integer
         Dim fasta As New FastaFile
@@ -132,7 +135,7 @@ Partial Module CLI
         For Each operon As RegPreciseOperon In operons
             Dim locus As String = operon.Operon.__firstLocus(PTT)  ' 得到当前的这个operon的第一个基因
             Dim uid As String = $"{locus}|{operon.TF_trace}|{operon.source}"
-            Dim fa As New FastaToken({uid}, Parser.Promoter_500(locus).SequenceData)
+            Dim fa As New FastaToken({uid}, Parser.GetRegionCollectionByLength(500)(locus).SequenceData)
             Call fasta.Add(fa)
         Next
 
@@ -164,6 +167,7 @@ Partial Module CLI
                Usage:="/Parser.Operon /in <footprint.csv> /PTT <PTTDIR> [/out <outDIR> /family /offset <50> /all]")>
     <Argument("/family", True,
                    Description:="Group the source by family? Or output the source in one fasta set")>
+    <Group(CLIGrouping.MEMESeqParser)>
     Public Function ParserNextIterator(args As CommandLine) As Integer
         Dim inCsv As String = args("/in")
         Dim PTT_DIR As String = args("/PTT")
@@ -194,7 +198,7 @@ Partial Module CLI
                          Select (From family In x.Family
                                  Let uid As String = $"{x.Regulator}-{x.Family}"
                                  Select uid,
-                                     family.Group.ToArray)).MatrixAsIterator _
+                                     family.Group.ToArray)).IteratesALL _
                                         .ToDictionary(Function(x) x.uid,
                                                       Function(x) x.ToArray)
         Else
@@ -207,7 +211,7 @@ Partial Module CLI
         End If
 
         Dim PTT As PTT = PTTDb.ORF_PTT
-        Dim parser As New SegmentReader(PTTDb.GenomeFasta)
+        Dim parser As IPolymerSequenceModel = PTTDb.GenomeFasta
 
         For Each siteGroup In GroupHash
             Dim path As String = out & "/" & siteGroup.Key.NormalizePathString(False) & ".fa"
@@ -220,7 +224,7 @@ Partial Module CLI
                              motifPos = New NucleotideLocation(left, right, gene.Location.Strand))
             Dim fa = (From loci In locis
                       Let attrs As String() = {loci.x.ORF, loci.x.MotifFamily, loci.x.Sequence, loci.motifPos.ToString}
-                      Let site As String = parser.TryParse(loci.motifPos).SequenceData
+                      Let site As String = parser.CutSequenceLinear(loci.motifPos).SequenceData
                       Let fasta = New FastaToken(attrs, site)
                       Select uid = fasta.Title,
                           fasta
@@ -234,6 +238,7 @@ Partial Module CLI
 
     <ExportAPI("/Parser.MAST",
                Usage:="/Parser.MAST /sites <mastsites.csv> /ptt <genome-context.pttDIR> /door <genome.opr> [/out <outDIR>]")>
+    <Group(CLIGrouping.MEMESeqParser)>
     Public Function ParserMAST(args As CommandLine) As Integer
         Dim PTT As String = args("/ptt")
         Dim door As String = args("/door")
@@ -245,17 +250,18 @@ Partial Module CLI
                       Select x
                       Group x By x.Trace Into Group)
         Dim PTTDb As New PTTDbLoader(PTT)
-        Dim Parser As New GenePromoterParser(PTTDb.GenomeFasta, PTTDb.ORF_PTT)
+        Dim Parser As New PromoterRegionParser(PTTDb.GenomeFasta, PTTDb.ORF_PTT)
 
         For Each Group In LQuery
             Dim locus As String() = Group.Group.ToArray(Function(x) x.Gene).Distinct.ToArray
-            Call GenePromoterParser.ParsingList(Parser, door, locus, out & "/" & Group.Trace.NormalizePathString)
+            Call GenePromoterRegions.ParsingList(Parser, door, locus, out & "/" & Group.Trace.NormalizePathString)
         Next
 
         Return 0
     End Function
 
     <ExportAPI("/Parser.DEGs", Usage:="/Parser.DEGs /degs <deseq2.csv> /PTT <genomePTT.DIR> /door <genome.opr> /out <out.DIR> [/log-fold 2]")>
+    <Group(CLIGrouping.MEMESeqParser)>
     Public Function ParserDEGs(args As CommandLine) As Integer
         Dim diff As String = args("/degs")
         Dim PTT As String = args("/ptt")
@@ -263,15 +269,16 @@ Partial Module CLI
         Dim out As String = args("/out")
         Dim logFold As Double = args.GetValue("/log-fold", 2)
         Dim DEGs = diff.LoadCsv(Of DESeq2.DESeq2Diff)
-        DEGs = (From x In DEGs Where Math.Abs(x.log2FoldChange) >= logFold Select x).ToList
+        DEGs = (From x In DEGs Where Math.Abs(x.log2FoldChange) >= logFold Select x).AsList
         Dim locus As String() = DEGs.ToArray(Function(x) x.locus_tag)
         Dim PTTDb As New GenBank.TabularFormat.PTTDbLoader(PTT)
-        Dim Parser As New GenePromoterParser(PTTDb.GenomeFasta, PTTDb.ORF_PTT)
-        Call GenePromoterParser.ParsingList(Parser, door, locus, out)
+        Dim Parser As New PromoterRegionParser(PTTDb.GenomeFasta, PTTDb.ORF_PTT)
+        Call GenePromoterRegions.ParsingList(Parser, door, locus, out)
         Return 0
     End Function
 
     <ExportAPI("/Parser.Log2", Usage:="/Parser.Log2 /in <log2.csv> /PTT <genomePTT.DIR> /DOOR <genome.opr> [/factor 1 /out <outDIR>]")>
+    <Group(CLIGrouping.MEMESeqParser)>
     Public Function ParserLog2(args As CommandLine) As Integer
         Dim inFile As String = args("/in")
         Dim PTT As String = args("/PTT")
@@ -287,26 +294,28 @@ Partial Module CLI
                                                                 Select exp.Key).FirstOrDefault)
                                 Select x.locus_tag).ToArray
         Dim PTTDb As New PTTDbLoader(PTT)
-        Dim Parser As New GenePromoterParser(PTTDb.GenomeFasta, PTTDb.ORF_PTT)
-        Call GenePromoterParser.ParsingList(Parser, DOOR, DEGs, out)
+        Dim Parser As New PromoterRegionParser(PTTDb.GenomeFasta, PTTDb.ORF_PTT)
+        Call GenePromoterRegions.ParsingList(Parser, DOOR, DEGs, out)
         Return 0
     End Function
 
     <ExportAPI("/Parser.Locus", Usage:="/Parser.Locus /locus <locus.txt> /PTT <genomePTT.DIR> /DOOR <genome.opr> [/out <out.DIR>]")>
+    <Group(CLIGrouping.MEMESeqParser)>
     Public Function ParserLocus(args As CommandLine) As Integer
         Dim locus As String = args("/locus")
         Dim PTT As String = args("/ptt")
         Dim door As String = args("/door")
         Dim out As String = args.GetValue("/out", locus.TrimSuffix & ".fa")
         Dim PTTDb As New GenBank.TabularFormat.PTTDbLoader(PTT)
-        Dim Parser As New GenePromoterParser(PTTDb.GenomeFasta, PTTDb.ORF_PTT)
-        Call GenePromoterParser.ParsingList(Parser, door, locus.ReadAllLines, out)
+        Dim Parser As New PromoterRegionParser(PTTDb.GenomeFasta, PTTDb.ORF_PTT)
+        Call GenePromoterRegions.ParsingList(Parser, door, locus.ReadAllLines, out)
         Return 0
     End Function
 
     '' 这一部分是生成MEME分析所需要的上游序列的程序
 
     <ExportAPI("/Parser.Regulon", Usage:="/Parser.Regulon /inDIR <regulons.inDIR> /out <fasta.outDIR> /PTT <genomePTT.DIR> [/door <genome.opr>]")>
+    <Group(CLIGrouping.MEMESeqParser)>
     Public Function RegulonParser(args As CommandLine) As Integer
         Dim inDIR As String = args("/inDIR")
         Dim out As String = args("/out")
@@ -324,6 +333,7 @@ Partial Module CLI
     End Function
 
     <ExportAPI("/Parser.Regulon.Merged", Usage:="/Parser.Regulon.Merged /in <merged.Csv> /out <fasta.outDIR> /PTT <genomePTT.DIR> [/DOOR <genome.opr>]")>
+    <Group(CLIGrouping.MEMESeqParser)>
     Public Function RegulonParser3(args As CommandLine) As Integer
         Dim inCsv As String = args("/in")
         Dim out As String = args.GetValue("/out", inCsv.TrimSuffix & ".MEME.fa/")
@@ -336,14 +346,15 @@ Partial Module CLI
         Else
             opr = DOOR_API.PTT2DOOR(PTTDb.ORF_PTT)
         End If
-        Dim Parser As New GenePromoterParser(PTTDb.GenomeFasta, PTTDb.ORF_PTT)
+        Dim Parser As New PromoterRegionParser(PTTDb.GenomeFasta, PTTDb.ORF_PTT)
         For Each regulon As VirtualFootprint.RegPreciseRegulon In inCsv.LoadCsv(Of VirtualFootprint.RegPreciseRegulon)
-            Call GenePromoterParser.ParsingList(Parser, opr, regulon.Members, out & "/" & regulon.uid)
+            Call GenePromoterRegions.ParsingList(Parser, opr, regulon.Members, out & "/" & regulon.uid)
         Next
         Return 0
     End Function
 
     <ExportAPI("/Parser.Regulon.gb", Usage:="/Parser.Regulon.gb /inDIR <regulons.inDIR> /out <fasta.outDIR> /gb <genbank.gbk> [/door <genome.opr>]")>
+    <Group(CLIGrouping.MEMESeqParser)>
     Public Function RegulonParser2(args As CommandLine) As Integer
         Dim inDIR As String = args("/inDIR")
         Dim out As String = args("/out")
@@ -362,6 +373,7 @@ Partial Module CLI
 
     <ExportAPI("/Parser.Pathway",
                Usage:="/Parser.Pathway /KEGG.Pathways <KEGG.pathways.DIR> /PTT <genomePTT.DIR> /DOOR <genome.opr> [/locus <union/initx/locus, default:=union> /out <fasta.outDIR>]")>
+    <Group(CLIGrouping.MEMESeqParser)>
     Public Function PathwayParser(args As CommandLine) As Integer
         Dim pathwayDIR As String = args("/KEGG.Pathways")
         Dim PTT_DIR As String = args("/PTT")
@@ -369,14 +381,15 @@ Partial Module CLI
         Dim locusParser As String = args.GetValue("/locus", "union")
         Dim out As String = args.GetValue("/out", App.CurrentDirectory & $"/Pathways.{locusParser}.fa")
         Dim PTTDb As New PTTDbLoader(PTT_DIR)
-        Dim Parser As New GenePromoterParser(PTTDb.GenomeFasta, PTTDb.ORF_PTT)
+        Dim Parser As New PromoterRegionParser(PTTDb.GenomeFasta, PTTDb.ORF_PTT)
         Dim method As GetLocusTags = Workflows.PromoterParser.ParserLocus.GetType(locusParser)
-        Call GenePromoterParser.ParsingKEGGPathways(Parser, DOOR, pathwayDIR, out, method)
+        Call GenePromoterRegions.ParsingKEGGPathways(Parser, DOOR, pathwayDIR, out, method)
         Return 0
     End Function
 
     <ExportAPI("/Parser.Modules",
                Usage:="/Parser.Modules /KEGG.Modules <KEGG.modules.DIR> /PTT <genomePTT.DIR> /DOOR <genome.opr> [/locus <union/initx/locus, default:=union> /out <fasta.outDIR>]")>
+    <Group(CLIGrouping.MEMESeqParser)>
     Public Function ModuleParser(args As CommandLine) As Integer
         Dim pathwayDIR As String = args("/KEGG.Modules")
         Dim PTT_DIR As String = args("/PTT")
@@ -385,8 +398,8 @@ Partial Module CLI
         Dim out As String = args.GetValue("/out", App.CurrentDirectory & $"/Modules.{locusParser}.fa/")
         Dim PTTDb As New PTTDbLoader(PTT_DIR)
         Dim method As GetLocusTags = Workflows.PromoterParser.ParserLocus.GetType(locusParser)
-        Dim Parser As New GenePromoterParser(PTTDb.GenomeFasta, PTTDb.ORF_PTT)
-        Call GenePromoterParser.ParsingKEGGModules(Parser, DOOR, pathwayDIR, out, method)
+        Dim Parser As New PromoterRegionParser(PTTDb.GenomeFasta, PTTDb.ORF_PTT)
+        Call GenePromoterRegions.ParsingKEGGModules(Parser, DOOR, pathwayDIR, out, method)
         Return 0
     End Function
 End Module

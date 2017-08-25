@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::3bb359bafcb5eea697796af26478f55e, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Slots\Reaction.vb"
+﻿#Region "Microsoft.VisualBasic::a47c3f8d0704cfeff6dee47414a4cc36, ..\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Slots\Reaction.vb"
 
     ' Author:
     ' 
@@ -139,7 +139,7 @@ Namespace Assembly.MetaCyc.File.DataFiles.Slots
         ''' <remarks>Left和Right字段的值的集合，不能够被用户指定的一个只读属性</remarks>
         Public ReadOnly Property Substrates As String()
             Get
-                Dim ChunkBuffer As List(Of String) = Left.ToList
+                Dim ChunkBuffer As List(Of String) = Left.AsList
                 Call ChunkBuffer.AddRange(Right)
                 Return (From strValue As String
                         In ChunkBuffer
@@ -241,7 +241,7 @@ Namespace Assembly.MetaCyc.File.DataFiles.Slots
 
         Public Function IsTransportReaction() As Boolean
             Dim LQuery = (From strLine As String
-                          In Me._innerHash.Values.MatrixAsIterator
+                          In Me._innerHash.Values.IteratesALL
                           Where Regex.Match(strLine, "\[\^COMPARTMENT - .+?\]").Success
                           Select strLine).FirstOrDefault
             Return Not String.IsNullOrEmpty(LQuery)

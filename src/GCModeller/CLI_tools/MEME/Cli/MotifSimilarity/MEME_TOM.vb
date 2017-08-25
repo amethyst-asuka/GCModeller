@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::c1401c88b399e4966358aa2a002bca1d, ..\GCModeller\CLI_tools\MEME\Cli\MotifSimilarity\MEME_TOM.vb"
+﻿#Region "Microsoft.VisualBasic::9a8c6cfb691efd5f19ce8ec470a89bcc, ..\GCModeller\CLI_tools\MEME\Cli\MotifSimilarity\MEME_TOM.vb"
 
     ' Author:
     ' 
@@ -26,13 +26,14 @@
 
 #End Region
 
-Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Programs
-Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic
-Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.CommandLine
+Imports Microsoft.VisualBasic.CommandLine.Reflection
+Imports Microsoft.VisualBasic.Data.csv
+Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.DocumentFormat.TomTOM
+Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Programs
 
 Partial Module CLI
 

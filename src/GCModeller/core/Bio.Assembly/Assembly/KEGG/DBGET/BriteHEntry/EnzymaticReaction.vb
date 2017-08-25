@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::f0bb9c6cb74603beaabbbaa2cb737a5a, ..\GCModeller\core\Bio.Assembly\Assembly\KEGG\DBGET\BriteHEntry\EnzymaticReaction.vb"
+﻿#Region "Microsoft.VisualBasic::ab4ea986bfc2ca68f3db38aa5366ad13, ..\core\Bio.Assembly\Assembly\KEGG\DBGET\BriteHEntry\EnzymaticReaction.vb"
 
     ' Author:
     ' 
@@ -26,60 +26,86 @@
 
 #End Region
 
-Imports Microsoft.VisualBasic
+Imports System.Threading
 Imports Microsoft.VisualBasic.ComponentModel
+Imports Microsoft.VisualBasic.Language
+Imports Microsoft.VisualBasic.Terminal
+Imports SMRUCC.genomics.Assembly.KEGG.DBGET.bGetObject
 
 Namespace Assembly.KEGG.DBGET.BriteHEntry
 
+    ''' <summary>
+    ''' Extract data from the <see cref="htext"/> entry model
+    ''' </summary>
     Public Class EnzymaticReaction
+
+        ''' <summary>
+        ''' level: D
+        ''' </summary>
+        ''' <returns></returns>
         Public Property EC As String
+        ''' <summary>
+        ''' level: A
+        ''' </summary>
+        ''' <returns></returns>
         Public Property [Class] As String
+        ''' <summary>
+        ''' level: B
+        ''' </summary>
+        ''' <returns></returns>
         Public Property Category As String
+        ''' <summary>
+        ''' level: C
+        ''' </summary>
+        ''' <returns></returns>
         Public Property SubCategory As String
         Public Property Entry As KeyValuePair
 
         Public Shared Function LoadFromResource() As EnzymaticReaction()
-            Dim Model = BriteHText.Load(My.Resources.br08201)
-            Return Build(Model)
+            Dim model As BriteHText = BriteHText.Load(My.Resources.br08201)
+            Return Build(model)
         End Function
 
         Private Shared Function Build(Model As BriteHText) As EnzymaticReaction()
-            Dim ReactionList As List(Of EnzymaticReaction) = New List(Of EnzymaticReaction)
+            Dim out As New List(Of EnzymaticReaction)
 
-            For Each ClassItem As BriteHText In Model.CategoryItems
-                For Each Category As BriteHText In ClassItem.CategoryItems
-                    For Each SubCategory As BriteHText In Category.CategoryItems
+            For Each [class] As BriteHText In Model.CategoryItems
+                For Each category As BriteHText In [class].CategoryItems
+                    For Each subCategory As BriteHText In category.CategoryItems
 
-                        If SubCategory.CategoryItems.IsNullOrEmpty Then
+                        If subCategory.CategoryItems.IsNullOrEmpty Then
                             Continue For
                         End If
 
-                        For Each EC As BriteHText In SubCategory.CategoryItems
+                        For Each EC As BriteHText In subCategory.CategoryItems
                             If Not EC.CategoryItems.IsNullOrEmpty Then
-                                Call ReactionList.AddRange(__rxns(EC, ClassItem, Category, SubCategory))
+                                out += __rxns(EC, [class], category, subCategory)
                             End If
                         Next
                     Next
                 Next
             Next
 
-            Return ReactionList.ToArray
+            Return out.ToArray
         End Function
 
         Private Shared Function __rxns(EC As BriteHText, [class] As BriteHText, category As BriteHText, subCat As BriteHText) As EnzymaticReaction()
-            Dim LQuery = (From rxn As BriteHText
-                          In EC.CategoryItems
-                          Let erxn As EnzymaticReaction = New EnzymaticReaction With {
-                              .EC = EC.ClassLabel,
-                              .Category = category.ClassLabel,
-                              .Class = [class].ClassLabel,
-                              .SubCategory = subCat.ClassLabel,
-                              .Entry = New KeyValuePair With {
-                                    .Key = rxn.EntryId,
-                                    .Value = rxn.Description
-                              }
-                          }
-                          Select erxn).ToArray
+            Dim LQuery = LinqAPI.Exec(Of EnzymaticReaction) <=
+ _
+                From rxn As BriteHText
+                In EC.CategoryItems
+                Let erxn As EnzymaticReaction = New EnzymaticReaction With {
+                    .EC = EC.ClassLabel,
+                    .Category = category.ClassLabel,
+                    .Class = [class].ClassLabel,
+                    .SubCategory = subCat.ClassLabel,
+                    .Entry = New KeyValuePair With {
+                        .Key = rxn.EntryId,
+                        .Value = rxn.Description
+                    }
+                }
+                Select erxn
+
             Return LQuery
         End Function
 
@@ -91,50 +117,83 @@ Namespace Assembly.KEGG.DBGET.BriteHEntry
             Return String.Format("[{0}: {1}] {2}", String.Join("/", [Class], Category, SubCategory), EC, Entry.ToString)
         End Function
 
-        ''' <summary>
-        ''' 
-        ''' </summary>
-        ''' <param name="Export"></param>
-        ''' <returns>返回成功下载的代谢途径的数目</returns>
-        ''' <remarks></remarks>
-        Public Shared Function DownloadReactions(Export As String, Optional BriefFile As String = "", Optional DirectoryOrganized As Boolean = True) As Integer
-            Dim BriefEntries = If(String.IsNullOrEmpty(BriefFile), LoadFromResource(), LoadFile(BriefFile))
-
-            For Each Entry As EnzymaticReaction In BriefEntries
-                Dim EntryId As String = Entry.Entry.Key
-                Dim SaveToDir As String = If(DirectoryOrganized, __getDIR(Export, Entry), Export)
-                Dim XmlFile As String = String.Format("{0}/{1}.xml", SaveToDir, EntryId)
-
-                If FileIO.FileSystem.FileExists(XmlFile) Then
-                    If FileIO.FileSystem.GetFileInfo(XmlFile).Length > 0 Then
-                        Continue For
-                    End If
-                End If
-
-                Dim rMod As bGetObject.Reaction = bGetObject.Reaction.Download(EntryId)
-
-                If rMod Is Nothing Then
-                    Call $"[{Entry.ToString}] is not exists in the kegg!".__DEBUG_ECHO
-                    Call FileIO.FileSystem.WriteAllText(App.HOME & "/DownloadsFailures.log", Entry.ToString & vbCrLf, append:=True)
-                    Continue For
-                End If
-
-                Call rMod.GetXml.SaveTo(XmlFile)
-            Next
-
-            Return 0
+        Private Shared Function __source(path$) As EnzymaticReaction()
+            If Not path.FileLength > 0 Then
+                Return LoadFromResource()
+            Else
+                Return LoadFile(path)
+            End If
         End Function
+
+        ''' <summary>
+        ''' 函数返回下载失败的列表
+        ''' </summary>
+        ''' <param name="EXPORT"></param>
+        ''' <returns>返回下载失败的代谢反应过程的编号列表</returns>
+        ''' <remarks></remarks>
+        Public Shared Function DownloadReactions(EXPORT$, Optional briefFile$ = "", Optional directoryOrganized As Boolean = True, Optional [overrides] As Boolean = False) As String()
+            Dim sources As EnzymaticReaction() = __source(briefFile)
+            Dim failures As New List(Of String)
+
+            Using progress As New ProgressBar("Download KEGG Reactions...", CLS:=True)
+                Dim tick As New ProgressProvider(sources.Length)
+                Dim ETA$
+                Dim __tick = Sub()
+                                 ETA$ = tick _
+                                    .ETA(progress.ElapsedMilliseconds) _
+                                    .FormatTime
+                                 Call progress.SetProgress(tick.StepProgress, "ETA=" & ETA)
+                             End Sub
+
+                For Each r As EnzymaticReaction In sources
+                    Call __downloadInternal(
+                        r, EXPORT, directoryOrganized,
+                        [overrides],
+                        failures,
+                        __tick)
+                Next
+            End Using
+
+            Return failures
+        End Function
+
+        Private Shared Sub __downloadInternal(r As EnzymaticReaction,
+                                              EXPORT$,
+                                              directoryOrganized As Boolean,
+                                              [overrides] As Boolean,
+                                              failures As List(Of String),
+                                              tick As Action)
+            Dim rnID As String = r.Entry.Key
+            Dim saveDIR As String = If(directoryOrganized, __getDIR(EXPORT, r), EXPORT)
+            Dim xmlFile As String = String.Format("{0}/{1}.xml", saveDIR, rnID)
+
+            If Not [overrides] AndAlso xmlFile.FileLength > 0 Then
+                GoTo EXIT_LOOP
+            End If
+
+            Dim reaction As bGetObject.Reaction = ReactionWebAPI.Download(rnID)
+
+            If reaction Is Nothing Then
+                failures += rnID
+            Else
+                Call reaction.GetXml.SaveTo(xmlFile)
+                Call Thread.Sleep(1000)
+            End If
+EXIT_LOOP:
+            Call tick()
+        End Sub
 
         Private Shared Function __getDIR(outDIR As String, entry As EnzymaticReaction) As String
             Dim [class] As String = __trimInner(entry.Class)
             Dim cat As String = __trimInner(entry.Category)
             Dim subCat As String = __trimInner(entry.SubCategory)
+            Dim ec As String = __trimInner(entry.EC)
 
-            Return String.Join("/", outDIR, [class], cat, subCat)
+            Return String.Join("/", outDIR, [class], cat, subCat, ec)
         End Function
 
         Private Shared Function __trimInner(s As String) As String
-            Return If(s.Length > 56, Mid(s, 1, 56) & "~", s)
+            Return If(s.Length > 56, Mid(s, 1, 56) & "~", s).Split("\/:*".ToCharArray).JoinBy(" ")
         End Function
     End Class
 End Namespace

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::77308d9e740390eee7ae977c43284f55, ..\GCModeller\models\SBML\SBML\Level2\FluxModel\kineticLaw\Parameter.vb"
+﻿#Region "Microsoft.VisualBasic::b73aca7e18237ae5161a4c2476988475, ..\GCModeller\models\SBML\SBML\Level2\FluxModel\kineticLaw\Parameter.vb"
 
     ' Author:
     ' 
@@ -42,9 +42,9 @@ Namespace Level2.Elements
         End Function
     End Structure
 
-    Public Class parameter : Implements sIdEnumerable
+    Public Class parameter : Implements INamedValue
 
-        <XmlAttribute()> Public Property id As String Implements sIdEnumerable.Identifier
+        <XmlAttribute()> Public Property id As String Implements INamedValue.Key
         <XmlAttribute()> Public Property value As Double
         <XmlAttribute()> Public Property units As String
 

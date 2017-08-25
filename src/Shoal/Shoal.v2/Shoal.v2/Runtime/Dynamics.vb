@@ -2,6 +2,7 @@
 Imports System.Text
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Scripting.ShoalShell.Runtime.MMU
+Imports Microsoft.VisualBasic.Text
 
 Namespace Runtime
 
@@ -65,7 +66,7 @@ Namespace Runtime
             Return (From var In ScriptEngine.MMUDevice Select var.Value.Name).ToArray
         End Function
 
-        Public Overrides Function TryGetMember( binder As GetMemberBinder, ByRef result As Object) As Boolean
+        Public Overrides Function TryGetMember(binder As GetMemberBinder, ByRef result As Object) As Boolean
             If ScriptEngine.MMUDevice.Exists(binder.Name) Then
                 result = ScriptEngine.MMUDevice(binder.Name).Value
             Else
@@ -163,7 +164,7 @@ Namespace Runtime
 #End Region
 
         Public Function ToBoolean(provider As IFormatProvider) As Boolean Implements IConvertible.ToBoolean
-            Return InputHandler.ToString(SysTopStack).getBoolean
+            Return InputHandler.ToString(SysTopStack).ParseBoolean
         End Function
 
         Public Function ToByte(provider As IFormatProvider) As Byte Implements IConvertible.ToByte
@@ -173,7 +174,7 @@ Namespace Runtime
         Public Function ToChar(provider As IFormatProvider) As Char Implements IConvertible.ToChar
             Dim value As String = InputHandler.ToString(SysTopStack)
             If String.IsNullOrEmpty(value) Then
-                Return NIL
+                Return ASCII.NUL
             Else
                 Return value(Scan0)
             End If

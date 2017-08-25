@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::ada3be1b397a589f88b95ebedfda1674, ..\GCModeller\data\GO_gene-ontology\GeneOntology\Files\xref2go\ToGo.vb"
+﻿#Region "Microsoft.VisualBasic::ae5e9f6aa38679fc3c3fd4ec62fc021c, ..\GCModeller\data\GO_gene-ontology\GeneOntology\Files\xref2go\ToGo.vb"
 
     ' Author:
     ' 
@@ -79,7 +79,7 @@ Namespace xref2go
  _
                 From s As NamedValue(Of String)
                 In reads.AsParallel
-                Let Tokens As String() = Strings.Split(s.x, " ; ")
+                Let Tokens As String() = Strings.Split(s.Value, " ; ")
                 Let annotation As String = Tokens(0)
                 Let id As String = Tokens(1)
                 Select New ToGo(Of uid) With {

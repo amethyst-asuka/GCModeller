@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::468da2384a6c16971ad5077330296fc4, ..\GCModeller\engine\GCModeller\EngineSystem\Services\DataAcquisition\DataSerializer\DataModels.vb"
+﻿#Region "Microsoft.VisualBasic::94651f79916c8de7f76a5e04496b6938, ..\GCModeller\engine\GCModeller\EngineSystem\Services\DataAcquisition\DataSerializer\DataModels.vb"
 
     ' Author:
     ' 
@@ -30,7 +30,7 @@ Imports SMRUCC.genomics.GCModeller.ModellingEngine.EngineSystem.Services.DataAcq
 Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Oracle.LinuxCompatibility.MySQL.Reflection.DbAttributes
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 
 Namespace EngineSystem.Services.DataAcquisition.DataSerializer
 
@@ -109,7 +109,7 @@ Namespace EngineSystem.Services.DataAcquisition.DataSerializer
     End Structure
 
     Public Structure HandleF
-        Implements sIdEnumerable, IAddressHandle
+        Implements INamedValue, IAddressOf
 
         Const CREATE_TABLE_SQL As String = "CREATE TABLE `%s_handles` (`Handle` BIGINT NOT NULL, `unique_Id` LONGTEXT NOT NULL, PRIMARY KEY (`Handle`), UNIQUE INDEX `Handle_UNIQUE` (`Handle` ASC));"
         Const INSERT_INTO_SQL As String = "INSERT INTO `%s_handles` (`Handle`, `unique_Id`) VALUES ('{0}', '{1}');"
@@ -136,11 +136,8 @@ Namespace EngineSystem.Services.DataAcquisition.DataSerializer
             Return LQuery.ToArray
         End Function
 
-        Public Property Identifier As String Implements sIdEnumerable.Identifier
-        Public Property Handle As Integer Implements IAddressHandle.Address
+        Public Property Identifier As String Implements INamedValue.Key
+        Public Property Handle As Integer Implements IAddressOf.Address
 
-        Public Sub Dispose() Implements IDisposable.Dispose
-
-        End Sub
     End Structure
 End Namespace

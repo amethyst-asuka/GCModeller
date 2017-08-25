@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::f1ed4506063ab6d3b728862dba4060c7, ..\GCModeller\engine\GCTabular\Compiler\SignalTransductionNetwork\CrossTalks\CrossTalksAnalysis.vb"
+﻿#Region "Microsoft.VisualBasic::32dae320730eae2d8579ea971addbea7, ..\GCModeller\engine\GCTabular\Compiler\SignalTransductionNetwork\CrossTalks\CrossTalksAnalysis.vb"
 
     ' Author:
     ' 
@@ -33,7 +33,7 @@ Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
 Imports Microsoft.VisualBasic.Scripting.MetaData
 Imports SMRUCC.genomics.Assembly
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
+Imports Microsoft.VisualBasic.Data.csv.IO
 
 Namespace Compiler.Components
 
@@ -42,20 +42,20 @@ Namespace Compiler.Components
     ''' </summary>
     ''' <remarks></remarks>
     ''' 
-    <PackageNamespace("GCModeller.Compiler.Crosstalks.API")>
+    <Package("GCModeller.Compiler.Crosstalks.API")>
     Public Module CrossTalksAnalysis
 
         <ExportAPI("TCS.CrossTalks.Net")>
-        Public Function CreateNetwork(data As IEnumerable(Of CrossTalks)) As Network
+        Public Function CreateNetwork(data As IEnumerable(Of CrossTalks)) As NetworkTables
             Dim Nodes = (From item In data Select New Node With {
-                                               .Identifier = item.Kinase,
-                                               .NodeType = "Kinase"}).Join((From item In data Select New Node With {.Identifier = item.Regulator, .NodeType = "Response Regulator"}).ToArray)
+                                               .ID = item.Kinase,
+                                               .NodeType = "Kinase"}).Join((From item In data Select New Node With {.ID = item.Regulator, .NodeType = "Response Regulator"}).ToArray)
             Dim Edges = (From item In data Select New NetworkEdge With {
                                                .FromNode = item.Kinase,
                                                .ToNode = item.Regulator,
-                                               .Confidence = item.Probability,
-                                               .InteractionType = "CrossTalk"}).ToArray
-            Dim Network As Network = New Network With {
+                                               .value = item.Probability,
+                                               .Interaction = "CrossTalk"}).ToArray
+            Dim Network As NetworkTables = New NetworkTables With {
                 .Nodes = Nodes.ToArray,
                 .Edges = Edges
             }
@@ -71,14 +71,14 @@ Namespace Compiler.Components
         ''' <remarks></remarks>
         ''' 
         <ExportAPI("Analysis")>
-        Public Function Analysis(Model As FileStream.IO.XmlresxLoader, CrossTalks As DocumentStream.File) As CrossTalks()
+        Public Function Analysis(Model As FileStream.IO.XmlresxLoader, CrossTalks As IO.File) As CrossTalks()
             Dim RR = CrossTalks.First.Skip(1).ToArray
             Dim p_cache = RR.Sequence
             Dim LQuery = (From line As RowObject
                           In CrossTalks.Skip(1).ToArray
                           Let hisk As String = line.First
                           Let scores = line.Skip(1).ToArray
-                          Select (From p As Integer In p_cache Select New CrossTalks With {.Regulator = RR(p), .Probability = Val(scores(p)), .Kinase = hisk}).ToArray).ToArray.MatrixToList
+                          Select (From p As Integer In p_cache Select New CrossTalks With {.Regulator = RR(p), .Probability = Val(scores(p)), .Kinase = hisk}).ToArray).ToArray.Unlist
 
             Dim HisKinase As String() = Model.MisT2.MajorModules.First.TwoComponent.get_HisKinase
             RR = Model.MisT2.MajorModules.First.TwoComponent.GetRR

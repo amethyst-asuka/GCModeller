@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::a1a0ce190ee2e05aede6174df0a21180, ..\GCModeller\data\Reactome\Owl\Abstract.vb"
+﻿#Region "Microsoft.VisualBasic::356d83a37ce7208aa00ad50dc8e89be3, ..\GCModeller\data\Reactome\Owl\Abstract.vb"
 
     ' Author:
     ' 
@@ -32,10 +32,10 @@ Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Namespace OwlDocument.Abstract
 
     Public MustInherit Class ResourceElement
-        Implements sIdEnumerable
+        Implements INamedValue
 
         <XmlAttribute("ID")>
-        Public Property ResourceId As String Implements sIdEnumerable.Identifier
+        Public Property ResourceId As String Implements INamedValue.Key
 
         Public Overrides Function ToString() As String
             Return ResourceId

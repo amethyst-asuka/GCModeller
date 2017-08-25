@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::8673082f3ce80d12ca9042f5b931e1a7, ..\GCModeller\core\Bio.Assembly\Assembly\NCBI\Taxonomy\TaxonomyWeb.vb"
+﻿#Region "Microsoft.VisualBasic::2777d8522a96c05eaed340ed0792675b, ..\core\Bio.Assembly\Assembly\NCBI\Taxonomy\TaxonomyWeb.vb"
 
     ' Author:
     ' 
@@ -26,7 +26,7 @@
 
 #End Region
 
-Namespace Assembly.NCBI
+Namespace Assembly.NCBI.Taxonomy
 
     ''' <summary>
     ''' The Taxonomy Database is a curated classification and nomenclature for all of the organisms in the 

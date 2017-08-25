@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::d0e07fbe9505c93616e9493672eb3448, ..\GCModeller\core\Bio.Assembly\SequenceModel\Polypeptides\Chou-Fasman\ChouFasmanAPI.vb"
+﻿#Region "Microsoft.VisualBasic::7b07eb5616daa9bed0825d0b590e757c, ..\core\Bio.Assembly\SequenceModel\Polypeptides\Chou-Fasman\ChouFasmanAPI.vb"
 
     ' Author:
     ' 
@@ -76,8 +76,8 @@ Namespace SequenceModel.Polypeptides.SecondaryStructure
         }
 
         Private Function __sequenceData(SequenceData As String) As AminoAcid()
-            Dim SequenceEnums = SequenceModel.Polypeptides.Polypeptides.ConstructVector(SequenceData)
-            Dim AA = (From Token In SequenceEnums Where Token <> Polypeptides.AminoAcid.NULL Select New AminoAcid(Token)).ToArray
+            Dim SequenceEnums = SequenceModel.Polypeptides.ConstructVector(SequenceData)
+            Dim AA = (From Token In SequenceEnums Where Token <> SequenceModel.Polypeptides.AminoAcid.NULL Select New AminoAcid(Token)).ToArray
 
             If AA.Length < SequenceEnums.Length Then
                 Call VBDebugger.Warning("There is illegal character contains in your protein sequence, they was removed:  " & SequenceData)
@@ -109,7 +109,7 @@ Namespace SequenceModel.Polypeptides.SecondaryStructure
         ''' <param name="sequence"></param>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        Public Function Calculate(sequence As I_PolymerSequenceModel) As AminoAcid()
+        Public Function Calculate(sequence As IPolymerSequenceModel) As AminoAcid()
             Return ChouFasman.Calculate(sequence.SequenceData)
         End Function
 

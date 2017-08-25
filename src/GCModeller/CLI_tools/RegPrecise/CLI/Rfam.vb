@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::83e4b79fe5b54212469bfda7d79f418e, ..\GCModeller\CLI_tools\RegPrecise\CLI\Rfam.vb"
+﻿#Region "Microsoft.VisualBasic::9cb6c144c8c1d5018955078c67f9269e, ..\GCModeller\CLI_tools\RegPrecise\CLI\Rfam.vb"
 
     ' Author:
     ' 
@@ -31,6 +31,7 @@ Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
 Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
+Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Serialization.JSON
 Imports SMRUCC.genomics.Assembly
@@ -58,7 +59,7 @@ Partial Module CLI
                      Select From rg As String
                             In x.Regulators
                             Select rg,
-                                opr = x).MatrixAsIterator
+                                opr = x).IteratesALL
         Dim oprHash As Dictionary(Of String, RegPreciseOperon()) =
             (From x
              In oprRG

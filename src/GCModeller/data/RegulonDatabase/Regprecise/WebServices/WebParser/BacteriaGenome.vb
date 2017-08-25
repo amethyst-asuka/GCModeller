@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::18b1fc71cc9f29714c87a07c22915985, ..\GCModeller\data\RegulonDatabase\Regprecise\WebServices\WebParser\BacteriaGenome.vb"
+﻿#Region "Microsoft.VisualBasic::44c632640b8d25dcca566eb523234cc6, ..\GCModeller\data\RegulonDatabase\Regprecise\WebServices\WebParser\BacteriaGenome.vb"
 
     ' Author:
     ' 
@@ -84,7 +84,7 @@ Namespace Regprecise
         Public Function ListRegulatedGenes() As String()
             Dim list As List(Of String) = (From x As Regulator
                                            In Regulons.Regulators
-                                           Select x.lstOperon.ToArray(Function(o) o.Members.ToArray(Function(g) g.LocusId))).ToArray.MatrixToList.MatrixToList
+                                           Select x.lstOperon.ToArray(Function(o) o.Members.ToArray(Function(g) g.LocusId))).ToArray.Unlist.Unlist
             Dim dlist As String() = list.Distinct.ToArray
             Return dlist
         End Function

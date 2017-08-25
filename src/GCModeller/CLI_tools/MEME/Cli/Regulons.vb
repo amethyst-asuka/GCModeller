@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::ff7413cb02e5b14a27d8ef3f9afeda11, ..\GCModeller\CLI_tools\MEME\Cli\Regulons.vb"
+﻿#Region "Microsoft.VisualBasic::5e01cc1afec2df01e4d4f74f560ed209, ..\GCModeller\CLI_tools\MEME\Cli\Regulons.vb"
 
     ' Author:
     ' 
@@ -42,10 +42,11 @@ Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH
 Partial Module CLI
 
     <ExportAPI("/Regulon.Test", Usage:="/Regulon.Test /in <meme.txt> /reg <genome.bbh.regulon.xml> /bbh <maps.bbh.Csv>")>
+    <Group(CLIGrouping.RegulonTools)>
     Public Function RegulonTest(args As CommandLine) As Integer
         Dim inMEME As String = args("/in")
         Dim inRegulon As String = args("/reg")
-        Dim inId As String = IO.Path.GetFileNameWithoutExtension(inMEME)
+        Dim inId As String = basename(inMEME)
         Dim queryList = AnnotationModel.LoadDocument(inMEME)
         Dim source = inRegulon.LoadXml(Of BacteriaGenome)
         Dim sourceHash = (From x As Regulator
@@ -93,16 +94,17 @@ Partial Module CLI
     Private Function __getRegulators(name As String, RegDb As Regulations) As String()
         Dim LDM = GCModeller.FileSystem.GetMotifLDM(name).LoadXml(Of AnnotationModel)
         Dim sites = LDM.Sites.ToArray(Function(site) site.Name)
-        Dim regulators = sites.ToArray(Function(sId) RegDb.GetRegulators(sId)).MatrixToVector
+        Dim regulators = sites.ToArray(Function(sId) RegDb.GetRegulators(sId)).ToVector
         Return regulators
     End Function
 
     <ExportAPI("/Regulon.Reconstruct", Usage:="/Regulon.Reconstruct /bbh <bbh.csv> /genome <RegPrecise.genome.xml> /door <operon.door> [/out <outfile.csv>]")>
+    <Group(CLIGrouping.RegulonTools)>
     Public Function RegulonReconstruct(args As CommandLine) As Integer
         Dim bbh As String = args("/bbh")
         Dim genome As String = args("/genome")
         Dim door As String = args("/door")
-        Dim out As String = args.GetValue("/out", $"{bbh.TrimSuffix}.{IO.Path.GetFileNameWithoutExtension(genome)}.Regulons.Xml")
+        Dim out As String = args.GetValue("/out", $"{bbh.TrimSuffix}.{basename(genome)}.Regulons.Xml")
         Dim genomeGET = RegulonAPI.Reconstruct(bbh, genome, door)
         Return genomeGET.GetXml.SaveTo(out)
     End Function
@@ -113,6 +115,7 @@ Partial Module CLI
     ''' <param name="args"></param>
     ''' <returns></returns>
     <ExportAPI("/Regulon.Reconstruct2", Usage:="/Regulon.Reconstruct2 /bbh <bbh.csv> /genome <RegPrecise.genome.DIR> /door <operons.opr> [/out <outDIR>]")>
+    <Group(CLIGrouping.RegulonTools)>
     Public Function RegulonReconstructs2(args As CommandLine) As Integer
         Dim bbh As String = args("/bbh")
         Dim genome As String = args("/genome")
@@ -130,7 +133,7 @@ Partial Module CLI
         Dim LQuery = (From x As String In genomes
                       Let regulators = RegulonAPI.Reconstruct(mapHash, x.LoadXml(Of BacteriaGenome), doorOperon)
                       Where Not regulators.IsNullOrEmpty
-                      Let id As String = IO.Path.GetFileNameWithoutExtension(x)
+                      Let id As String = basename(x)
                       Select id, _genome = New BacteriaGenome With {
                           .Regulons = New Data.Regprecise.Regulon With {
                                 .Regulators = regulators
@@ -157,6 +160,7 @@ Partial Module CLI
     <Argument("/bbh", False, Description:="A directory which contains the bbh export csv data from the localblast tool.")>
     <Argument("/genome", False, Description:="The directory which contains the RegPrecise bacterial genome downloads data from the RegPrecise web server.")>
     <Argument("/door", False, Description:="Door file which is the prediction data of the bacterial operon.")>
+    <Group(CLIGrouping.RegulonTools)>
     Public Function RegulonReconstructs(args As CommandLine) As Integer
         Dim inDIR As String = args("/bbh")
         Dim genomeDIR As String = args("/genome")
@@ -194,6 +198,7 @@ Partial Module CLI
     End Function
 
     <ExportAPI("/regulon.export", Usage:="/regulon.export /in <sw-tom_out.DIR> /ref <regulon.bbh.xml.DIR> [/out <out.csv>]")>
+    <Group(CLIGrouping.RegulonTools)>
     Public Function ExportRegulon(args As CommandLine) As Integer
         Dim inDIR As String = args("/in")
         Dim refDIR As String = args("/ref")

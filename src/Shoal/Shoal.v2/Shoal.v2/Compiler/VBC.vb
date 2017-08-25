@@ -1,4 +1,5 @@
 ﻿Imports Microsoft.VisualBasic.Emit.CodeDOM_VBC
+Imports Microsoft.VisualBasic.Scripting.Runtime
 Imports Microsoft.VisualBasic.Scripting.ShoalShell.Interpreter.LDM
 
 Namespace Compiler
@@ -22,13 +23,13 @@ Namespace Compiler
 
             Dim CodePreview As String = assm.Assembly.GenerateCode
             Call CodePreview.__DEBUG_ECHO
-            Dim refList As String() = Parallel.GetReferences(GetType(VBC))
+            Dim refList As String() = ReferenceSolver.GetReferences(GetType(VBC))
 
             Dim Exe = CodeDOMExtension.Compile(
                 assm.Assembly,
                 Options:=CodeDOMExtension.ExecutableProfile,
                 Reference:=refList,
-                DotNETReferenceAssembliesDir:=Parallel.ParallelLoading.RunTimeDirectory)
+                DotNETReferenceAssembliesDir:=RunTimeDirectory)
             Call FileIO.FileSystem.ReadAllBytes(Exe.Location).FlushStream(Output)
             Return CodePreview
         End Function

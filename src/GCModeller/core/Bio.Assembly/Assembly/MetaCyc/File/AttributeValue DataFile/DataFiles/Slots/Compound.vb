@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::b660ca10b2cabd4a848e1d9d17683c86, ..\GCModeller\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Slots\Compound.vb"
+﻿#Region "Microsoft.VisualBasic::9c7eceed836ee42549c3103f418e781b, ..\core\Bio.Assembly\Assembly\MetaCyc\File\AttributeValue DataFile\DataFiles\Slots\Compound.vb"
 
     ' Author:
     ' 
@@ -30,8 +30,10 @@ Imports SMRUCC.genomics.Assembly.MetaCyc.File.DataFiles.Reflection
 Imports System.Text.RegularExpressions
 Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
+Imports Microsoft.VisualBasic.Language
 Imports SMRUCC.genomics.Assembly.MetaCyc.Schema
 Imports SMRUCC.genomics.Assembly.MetaCyc.Schema.Reflection
+Imports SMRUCC.genomics.ComponentModel.EquaionModel
 
 Namespace Assembly.MetaCyc.File.DataFiles.Slots
 
@@ -45,7 +47,7 @@ Namespace Assembly.MetaCyc.File.DataFiles.Slots
     ''' </remarks>
     Public Class Compound : Inherits Slots.Object
         Implements Regulation.IRegulator
-        Implements sIdEnumerable
+        Implements INamedValue
         Implements ICompoundObject
 
         <MetaCycField> Public Overrides Property CommonName As String Implements Regulation.IRegulator.CommonName
@@ -72,7 +74,7 @@ Namespace Assembly.MetaCyc.File.DataFiles.Slots
         End Property
 
         <MetaCycField(Name:="UNIQUE-ID")>
-        Public Overrides Property Identifier As String Implements Regulation.IRegulator.locusId, sIdEnumerable.Identifier, ICompoundObject.locusId
+        Public Overrides Property Identifier As String Implements Regulation.IRegulator.locusId, INamedValue.Key, ICompoundObject.KEGG_cpd
             Get
                 Return MyBase.Identifier
             End Get
@@ -92,12 +94,12 @@ Namespace Assembly.MetaCyc.File.DataFiles.Slots
                                         Me.AbbrevName + Me.CommonName + Me.Synonyms + Me.Types.ToArray
                                     Let strItem As String = strValue.Trim.ToLower
                                     Where Not String.IsNullOrEmpty(strItem)
-                                    Select strItem Distinct).ToList
+                                    Select strItem Distinct).AsList
                 End If
                 Return MyBase.Names
             End Get
             Set(value As String())
-                MyBase.Names = value.ToList
+                MyBase.Names = value.AsList
             End Set
         End Property
 

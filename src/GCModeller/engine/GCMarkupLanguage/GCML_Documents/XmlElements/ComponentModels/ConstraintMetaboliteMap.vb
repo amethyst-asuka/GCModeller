@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::4c666444a1cae35f52de0e4b10fae45e, ..\GCModeller\engine\GCMarkupLanguage\GCML_Documents\XmlElements\ComponentModels\ConstraintMetaboliteMap.vb"
+﻿#Region "Microsoft.VisualBasic::ed4e76c321920bc58e9989d8b45c1791, ..\GCModeller\engine\GCMarkupLanguage\GCML_Documents\XmlElements\ComponentModels\ConstraintMetaboliteMap.vb"
 
     ' Author:
     ' 
@@ -31,7 +31,7 @@ Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 
 Namespace GCML_Documents.ComponentModels
 
-    Public Class ConstraintMetaboliteMap : Implements sIdEnumerable
+    Public Class ConstraintMetaboliteMap : Implements INamedValue
 
         ''' <summary>
         ''' 被GCModeller所识别的代谢底物的标识符
@@ -39,7 +39,7 @@ Namespace GCML_Documents.ComponentModels
         ''' <value></value>
         ''' <returns></returns>
         ''' <remarks></remarks>
-        <XmlAttribute> Public Property ConstraintId As String Implements sIdEnumerable.Identifier
+        <XmlAttribute> Public Property ConstraintId As String Implements INamedValue.Key
         ''' <summary>
         ''' 例如MetaCyc数据库中的UniqueId标识符
         ''' </summary>

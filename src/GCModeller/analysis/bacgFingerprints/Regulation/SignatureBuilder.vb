@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::47fa464ef292c877aaa76442dd510d40, ..\GCModeller\analysis\bacgFingerprints\Regulation\SignatureBuilder.vb"
+﻿#Region "Microsoft.VisualBasic::c0d5e1f9fb1220540cc81d409040fa0d, ..\GCModeller\analysis\bacgFingerprints\Regulation\SignatureBuilder.vb"
 
     ' Author:
     ' 
@@ -69,7 +69,7 @@ Namespace RegulationSignature
                 KEGG_Pathways As IEnumerable(Of bGetObject.Pathway),
                 COG As IEnumerable(Of ICOGDigest))
 
-            Dim COGHash = COG.ToDictionary(Function(Gene) Gene.Identifier)
+            Dim COGHash = COG.ToDictionary(Function(Gene) Gene.Key)
             Dim GenomeHash As Dictionary(Of String, GeneObject) =
                 PTT.GeneObjects.ToDictionary(Function(Gene) Gene.Synonym,
                                              Function(Gene) New GeneObject With {
@@ -140,7 +140,7 @@ Namespace RegulationSignature
             Next
 
             For Each gene As GeneObject In KOHash.Values
-                gene.KO = (From KO_ID As String In gene.KO Select KO_ID Distinct Order By KO_ID Ascending).ToList
+                gene.KO = (From KO_ID As String In gene.KO Select KO_ID Distinct Order By KO_ID Ascending).AsList
                 If String.IsNullOrEmpty(gene.GeneID.GeneName) OrElse String.Equals(gene.GeneID.GeneName, "-") Then
                     gene.GeneID.GeneName = gene.KO.Last
                     gene.COG = gene.GeneID.GeneName
@@ -168,7 +168,7 @@ Namespace RegulationSignature
                               Let ClassID As String = Regex.Match(KO_ID, "\d+").Value
                               Where Not String.IsNullOrEmpty(ClassID)
                               Select ClassID).ToArray
-                gene.KO = LQuery.ToList
+                gene.KO = LQuery.AsList
             Next
 
         End Sub
@@ -248,7 +248,7 @@ Namespace RegulationSignature
             ' 排序KEGG Pathway部分的数据
             Dim DisAssembly = (From KO_Gene In (From Gene In KOHash Select (From KO_ID As String
                                                                             In Gene.Value.KO
-                                                                            Select KO_ID, GeneObject = Gene).ToArray).MatrixToList
+                                                                            Select KO_ID, GeneObject = Gene).ToArray).Unlist
                                Select KO_Gene
                                Group KO_Gene By KO_Gene.KO_ID Into Group).ToArray
 

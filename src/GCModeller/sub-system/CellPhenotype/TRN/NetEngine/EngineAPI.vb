@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::580c54798b29c17db8873d527a329505, ..\GCModeller\sub-system\CellPhenotype\TRN\NetEngine\EngineAPI.vb"
+﻿#Region "Microsoft.VisualBasic::54bbccf214bc7aa40bfa1ea4bc1fc5b1, ..\GCModeller\sub-system\CellPhenotype\TRN\NetEngine\EngineAPI.vb"
 
     ' Author:
     ' 
@@ -73,7 +73,7 @@ Namespace TRN
                           Select DirectCast(RR_R, TCS)).ToDictionary(keySelector:=Function(regulator) regulator.UniqueId)
 
             Dim Pathways = cellularNET.KEGG_Pathways.GetAllPathways
-            Dim OCS_CACHE = (From item In (From nr In (From nnn In cellularNET.Regulators Where Not nnn.Effectors.IsNullOrEmpty Select nnn.ProteinId, nnn.Effectors Group By ProteinId Into Group).ToArray Select nr.ProteinId, Effectors = (From ng In nr.Group.ToArray Select ng.Effectors).ToArray.MatrixToVector.Distinct.ToArray).ToArray
+            Dim OCS_CACHE = (From item In (From nr In (From nnn In cellularNET.Regulators Where Not nnn.Effectors.IsNullOrEmpty Select nnn.ProteinId, nnn.Effectors Group By ProteinId Into Group).ToArray Select nr.ProteinId, Effectors = (From ng In nr.Group.ToArray Select ng.Effectors).ToArray.ToVector.Distinct.ToArray).ToArray
                              Let KEGGCompounds = (From EId As String In item.Effectors Let kid As String = cellularNET.MetabolitesModel(EId).KEGGCompound Where Not String.IsNullOrEmpty(kid) Select kid Distinct).ToArray
                              Let FindPathways = (From kid As String In KEGGCompounds
                                                  Let finded = (From pathway In Pathways
@@ -88,7 +88,7 @@ Namespace TRN
                                                         Select New KeyValuePairData(Of BinaryExpression()) With {
                                                             .DataObject = item.Enzymes,
                                                             .Key = item.EntryId,
-                                                            .Value = p.kid}).ToArray).MatrixToVector,
+                                                            .Value = p.kid}).ToArray).ToVector,
                            .Regulator = Regulator.ProteinId}
                        Select DirectCast(ocs_r.set__Regulator(New BinaryExpression With {.Identifier = Regulator.ProteinId}), OCS)).ToDictionary(Function(regulator) regulator.UniqueId)
 
@@ -223,7 +223,7 @@ Namespace TRN
             '            Dim NetworkInitialization = (From Gene In GenerateSites.AsParallel
             '                                         Select Gene.Expression.InvokeSet(NameOf(Gene.Expression.RegulatorySites), Gene.rs)).ToArray
 
-            '            Dim Model = New BinaryNetwork With {._DynamicsExpressions = NetworkInitialization.OrderBy(Function(GeneObject) GeneObject.UniqueId).ToArray.AddHandle, .InitCache = Inits}
+            '            Dim Model = New BinaryNetwork With {._DynamicsExpressions = NetworkInitialization.OrderBy(Function(GeneObject) GeneObject.UniqueId).ToArray.WriteAddress, .InitCache = Inits}
 
             '            Dim RegulatorIdList As String() = (From item In footprints Where Not item.Regulators.IsNullOrEmpty Select item.Regulators).ToArray.MatrixToVector.Distinct.ToArray
             '            Call Console.WriteLine("[DEBUG] Initialization for the regulators....")

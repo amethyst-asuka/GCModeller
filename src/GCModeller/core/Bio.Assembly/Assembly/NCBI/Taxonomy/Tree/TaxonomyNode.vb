@@ -1,10 +1,37 @@
-﻿Imports Microsoft.VisualBasic
+﻿#Region "Microsoft.VisualBasic::05d006a15e59a0683aa6ae2f3d92610d, ..\core\Bio.Assembly\Assembly\NCBI\Taxonomy\Tree\TaxonomyNode.vb"
+
+    ' Author:
+    ' 
+    '       asuka (amethyst.asuka@gcmodeller.org)
+    '       xieguigang (xie.guigang@live.com)
+    '       xie (genetics@smrucc.org)
+    ' 
+    ' Copyright (c) 2016 GPL3 Licensed
+    ' 
+    ' 
+    ' GNU GENERAL PUBLIC LICENSE (GPL3)
+    ' 
+    ' This program is free software: you can redistribute it and/or modify
+    ' it under the terms of the GNU General Public License as published by
+    ' the Free Software Foundation, either version 3 of the License, or
+    ' (at your option) any later version.
+    ' 
+    ' This program is distributed in the hope that it will be useful,
+    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
+    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    ' GNU General Public License for more details.
+    ' 
+    ' You should have received a copy of the GNU General Public License
+    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+#End Region
+
 Imports Microsoft.VisualBasic.Language
-Imports Microsoft.VisualBasic.Language.Python
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Serialization.JSON
+Imports SMRUCC.genomics.Metagenomics.BIOMTaxonomy
 
-Namespace Assembly.NCBI
+Namespace Assembly.NCBI.Taxonomy
 
     ''' <summary>
     ''' The tree node calculation model for <see cref="NcbiTaxonomyTree"/>
@@ -47,11 +74,6 @@ Namespace Assembly.NCBI
         End Function
 
         ''' <summary>
-        ''' ``k__{x.superkingdom};p__{x.phylum};c__{x.class};o__{x.order};f__{x.family};g__{x.genus};s__{x.species}``
-        ''' </summary>
-        Public Shared ReadOnly Property BIOMPrefix As String() = {"k__", "p__", "c__", "o__", "f__", "g__", "s__"}
-
-        ''' <summary>
         ''' <see cref="BIOMPrefix"/>
         ''' </summary>
         ''' <param name="nodes"></param>
@@ -71,7 +93,7 @@ Namespace Assembly.NCBI
             SyncLock BIOMPrefix
                 Return list _
                     .SeqIterator _
-                    .Select(Function(x) BIOMPrefix(x.i) & x.obj) _
+                    .Select(Function(x) BIOMPrefix(x.i) & x.value) _
                     .JoinBy(";")
             End SyncLock
         End Function

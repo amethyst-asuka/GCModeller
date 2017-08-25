@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::bf1259d712ddc958898852ee430fa0e7, ..\GCModeller\engine\GCModeller\EngineSystem\ObjectModels\SubSystem\ExpressionSystem\Initializer.vb"
+﻿#Region "Microsoft.VisualBasic::01e53cf72ad97696d70a456f41e7f2c6, ..\GCModeller\engine\GCModeller\EngineSystem\ObjectModels\SubSystem\ExpressionSystem\Initializer.vb"
 
     ' Author:
     ' 
@@ -88,7 +88,7 @@ Namespace EngineSystem.ObjectModels.SubSystem.ExpressionSystem
             Dim ExpressionObjectInitializeLQuery = (From ExpressionObject As [Module].CentralDogmaInstance.CentralDogma
                                                     In _ExpressionRegulationNetwork.NetworkComponents.AsParallel
                                                     Select ExpressionObject.Initialize(CellSystem)).ToArray
-            ExpressionObjectInitializeLQuery = ExpressionObjectInitializeLQuery.AddHandle.ToArray
+            ExpressionObjectInitializeLQuery = ExpressionObjectInitializeLQuery.WriteAddress.ToArray
 
             Call _ExpressionRegulationNetwork.SystemLogging.WriteLine(String.Format("Initialization time using {0} ms", stw.ElapsedMilliseconds))
             Call _ExpressionRegulationNetwork.SystemLogging.WriteLine("End of expression regulation network initialize...", "SVD", Logging.MSG_TYPES.INF)
@@ -104,7 +104,7 @@ Namespace EngineSystem.ObjectModels.SubSystem.ExpressionSystem
         End Function
 
         Public Shared Function SetupConstraint(FluxObject As EngineSystem.ObjectModels.Module.CentralDogmaInstance.BasalExpression, MetabolismSystem As EngineSystem.ObjectModels.SubSystem.MetabolismCompartment) As Integer
-            FluxObject.UPPER_BOUND = If(Global.System.Math.Abs(FluxObject.UPPER_BOUND - 0.0R) < TOLERANCE, RandomDouble() * 10, FluxObject.UPPER_BOUND / 37)
+            FluxObject.UPPER_BOUND = If(Global.System.Math.Abs(FluxObject.UPPER_BOUND - 0.0R) < TOLERANCE, Rnd() * 10, FluxObject.UPPER_BOUND / 37)
             Call FluxObject.InitializeConstraints(MetabolismSystem)
             '     Call Randomize()
             Return 0

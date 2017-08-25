@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::b1b9074a9fa7e006d71c8c4864b0970c, ..\GCModeller\data\ExternalDBSource\DEG\Models.vb"
+﻿#Region "Microsoft.VisualBasic::4a83678dbb195ab52328ed63fe85beed, ..\GCModeller\data\ExternalDBSource\DEG\Models.vb"
 
     ' Author:
     ' 
@@ -35,9 +35,9 @@ Imports SMRUCC.genomics.SequenceModel.FASTA
 
 Namespace DEG
 
-    Public Class Annotations : Implements sIdEnumerable
+    Public Class Annotations : Implements INamedValue
 
-        <Column("#DEG_AC")> Public Property DEG_AC As String Implements sIdEnumerable.Identifier
+        <Column("#DEG_AC")> Public Property DEG_AC As String Implements INamedValue.Key
         <Column("#Gene_Name")> Public Property GeneName As String
         <Column("#Gene_Ref")> Public Property Gene_Ref As String
         <Column("#COG")> Public Property COG As String
@@ -51,7 +51,7 @@ Namespace DEG
             Return String.Format("[{0}]  {1}", DEG_AC, Gene_Ref)
         End Function
 
-        Public Shared Function Load(CsvData As DocumentStream.File) As DEG.Annotations()
+        Public Shared Function Load(CsvData As IO.File) As DEG.Annotations()
             Dim ChunkBuffer As DEG.Annotations() = Reflector.Convert(Of DEG.Annotations)(CsvData.DataFrame(), False).ToArray
             Return ChunkBuffer
         End Function

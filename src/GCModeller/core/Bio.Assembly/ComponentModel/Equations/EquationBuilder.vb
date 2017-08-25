@@ -1,28 +1,28 @@
-﻿#Region "Microsoft.VisualBasic::63eb65d809dd78152d799d249b407bf4, ..\GCModeller\core\Bio.Assembly\ComponentModel\Equations\EquationBuilder.vb"
+﻿#Region "Microsoft.VisualBasic::b835c3a85a4e94eb6b33d6d54894ed1d, ..\core\Bio.Assembly\ComponentModel\Equations\EquationBuilder.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -36,29 +36,47 @@ Namespace ComponentModel.EquaionModel
 
     Public Module EquationBuilder
 
+        ''' <summary>
+        ''' 可逆的代谢反应过程的箭头
+        ''' </summary>
         Public Const EQUATION_DIRECTIONS_REVERSIBLE As String = " <=> "
+        ''' <summary>
+        ''' 不可逆的代谢反应过程的箭头
+        ''' </summary>
         Public Const EQUATION_DIRECTIONS_IRREVERSIBLE As String = " --> "
         Public Const EQUATION_SPECIES_CONNECTOR As String = " + "
 
+        ''' <summary>
+        ''' 从代谢过程的表达式字符串值创建代谢过程的对象模型
+        ''' </summary>
+        ''' <typeparam name="TCompound"></typeparam>
+        ''' <typeparam name="TEquation"></typeparam>
+        ''' <param name="Equation"></param>
+        ''' <returns></returns>
+        <Extension>
         Public Function CreateObject(Of TCompound As ICompoundSpecies, TEquation As IEquation(Of TCompound))(Equation As String) As TEquation
-            Dim EquationObject As IEquation(Of TCompound) = Activator.CreateInstance(Of TEquation)()
-            EquationObject.Reversible = CType(InStr(Equation, EQUATION_DIRECTIONS_REVERSIBLE), Boolean)
+            With Activator.CreateInstance(Of TEquation)()
+                Dim reversible = InStr(Equation, EQUATION_DIRECTIONS_REVERSIBLE) > 0
+                Dim deli As String = If(reversible,
+                    EQUATION_DIRECTIONS_REVERSIBLE,
+                    EQUATION_DIRECTIONS_IRREVERSIBLE)
+                Dim tokens As String() = Strings.Split(Equation, deli)
 
-            Dim deli As String = If(EquationObject.Reversible,
-                EQUATION_DIRECTIONS_REVERSIBLE,
-                EQUATION_DIRECTIONS_IRREVERSIBLE)
-            Dim Tokens As String() = Strings.Split(Equation, deli)
+                Try
+                    .Reversible = reversible
+                    .Reactants = tokens(left).GetSides(Of TCompound)()
+                    .Products = tokens(right).GetSides(Of TCompound)()
+                Catch ex As Exception   ' 生成字典的时候可能会因为重复的代谢物而出错
+                    Dim msg As String = String.Format(Duplicated, Equation)
+                    Throw New Exception(msg, ex)
+                End Try
 
-            Try
-                EquationObject.Reactants = GetSides(Of TCompound)(Tokens(Scan0))
-                EquationObject.Products = GetSides(Of TCompound)(Tokens(1))
-            Catch ex As Exception   ' 生成字典的时候可能会因为重复的代谢物而出错
-                Dim msg As String = String.Format(Duplicated, Equation)
-                Throw New Exception(msg, ex)
-            End Try
-
-            Return EquationObject
+                Return .ref
+            End With
         End Function
+
+        Const left% = Scan0
+        Const right = 1
 
         Const Duplicated As String = "Could not process ""{0}"", duplicated found!"
 
@@ -66,12 +84,12 @@ Namespace ComponentModel.EquaionModel
             Return CreateObject(Of DefaultTypes.CompoundSpecieReference, DefaultTypes.Equation)(Equation)
         End Function
 
-        Private Function GetSides(Of T As ICompoundSpecies)(Expr As String) As T()
-            If String.IsNullOrEmpty(Expr) Then
+        <Extension> Private Function GetSides(Of T As ICompoundSpecies)(expr As String) As T()
+            If String.IsNullOrEmpty(expr) Then
                 Return New T() {}
             End If
 
-            Dim tokens As String() = Strings.Split(Expr, EQUATION_SPECIES_CONNECTOR)
+            Dim tokens As String() = Strings.Split(expr, EQUATION_SPECIES_CONNECTOR)
             Dim LQuery As T() = tokens.ToArray(AddressOf __tryParse(Of T))
             Return LQuery
         End Function
@@ -84,14 +102,14 @@ Namespace ComponentModel.EquaionModel
                 Dim tokens As String() = token.Trim.Split
                 If tokens.Length > 1 Then
                     CompoundSpecie.StoiChiometry = Scripting.CTypeDynamic(Of Double)(tokens(Scan0))
-                    CompoundSpecie.Identifier = token
+                    CompoundSpecie.Key = token
                 Else
                     CompoundSpecie.StoiChiometry = 1
-                    CompoundSpecie.Identifier = token
+                    CompoundSpecie.Key = token
                 End If
             Else
                 CompoundSpecie.StoiChiometry = Val(SC)
-                CompoundSpecie.Identifier = Trim(token.Replace(SC, ""))
+                CompoundSpecie.Key = Trim(token.Replace(SC, ""))
             End If
 
             Return CompoundSpecie
@@ -154,7 +172,7 @@ Namespace ComponentModel.EquaionModel
         End Sub
 
         Private Sub AppendSides(sBuilder As StringBuilder, Compounds As ICompoundSpecies())
-            Call Compounds.__appendSide(sBuilder, Function(x) x.StoiChiometry, Function(x) x.Identifier)
+            Call Compounds.__appendSide(sBuilder, Function(x) x.StoiChiometry, Function(x) x.Key)
         End Sub
     End Module
 End Namespace

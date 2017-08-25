@@ -1,45 +1,44 @@
-﻿#Region "Microsoft.VisualBasic::35849a5f3e0e0d81882aa65d3e2f7050, ..\GCModeller\analysis\ProteinTools\ProteinTools.Interactions\SwissTCS\SwissRegulon.vb"
+﻿#Region "Microsoft.VisualBasic::53aeca2103707c3aee78a6e2c9b04aac, ..\GCModeller\analysis\ProteinTools\ProteinTools.Interactions\SwissTCS\SwissRegulon.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports System.Runtime.CompilerServices
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Data.csv
-Imports Microsoft.VisualBasic.Data.csv.DocumentStream
 Imports Microsoft.VisualBasic.Data.csv.Extensions
-Imports Microsoft.VisualBasic.Data.csv.StorageProvider.Reflection
-Imports Microsoft.VisualBasic.Data.visualize
+Imports Microsoft.VisualBasic.Data.csv.IO
+Imports Microsoft.VisualBasic.Data.visualize.Network
 Imports Microsoft.VisualBasic.Scripting.MetaData
+Imports SMRUCC.genomics.SequenceModel.FASTA
 
 Namespace SwissTCS
 
-    <[PackageNamespace]("swiss-regulon.TCS.pl",
+    <Package("swiss-regulon.TCS.pl",
                     Category:=APICategories.ResearchTools,
                     Description:="Burger, L. and E. van Nimwegen (2008). 
                     ""Accurate prediction Of protein-protein interactions from sequence alignments Using a Bayesian method."" 
@@ -187,10 +186,10 @@ Namespace SwissTCS
         End Sub
 
         <ExportAPI("Matrix.CrossTalks")>
-        Public Function CreateCrossTalks(dirHisK As String, dirRR As String) As DocumentStream.File
-            Dim HisKList = (From Path As String In FileIO.FileSystem.GetFiles(dirHisK) Select Path.LoadCsv(Of CrossTalks)(False).ToArray).ToArray.MatrixToVector
-            Dim RRList = (From Path As String In FileIO.FileSystem.GetFiles(dirRR) Select Path.LoadCsv(Of CrossTalks)(False).ToArray).ToArray.MatrixToVector
-            Dim ChunkBuffer As CrossTalks() = {HisKList, RRList}.MatrixToVector
+        Public Function CreateCrossTalks(dirHisK As String, dirRR As String) As IO.File
+            Dim HisKList = (From Path As String In FileIO.FileSystem.GetFiles(dirHisK) Select Path.LoadCsv(Of CrossTalks)(False).ToArray).ToArray.ToVector
+            Dim RRList = (From Path As String In FileIO.FileSystem.GetFiles(dirRR) Select Path.LoadCsv(Of CrossTalks)(False).ToArray).ToArray.ToVector
+            Dim ChunkBuffer As CrossTalks() = {HisKList, RRList}.ToVector
 
             Call $"{HisKList.Length} hisK and {RRList.Length} respone regulator...".__DEBUG_ECHO
 
@@ -220,17 +219,17 @@ Namespace SwissTCS
         End Function
 
         <ExportAPI("TCS.Sequence.Downloads")>
-        Public Function DownloadTcsSequence(DIR As String) As SMRUCC.genomics.SequenceModel.FASTA.FastaFile
+        Public Function DownloadTcsSequence(DIR As String) As FastaFile
             Dim profiles As CrossTalks() = (From path As String
                                             In FileIO.FileSystem.GetFiles(DIR, FileIO.SearchOption.SearchAllSubDirectories, "*.csv").AsParallel
                                             Let data = path.LoadCsv(Of CrossTalks)(False)
                                             Where Not data.IsNullOrEmpty
-                                            Select data.ToArray).ToArray.MatrixToVector
+                                            Select data.ToArray).ToArray.ToVector
             Dim lstId As String() = {(From cTk As CrossTalks
                                       In profiles
                                       Select cTk.Kinase).ToArray, (From cTk As CrossTalks
                                                                    In profiles
-                                                                   Select cTk.Regulator).ToArray}.MatrixToVector.Distinct.ToArray
+                                                                   Select cTk.Regulator).ToArray}.ToVector.Distinct.ToArray
             lstId = (From sId As String
                      In lstId
                      Let Trimed As String = __trim(sId)
@@ -239,10 +238,10 @@ Namespace SwissTCS
                      Order By Trimed Ascending).ToArray
             Dim LQuery = (From sId As String
                           In lstId
-                          Let gFa As SequenceModel.FASTA.FastaToken = SMRUCC.genomics.Assembly.KEGG.WebServices.Downloads(DIR, sId)
+                          Let gFa As SequenceModel.FASTA.FastaToken = SMRUCC.genomics.Assembly.KEGG.WebServices.WebRequest.Downloads(DIR, sId)
                           Where Not gFa Is Nothing
                           Select gFa).ToArray
-            Return New SMRUCC.genomics.SequenceModel.FASTA.FastaFile(LQuery)
+            Return New FastaFile(LQuery)
         End Function
 
         Private Function __trim(sId As String) As String
@@ -255,10 +254,10 @@ Namespace SwissTCS
             End If
         End Function
 
-        <Extension> Public Function CrossTalk(profiles As Generic.IEnumerable(Of CrossTalks), HisK As String, RR As String) As Double
+        <Extension> Public Function CrossTalk(profiles As IEnumerable(Of CrossTalks), HisK As String, RR As String) As Double
             Dim LQuery = (From ctk As CrossTalks
                           In profiles
-                          Where Network.Abstract.Contains(ctk, HisK) AndAlso Network.Abstract.Contains(ctk, RR)
+                          Where Graph.Abstract.Contains(ctk, HisK) AndAlso Graph.Abstract.Contains(ctk, RR)
                           Select ctk).FirstOrDefault
             If LQuery Is Nothing Then
                 Return 0

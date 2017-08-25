@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::e029c1b7245b80eed058980a594fea69, ..\GCModeller\engine\GCTabular\DataVisualization\CytoscapeAPI.vb"
+﻿#Region "Microsoft.VisualBasic::ba04714e32b4560bba6e66daedfdf522, ..\GCModeller\engine\GCTabular\DataVisualization\CytoscapeAPI.vb"
 
     ' Author:
     ' 
@@ -39,7 +39,7 @@ Imports Microsoft.VisualBasic.Text
 
 Namespace DataVisualization
 
-    <PackageNamespace("Cytoscape.GCModeller.NetVisual")>
+    <Package("Cytoscape.GCModeller.NetVisual")>
     Public Module CytoscapeAPI
 
         <ExportAPI("cytoscape_generator.create")>
@@ -81,13 +81,13 @@ Namespace DataVisualization
 
         <ExportAPI("save.paths")>
         Public Function SaveResult(path As KeyValuePair(Of Integer, Interactions())(), saveto As String) As Boolean
-            Dim CsvData As DocumentStream.File = New DocumentStream.File
+            Dim CsvData As IO.File = New IO.File
 
             For Each line In path
                 CsvData += New String() {String.Format("Path contains {0} nodes", line.Key)}
 
                 For Each item As Interactions In line.Value
-                    CsvData += New String() {item.FromNode, item.ToNode, item.InteractionType}
+                    CsvData += New String() {item.FromNode, item.ToNode, item.Interaction}
                 Next
                 CsvData += New String() {"</>"}
             Next

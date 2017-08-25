@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::330b691ec66c512c29fbb85d022f918e, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\API\stats\stats.vb"
+﻿#Region "Microsoft.VisualBasic::4cef575fbe73c4ecf9b4de361c50956d, ..\R.Bioconductor\RDotNET.Extensions.VisualBasic\API\stats\stats.vb"
 
     ' Author:
     ' 
@@ -178,6 +178,45 @@ Namespace API
             End SyncLock
 
             Return tmp
+        End Function
+
+        ''' <summary>
+        ''' ``p.adjust.methods``
+        ''' </summary>
+        Public Enum padjusts
+            holm
+            hochberg
+            hommel
+            bonferroni
+            BH
+            BY
+            fdr
+            none
+        End Enum
+
+        ''' <summary>
+        ''' ###### Adjust P-values for Multiple Comparisons
+        ''' 
+        ''' Given a set of p-values, returns p-values adjusted using one of several methods.
+        ''' </summary>
+        ''' <param name="p#">numeric vector of p-values (possibly with NAs). Any other R is coerced by as.numeric.</param>
+        ''' <param name="method">correction method. Can be abbreviated.</param>
+        ''' <param name="n$">
+        ''' number of comparisons, must be at least length(p); only set this (to non-default) when you know what you are doing!
+        ''' </param>
+        ''' <returns>函数返回来的是变量名，这个变量的值类型为一个Double数组向量</returns>
+        Public Function padjust(p#(), Optional method As padjusts = padjusts.fdr, Optional n$ = "length(p)") As String
+            Dim v$ = base.c(p, recursive:=False)
+
+            SyncLock R
+                With R
+                    Dim x$ = App.NextTempName
+
+                    .call = $"{x} <- p.adjust({v}, method = {Rstring(method.Description)}, n = length({v}));"
+
+                    Return x
+                End With
+            End SyncLock
         End Function
     End Module
 End Namespace

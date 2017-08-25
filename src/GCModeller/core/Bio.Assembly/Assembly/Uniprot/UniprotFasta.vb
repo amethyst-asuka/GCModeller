@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::9761c36a7b837ef078a6eafd5e63c56e, ..\GCModeller\core\Bio.Assembly\Assembly\Uniprot\UniprotFasta.vb"
+﻿#Region "Microsoft.VisualBasic::469bfe62e06c22cdde2688ecda750b9d, ..\core\Bio.Assembly\Assembly\Uniprot\UniprotFasta.vb"
 
     ' Author:
     ' 
@@ -27,11 +27,9 @@
 #End Region
 
 Imports System.Text.RegularExpressions
-Imports Microsoft.VisualBasic.CommandLine.Reflection
-Imports Microsoft.VisualBasic.Scripting.MetaData
+Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 Imports Microsoft.VisualBasic.Linq.Extensions
 Imports SMRUCC.genomics.SequenceModel
-Imports Microsoft.VisualBasic.ComponentModel.Collection.Generic
 
 Namespace Assembly.Uniprot
 
@@ -57,13 +55,13 @@ Namespace Assembly.Uniprot
     ''' </summary>
     ''' <remarks>http://www.uniprot.org/help/fasta-headers</remarks>
     Public Class UniprotFasta : Inherits FASTA.FastaToken
-        Implements sIdEnumerable
+        Implements INamedValue
 
         ''' <summary>
         ''' UniqueIdentifier Is the primary accession number of the UniProtKB entry.
         ''' </summary>
         ''' <returns></returns>
-        Public Property UniprotID As String Implements sIdEnumerable.Identifier
+        Public Property UniprotID As String Implements INamedValue.Key
         ''' <summary>
         ''' EntryName Is the entry name of the UniProtKB entry.
         ''' </summary>
@@ -105,13 +103,13 @@ Namespace Assembly.Uniprot
         ''' <summary>
         ''' 从读取的文件数据之中创建一个Uniprot序列对象
         ''' </summary>
-        ''' <param name="FastaRaw"></param>
+        ''' <param name="fasta"></param>
         ''' <returns></returns>
         ''' <remarks>
         ''' >sp|Q197F8|002R_IIV3 Uncharacterized protein 002R OS=Invertebrate iridescent virus 3 GN=IIV3-002R PE=4 SV=1
         ''' </remarks>
-        Public Shared Function CreateObject(FastaRaw As FASTA.FastaToken) As UniprotFasta
-            Dim UniprotFasta As UniprotFasta = FastaRaw.Copy(Of UniprotFasta)()
+        Public Shared Function CreateObject(fasta As FASTA.FastaToken) As UniprotFasta
+            Dim UniprotFasta As UniprotFasta = fasta.Copy(Of UniprotFasta)()
             Dim s As String = UniprotFasta.Attributes(2)
 
             UniprotFasta.EntryName = s.Split.First
@@ -137,9 +135,18 @@ Namespace Assembly.Uniprot
 
                 Return UniprotFasta
             Catch ex As Exception
-                Dim msg As String = String.Format("Header parsing error at  ------> ""{0}""" & vbCrLf & vbCrLf & ex.ToString, FastaRaw.Title)
+                Dim msg As String = String.Format("Header parsing error at  ------> ""{0}""" & vbCrLf & vbCrLf & ex.ToString, fasta.Title)
                 Throw New SyntaxErrorException(msg)
             End Try
+        End Function
+
+        Public Shared Function SimpleHeaderParser(header$) As Dictionary(Of String, String)
+            Dim headers$() = header.Split("|"c)
+            Return New Dictionary(Of String, String) From {
+                {"DB", headers(Scan0)},
+                {"UniprotID", headers(1)},
+                {"Description", headers(2)}
+            }
         End Function
 
         ''' <summary>

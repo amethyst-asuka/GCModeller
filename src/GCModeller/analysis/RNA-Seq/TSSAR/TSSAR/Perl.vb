@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::809139ca3f43280c58f6642eeb19bad0, ..\GCModeller\analysis\RNA-Seq\TSSAR\TSSAR\Perl.vb"
+﻿#Region "Microsoft.VisualBasic::724138079ad70963019b1cd201fabd44, ..\GCModeller\analysis\RNA-Seq\TSSAR\TSSAR\Perl.vb"
 
     ' Author:
     ' 
@@ -214,12 +214,11 @@ Public Module Perl
         '  [--winSize *INT*] [--verbose] [--noclean] [--nocluster] [-range *INT*]]
         '  [<--tmpdir> *DIR*] [--help|?] [--man]
 
-        Dim argBuilder As Dictionary(Of String, String) = New Dictionary(Of String, String) From
-            {
-                {"--libP", libP.Replace("\", "/")},
-                {"--libM", libM.Replace("\", "/")},
-                {"--tmpdir", Settings.DataCache.Replace("\", "/") & "/" & RandomDouble()}
-            }
+        Dim argBuilder As New Dictionary(Of String, String) From {
+            {"--libP", libP.Replace("\", "/")},
+            {"--libM", libM.Replace("\", "/")},
+            {"--tmpdir", Settings.DataCache.Replace("\", "/") & "/" & Rnd()}
+        }
 
         Call FileIO.FileSystem.CreateDirectory(argBuilder("--tmpdir"))
 
@@ -304,8 +303,8 @@ Public Module Perl
     End Function
 
     <ExportAPI("Read.Fastaq")>
-    Public Function LoadFastaq(Path As String) As FastaqFile
-        Return FastaqFile.Load(Path)
+    Public Function LoadFastaq(Path As String) As FastQFile
+        Return FastQFile.Load(Path)
     End Function
 
     <ExportAPI("Read.SAM")>
@@ -345,7 +344,7 @@ Public Module Perl
     '                                Select ReadMapping = (From Segment In Contig.Group Select Segment Order By Segment.Length Descending).First
     '                                Order By ReadMapping.POS Ascending).ToArray '超过30条共享同一个左端的Reads被作为一个候选的TSSs
 
-    '    Dim ChunkBuffer = FwAyHandle.EndInvoke(FwStart).ToList
+    '    Dim ChunkBuffer = FwAyHandle.EndInvoke(FwStart).AsList
     '    ChunkBuffer.AddRange(ReversedPossibleTSSs)
     '    Return ChunkBuffer.ToArray
     'End Function
@@ -445,9 +444,9 @@ Public Module Perl
         ' 通过blastn方法进行搜索定位的旧方法
 
         'Dim Fasta = (From Tss In data Let ID = Tss.Length & Tss.MappingPosition Select fsa = New SMRUCC.genomics.SequenceModel.FASTA.FastaObject With {.Attributes = {ID}, .SequenceData = Tss.SequenceData}, ID, Tss).ToArray
-        'Dim Temp As String = Program.Settings.DataCache & "/" & IO.Path.GetFileNameWithoutExtension(FileIO.FileSystem.GetTempFileName) & ".fasta"
+        'Dim Temp As String = Program.Settings.DataCache & "/" & basename(FileIO.FileSystem.GetTempFileName) & ".fasta"
         'Call CType((From obj In Fasta Select obj.fsa).ToArray, SMRUCC.genomics.SequenceModel.FASTA.FastaFile).Save(Temp)
-        'Dim Log = Program.Settings.DataCache & "/" & IO.Path.GetFileNameWithoutExtension(FileIO.FileSystem.GetTempFileName) & ".txt"
+        'Dim Log = Program.Settings.DataCache & "/" & basename(FileIO.FileSystem.GetTempFileName) & ".txt"
         'Call SMRUCC.genomics.NCBI.Extensions.Blastn(SMRUCC.genomics.NCBI.Extensions.CreateSession, Temp, refGenes, Log, "1000")
 
         '   Dim LQWuery = (From site In data Select site, genes = SMRUCC.genomics.Assembly.NCBI.GenBank.TabularFormat.ComponentModels.GetRelatedGenes(Ptt, site.MappingPosition, site.MappingPosition + 50)).ToArray

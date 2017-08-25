@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::b1bf4fc74144a114806a647c60d08751, ..\GCModeller\analysis\SequenceToolkit\SequencePatterns\SequenceLogo\DrawingDevice.vb"
+﻿#Region "Microsoft.VisualBasic::7e8a99a38afc6f578e8e4cd78381bd8c, ..\GCModeller\analysis\SequenceToolkit\SequencePatterns\SequenceLogo\DrawingDevice.vb"
 
     ' Author:
     ' 
@@ -46,7 +46,7 @@ Namespace SequenceLogo
     ''' sequence And diversity of the sequences. Sequence logos are frequently used to depict sequence 
     ''' characteristics such as protein-binding sites in DNA Or functional units in proteins.
     ''' </summary>
-    <[PackageNamespace]("SequenceLogo",
+    <Package("SequenceLogo",
                         Description:="In bioinformatics, a sequence logo is a graphical representation of the sequence conservation " &
                  "of nucleotides (in a strand Of DNA/RNA) Or amino acids (In protein sequences). " &
                  "A sequence logo Is created from a collection of aligned sequences And depicts the consensus " &
@@ -125,7 +125,7 @@ For example, we identified a new domain, likely to have a role downstream of the
                                                                   In rsd.PWM.SeqIterator
                                                                   Select New Alphabet With {
                                                                       .Alphabet = PWM.Alphabets(x.i),
-                                                                      .RelativeFrequency = x.obj
+                                                                      .RelativeFrequency = x.value
                                                                   }  ' alphabets
             }  ' residues
             Return InvokeDrawing(Model, True)
@@ -170,9 +170,9 @@ For example, we identified a new domain, likely to have a role downstream of the
 
             Dim n As Integer = model.Alphabets
             Dim gSize As New Size(model.Residues.Length * WordSize + 2 * margin, 2 * margin + n * Height)
-            Dim gdi As GDIPlusDeviceHandle = gSize.CreateGDIDevice(Color.Transparent)
+            Dim gdi As Graphics2D = gSize.CreateGDIDevice(Color.Transparent)
             Dim X, Y As Integer
-            Dim font As New Font(MicrosoftYaHei, CInt(WordSize * 0.6), FontStyle.Bold)
+            Dim font As New Font(FontFace.MicrosoftYaHei, CInt(WordSize * 0.6), FontStyle.Bold)
             Dim size As SizeF
 
             size =
@@ -182,7 +182,7 @@ For example, we identified a new domain, likely to have a role downstream of the
                 Brushes.Black,
                 New Point((gdi.Width - size.Width) / 2, y:=margin / 2.5))
 
-            font = New Font(MicrosoftYaHei, CInt(WordSize * 0.4))
+            font = New Font(FontFace.MicrosoftYaHei, CInt(WordSize * 0.4))
 
 #Region "画坐标轴"
 

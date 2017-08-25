@@ -1,28 +1,28 @@
-﻿#Region "Microsoft.VisualBasic::536eef4154323abe2a014f8c8b221d72, ..\GCModeller\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\ExportServices\gbExportService.vb"
+﻿#Region "Microsoft.VisualBasic::63f97f408d88b301bcde1f79e76eb98d, ..\core\Bio.Assembly\Assembly\NCBI\Database\GenBank\ExportServices\gbExportService.vb"
 
-' Author:
-' 
-'       asuka (amethyst.asuka@gcmodeller.org)
-'       xieguigang (xie.guigang@live.com)
-'       xie (genetics@smrucc.org)
-' 
-' Copyright (c) 2016 GPL3 Licensed
-' 
-' 
-' GNU GENERAL PUBLIC LICENSE (GPL3)
-' 
-' This program is free software: you can redistribute it and/or modify
-' it under the terms of the GNU General Public License as published by
-' the Free Software Foundation, either version 3 of the License, or
-' (at your option) any later version.
-' 
-' This program is distributed in the hope that it will be useful,
-' but WITHOUT ANY WARRANTY; without even the implied warranty of
-' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-' GNU General Public License for more details.
-' 
-' You should have received a copy of the GNU General Public License
-' along with this program. If not, see <http://www.gnu.org/licenses/>.
+    ' Author:
+    ' 
+    '       asuka (amethyst.asuka@gcmodeller.org)
+    '       xieguigang (xie.guigang@live.com)
+    '       xie (genetics@smrucc.org)
+    ' 
+    ' Copyright (c) 2016 GPL3 Licensed
+    ' 
+    ' 
+    ' GNU GENERAL PUBLIC LICENSE (GPL3)
+    ' 
+    ' This program is free software: you can redistribute it and/or modify
+    ' it under the terms of the GNU General Public License as published by
+    ' the Free Software Foundation, either version 3 of the License, or
+    ' (at your option) any later version.
+    ' 
+    ' This program is distributed in the hope that it will be useful,
+    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
+    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    ' GNU General Public License for more details.
+    ' 
+    ' You should have received a copy of the GNU General Public License
+    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -157,7 +157,7 @@ Namespace Assembly.NCBI.GenBank
             Dim out = LQuery.Select(
                 Function(o) New NamedValue(Of String) With {
                     .Name = o.ID,
-                    .x = o.Group.First.path
+                    .Value = o.Group.First.path
                 }).ToDictionary()
             Return out
         End Function
@@ -165,7 +165,7 @@ Namespace Assembly.NCBI.GenBank
         ''' <summary>
         ''' 将GBK文件之中的基因的位置数据导出为PTT格式的数据
         ''' </summary>
-        ''' <param name="genbank">导出gene和RNA部分的数据</param>
+        ''' <param name="genbank">导出CDS gene和RNA部分的数据</param>
         ''' <returns></returns>
         ''' <remarks></remarks>
         <Extension> Public Function GbkffExportToPTT(genbank As GBFF.File) As TabularFormat.PTT
@@ -173,7 +173,7 @@ Namespace Assembly.NCBI.GenBank
  _
                 From feature As Feature
                 In genbank.Features._innerList
-                Where String.Equals(feature.KeyName, "gene", StringComparison.OrdinalIgnoreCase) OrElse
+                Where String.Equals(feature.KeyName, "CDS", StringComparison.OrdinalIgnoreCase) OrElse  ' 蛋白质编码基因以及RNA基因
                     InStr(feature.KeyName, "RNA", CompareMethod.Text) > 0
                 Select feature
 
@@ -183,13 +183,13 @@ Namespace Assembly.NCBI.GenBank
         End Function
 
         <Extension> Private Function __toGenes(genes As Feature(), size As Integer, def As String) As TabularFormat.PTT
-            Dim PTTGenes = From g As Feature
-                           In genes
-                           Select gene = __featureToPTT(g)
-                           Group gene By gene.Synonym Into Group
-            Dim array = (From g In PTTGenes
-                         Select g.Synonym,
-                             ggenes = g.Group.ToArray).ToArray
+            Dim PTT_genes = From g As Feature
+                            In genes
+                            Select gene = g.__featureToPTT
+                            Group gene By gene.Synonym Into Group
+            Dim array = (From g
+                         In PTT_genes
+                         Select g.Synonym, ggenes = g.Group.ToArray).ToArray
 
             For Each duplicated In From ggene
                                    In array
@@ -302,11 +302,11 @@ Namespace Assembly.NCBI.GenBank
                                         .Attributes = New String() {Entry.AccessionID},
                                         .SequenceData = GBKFF.Origin.SequenceData.ToUpper
                                     }
-                                Let Reader = New SegmentReader(GBKFF.Origin.SequenceData, False)
+                                Let reader As IPolymerSequenceModel = GBKFF.Origin
                                 Let GeneFastaDump = CType((From GeneObject In GBKFF.Features._innerList.AsParallel
                                                            Where String.Equals(GeneObject.KeyName, "gene", StringComparison.OrdinalIgnoreCase)
                                                            Let loc = GeneObject.Location.ContiguousRegion
-                                                           Let Sequence As String = Reader.GetSegmentSequence(loc.Left, loc.Right)
+                                                           Let Sequence As String = reader.CutSequenceLinear(loc.Left, loc.Right).SequenceData
                                                            Select New FASTA.FastaToken With {
                                                                .Attributes = New String() {GeneObject.Query("locus_tag"), GeneObject.Location.ToString},
                                                                .SequenceData = If(GeneObject.Location.Complement, NucleicAcid.Complement(Sequence), Sequence)
@@ -316,7 +316,7 @@ Namespace Assembly.NCBI.GenBank
                                     Entry,
                                     FastaDump,
                                     Plasmid,
-                                    Reader,
+                                    reader,
                                     GeneFastaDump).ToArray
 
             For Each item In ExportLQuery
@@ -350,13 +350,14 @@ Namespace Assembly.NCBI.GenBank
         ''' </summary>
         ''' <param name="gbk"></param>
         ''' <returns></returns>
-        <Extension> Public Function ExportGeneAnno(gbk As GBFF.File) As GeneDumpInfo()
+        <Extension> Public Function ExportGeneFeatures(gbk As GBFF.File) As GeneDumpInfo()
             Dim dumps As GeneDumpInfo() = LinqAPI.Exec(Of GeneDumpInfo) <=
  _
                 From feature As Feature
                 In gbk.Features._innerList.AsParallel
                 Where String.Equals(feature.KeyName, "CDS", StringComparison.OrdinalIgnoreCase)
-                Select GeneDumpInfo.DumpEXPORT(New CDS(feature))
+                Select gene = GeneDumpInfo.DumpEXPORT(New CDS(feature))
+                Order By gene.LocusID Ascending
 
             Return dumps
         End Function
@@ -426,7 +427,7 @@ Namespace Assembly.NCBI.GenBank
             Call $"There is ""{Source.Length}"" plasmid source will be export...".__DEBUG_ECHO
 
             For Each gb As GBFF.File In Source
-                Dim cds As GeneDumpInfo() = gb.ExportGeneAnno
+                Dim cds As GeneDumpInfo() = gb.ExportGeneFeatures
                 Dim Entry = NCBI.GenBank.CsvExports.Plasmid.Build(gb)
 
                 Call ExportList.Add(Entry, gb.Origin.SequenceData)
@@ -451,11 +452,11 @@ Namespace Assembly.NCBI.GenBank
                 Call PlasmidList.Add(Plasmid)
                 Call Plasmid.SaveTo(String.Format("{0}/plasmids/{1}.fasta", FastaExport, gb.Accession.AccessionId))
 
-                Dim Reader As New SegmentReader(gb.Origin.SequenceData, False)
+                Dim reader As IPolymerSequenceModel = gb.Origin
                 Dim GeneFastaDump = CType((From GeneObject In gb.Features._innerList.AsParallel
                                            Where String.Equals(GeneObject.KeyName, "gene", StringComparison.OrdinalIgnoreCase)
                                            Let loc = GeneObject.Location.ContiguousRegion
-                                           Let Sequence As String = Reader.GetSegmentSequence(loc.Left, loc.Right)
+                                           Let Sequence As String = reader.CutSequenceLinear(loc.Left, loc.Right).SequenceData
                                            Select New FASTA.FastaToken With {
                                                .Attributes = New String() {GeneObject.Query("locus_tag"), GeneObject.Location.ToString},
                                                .SequenceData = If(GeneObject.Location.Complement, NucleicAcid.Complement(Sequence), Sequence)
@@ -507,7 +508,7 @@ Namespace Assembly.NCBI.GenBank
         End Function
 
         <Extension> Public Function TryParseGBKID(path As String) As String
-            Dim Name As String = IO.Path.GetFileNameWithoutExtension(path)
+            Dim Name As String = basename(path)
             Name = Regex.Replace(Name, "\.\d+", "")
             Return Name.ToUpper
         End Function
@@ -517,23 +518,28 @@ Namespace Assembly.NCBI.GenBank
         ''' (导出每一个基因的核酸序列)
         ''' </summary>
         ''' <param name="gb">Genbank数据库文件</param>
+        ''' <param name="geneName">
+        ''' If this parameter is specific as True, then this function will try using 
+        ''' geneName as the fasta sequence title, or using locus_tag value as default.
+        ''' </param>
         ''' <returns></returns>
         <Extension>
         Public Function ExportGeneNtFasta(gb As GBFF.File, Optional geneName As Boolean = False) As FASTA.FastaFile
-            Dim Reader As New NucleotideModels.SegmentReader(gb.Origin.SequenceData, False)
+            Dim reader As IPolymerSequenceModel = gb.Origin
             Dim list As New List(Of FASTA.FastaToken)
             Dim loc As NucleotideLocation = Nothing
             Dim attrs As String() = Nothing
             Dim Sequence As String
-            Dim products As Dictionary(Of GeneDumpInfo) = gb.ExportGeneAnno.ToDictionary
+            Dim products As Dictionary(Of GeneDumpInfo) = gb.ExportGeneFeatures.ToDictionary
 
             Try
                 For Each gene As Feature In (From x As Feature
-                                             In gb.Features._innerList.AsParallel
+                                             In gb.Features._innerList
                                              Where String.Equals(x.KeyName, "gene", StringComparison.OrdinalIgnoreCase)
                                              Select x)
 
                     Dim locus_tag As String
+                    Dim function$
 
                     If geneName Then
                         locus_tag = gene.Query("gene")
@@ -544,12 +550,14 @@ Namespace Assembly.NCBI.GenBank
                         locus_tag = gene.Query("locus_tag")
                     End If
 
+                    [function] = products.SafeGetValue(locus_tag)?.Function
+                    [function] = If([function].StringEmpty, products.SafeGetValue(locus_tag)?.CommonName, [function])
                     loc = gene.Location.ContiguousRegion
-                    attrs = {locus_tag, gene.Location.ToString, products.SafeGetValue(locus_tag)?.Function}
-                    Sequence = Reader.GetSegmentSequence(loc.Left, loc.Right)
-                    Sequence = If(gene.Location.Complement, NucleotideModels.NucleicAcid.Complement(Sequence), Sequence)
+                    attrs = {locus_tag, gene.Location.ToString, [function]}
+                    Sequence = reader.CutSequenceLinear(loc.Left, loc.Right).SequenceData
+                    Sequence = If(gene.Location.Complement, NucleicAcid.Complement(Sequence), Sequence)
 
-                    list += New FASTA.FastaToken(attrs, Sequence)
+                    list += New FastaToken(attrs, Sequence)
                 Next
             Catch ex As Exception
                 ex = New Exception(gb.ToString, ex)

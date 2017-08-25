@@ -1,28 +1,28 @@
-﻿#Region "Microsoft.VisualBasic::282a711d9e374c7b44f0dcd0d4dfc025, ..\GCModeller\sub-system\CellPhenotype\TRN\KineticsModel\KineticsModel.vb"
+﻿#Region "Microsoft.VisualBasic::fa6eb06711d1a1f359f40a7548c4cf73, ..\GCModeller\sub-system\CellPhenotype\TRN\KineticsModel\KineticsModel.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -43,9 +43,9 @@ Namespace TRN.KineticsModel
 
         Implements Configs.I_Configurable
         Implements IDynamicsExpression(Of Integer)
-        Implements sIdEnumerable
+        Implements INamedValue
         Implements IDataSource(Of Long, Integer)
-        Implements IAddressHandle
+        Implements IAddressOf
         Implements IObjectStatus
 
         ''' <summary>
@@ -132,7 +132,7 @@ Namespace TRN.KineticsModel
 
         Public ReadOnly Property RegulatorCounts As Integer
             Get
-                Return (From item In RegulatorySites Select item.Regulators.GetElementCounts).ToArray.Sum
+                Return (From item In RegulatorySites Select item.Regulators.DataCounts).Sum
             End Get
         End Property
 
@@ -152,7 +152,7 @@ Namespace TRN.KineticsModel
             _factor = factor
         End Sub
 
-        Public Property Identifier As String Implements IObjectStatus.locusId, sIdEnumerable.Identifier
+        Public Property Identifier As String Implements IObjectStatus.locusId, INamedValue.Key
 
         Public Overrides Function ToString() As String
             Return String.Format("{0}:= {1};  {2} sites and {3} regulators", Me.Identifier, Value, Me.RegulatorySites.Count, (From item In RegulatorySites Select item.Regulators.Count).ToArray.Sum)
@@ -183,7 +183,7 @@ Namespace TRN.KineticsModel
                 'factor 值越高，表达的可能性越高，1位正常表达，值越低则表达量越低，接近于0的时候为本底表达
 
                 If _factor < 1 Then
-                    If RandomDouble() > (1 - _factor) Then 'factor数值越大，越容易发生该事件
+                    If Rnd() > (1 - _factor) Then 'factor数值越大，越容易发生该事件
                         _InternalQuantityValue += Me._LengthDelta   '低量表达依照factor的数值大小来决定表达的量
                         _RegulationValue = 1
                     Else
@@ -246,11 +246,11 @@ Namespace TRN.KineticsModel
             Dim Effects As Boolean = InternalGetMostPossibleAppearState(DLQuery)
 
             '   Call Randomize()
-            If RandomDouble() >= Conf.SiteSpecificDynamicsRegulations Then 'factor越大，则阈值越低，即事件越容易发生
+            If Rnd() >= Conf.SiteSpecificDynamicsRegulations Then 'factor越大，则阈值越低，即事件越容易发生
                 Return Effects
             Else
 BASAL_EXPRESSION:
-                Dim n = RandomDouble()
+                Dim n# = Rnd()
 
                 If n < Conf.BasalThreshold Then '默认状态是不激活，有较低的概率处于激活状态，即本底表达
                     '  Call Console.WriteLine("[DEBUG] {0} for basal expression.....", n)
@@ -320,7 +320,7 @@ BASAL_EXPRESSION:
             End Set
         End Property
 
-        Private Property __address As Integer Implements IAddressHandle.Address
+        Private Property __address As Integer Implements IAddressOf.Address
 
         Public Function CreateHandle() As ObjectHandle Implements IDynamicsExpression(Of Integer).get_ObjectHandle
             Return New ObjectHandle With {
@@ -329,42 +329,11 @@ BASAL_EXPRESSION:
             }
         End Function
 
-#Region "IDisposable Support"
-        Private disposedValue As Boolean ' To detect redundant calls
-
-        ' IDisposable
-        Protected Overridable Sub Dispose(disposing As Boolean)
-            If Not Me.disposedValue Then
-                If disposing Then
-                    ' TODO: dispose managed state (managed objects).
-                End If
-
-                ' TODO: free unmanaged resources (unmanaged objects) and override Finalize() below.
-                ' TODO: set large fields to null.
-            End If
-            Me.disposedValue = True
-        End Sub
-
-        ' TODO: override Finalize() only if Dispose( disposing As Boolean) above has code to free unmanaged resources.
-        'Protected Overrides Sub Finalize()
-        '    ' Do not change this code.  Put cleanup code in Dispose( disposing As Boolean) above.
-        '    Dispose(False)
-        '    MyBase.Finalize()
-        'End Sub
-
-        ' This code added by Visual Basic to correctly implement the disposable pattern.
-        Public Sub Dispose() Implements IDisposable.Dispose
-            ' Do not change this code.  Put cleanup code in Dispose(disposing As Boolean) above.
-            Dispose(True)
-            GC.SuppressFinalize(Me)
-        End Sub
-#End Region
-
         Public Function SetConfigs(conf As Configs) As Integer Implements Configs.I_Configurable.SetConfigs
             Me._semi_Decays_delta = If(Is_RegulatorType, conf.Regulator_Decays, conf.Enzyme_Decays)
             Me.Conf = conf
             Return (From regulator As RegulationExpression
-                    In (From site As SiteInfo In Me.RegulatorySites Select site.Regulators).ToArray.MatrixToList
+                    In (From site As SiteInfo In Me.RegulatorySites Select site.Regulators).ToArray.Unlist
                     Select regulator.SetConfigs(conf)).ToArray.Length
         End Function
     End Class
