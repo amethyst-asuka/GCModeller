@@ -30,6 +30,7 @@ Imports System.Drawing
 Imports System.Reflection
 Imports System.Runtime.CompilerServices
 Imports System.Text.RegularExpressions
+Imports Microsoft.VisualBasic.ApplicationServices
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel
 Imports Microsoft.VisualBasic.ComponentModel.Algorithm.base
@@ -650,7 +651,7 @@ SET_END:    Dim ends = i
             Dim aavg As Double
 
             If chun.IsNullOrEmpty Then
-                aavg = pre.Get(start - 1, [default]:=0)  ' 一个点的？？？
+                aavg = pre.ElementAtOrDefault(start - 1, [default]:=0)  ' 一个点的？？？
             Else
                 aavg = chun.Average
             End If

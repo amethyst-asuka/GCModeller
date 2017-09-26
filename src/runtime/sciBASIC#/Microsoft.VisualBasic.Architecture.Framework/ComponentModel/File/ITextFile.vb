@@ -40,9 +40,10 @@ Namespace ComponentModel
     ''' Object model of the text file doucment.(文本文件的对象模型，这个文本文件对象在Disposed的时候会自动保存其中的数据)
     ''' </summary>
     ''' <remarks></remarks>
-    Public MustInherit Class ITextFile : Inherits ClassObject
+    Public MustInherit Class ITextFile : Inherits BaseClass
         Implements IDisposable
         Implements ISaveHandle
+        Implements IFileReference
 #If NET_40 = 0 Then
         Implements Settings.IProfile
 #End If
@@ -56,7 +57,7 @@ Namespace ComponentModel
         '''
 #If NET_40 = 0 Then
         <XmlIgnore> <ScriptIgnore>
-        Public Overridable Property FilePath As String Implements Settings.IProfile.FilePath
+        Public Overridable Property FilePath As String Implements Settings.IProfile.FilePath, IFileReference.FilePath
 #Else
         <XmlIgnore> <ScriptIgnore>
         Public Overridable Property FilePath As String

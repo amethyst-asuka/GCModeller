@@ -29,16 +29,24 @@
 Imports System.IO
 Imports System.Runtime.CompilerServices
 Imports System.Text
+Imports Microsoft.VisualBasic.Language
 
 Public Module PrintHelper
 
+    ''' <summary>
+    ''' Helper for print the cluster tree
+    ''' </summary>
+    ''' <param name="cluster"></param>
+    ''' <param name="out">
+    ''' If this output pointer is nothing, then by default is print onto the <see cref="Console.OpenStandardOutput"/>
+    ''' </param>
     <Extension> Public Sub Print(cluster As Cluster, Optional out As StreamWriter = Nothing)
-        If out Is Nothing Then
-            out = New StreamWriter(Console.OpenStandardOutput)
-        End If
 
-        Call out.WriteLine(cluster.ToConsoleLine(indent:=Scan0))
-        Call out.Flush()
+        With out Or New StreamWriter(Console.OpenStandardOutput).AsDefault
+            Call .WriteLine(cluster.ToConsoleLine(indent:=Scan0))
+            Call .Flush()
+        End With
+
     End Sub
 
     <Extension>
@@ -56,11 +64,11 @@ Public Module PrintHelper
 
         With c
             ' 获取当前的cluster的显示文本
-            Dim name$ = .Name & (If(.Leaf, " (leaf)", "")) & (If(.Distance IsNot Nothing, "  distance: " & .Distance.ToString, ""))
+            Dim name$ = .Label & (If(.IsLeaf, " (leaf)", "")) & (If(.Distance IsNot Nothing, "  distance: " & .Distance.ToString, ""))
             Call sb.AppendLine(name)
 
             ' 然后递归的将所有子节点的文本也生成出来
-            For Each child As Cluster In .Children
+            For Each child As Cluster In .Childs
                 Call child.__consoleLine(sb, indent + 1)
             Next
         End With

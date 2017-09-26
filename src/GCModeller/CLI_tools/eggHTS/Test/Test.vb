@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::060d33d6a0e37aedd926dc6e66b88561, ..\GCModeller\annotations\Proteomics\Test.vb"
+﻿#Region "Microsoft.VisualBasic::c00b3f61dfc2f980ea3cfa4cc8c32dd2, ..\CLI_tools\eggHTS\Test\Test.vb"
 
     ' Author:
     ' 
@@ -39,6 +39,9 @@ Imports SMRUCC.genomics.Analysis.Microarray.DAVID
 Module Test
 
     Sub Main()
+
+
+        Call SMRUCC.genomics.Assembly.Uniprot.XML.UniprotXML.EnumerateEntries("G:\GCModeller-repo\uniprot-all.xml\uniprot-all.xml").ToArray
 
         Dim g As New SMRUCC.genomics.Data.GeneOntology.DAG.Graph("D:\smartnucl_integrative\DATA\go.obo")
 
@@ -202,7 +205,7 @@ Module Test
             Call KEGG.SaveTo($"{file.ParentPath}/KEGG_PATH/{name}.csv")
 
             Call GO.EnrichmentPlot().Save($"{file.ParentPath}/GO/{name}-enrichment.png")
-            Call KEGG.KEGGEnrichmentPlot(size:=New Size(1000, 750)).Save($"{file.ParentPath}/KEGG_PATH/{name}-enrichment.png")
+            '   Call KEGG.KEGGEnrichmentPlot(size:=New Size(1000, 750)).Save($"{file.ParentPath}/KEGG_PATH/{name}-enrichment.png")
 
 
         Next
@@ -273,4 +276,3 @@ Module Test
 
     End Sub
 End Module
-

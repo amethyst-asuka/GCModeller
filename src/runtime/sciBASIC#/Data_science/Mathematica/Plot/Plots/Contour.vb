@@ -1,35 +1,34 @@
 ﻿#Region "Microsoft.VisualBasic::01d4d95ae26fe7718cd3ff33918a17e3, ..\sciBASIC#\Data_science\Mathematica\Plot\Plots\Heatmaps\Contour.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
 Imports System.Drawing
 Imports System.Runtime.CompilerServices
 Imports Microsoft.VisualBasic.ComponentModel.Ranges
-Imports Microsoft.VisualBasic.Data.ChartPlots.Graphic
 Imports Microsoft.VisualBasic.Data.ChartPlots.Graphic.Axis
 Imports Microsoft.VisualBasic.Data.ChartPlots.Plot3D
 Imports Microsoft.VisualBasic.Data.csv.IO
@@ -43,8 +42,11 @@ Imports Microsoft.VisualBasic.Math
 Imports Microsoft.VisualBasic.Math.Scripting
 Imports Microsoft.VisualBasic.Math.Scripting.Types
 Imports Microsoft.VisualBasic.MIME.Markup.HTML.CSS
+Imports Microsoft.VisualBasic.Scripting.Runtime
 
 ''' <summary>
+''' Contour heatmap 
+''' 
 ''' ###### 等高线图
 ''' 
 ''' 和普通的heatmap相比，这里的坐标轴是连续的数值变量，而普通的heatmap，其坐标轴都是离散的分类变量
@@ -90,11 +92,11 @@ Public Module Contour
                          Optional colorMap$ = "Spectral:c10",
                          Optional mapLevels% = 25,
                          Optional bg$ = "white",
-                         Optional size As Size = Nothing,
+                         Optional size$ = "3000,2700",
                          Optional padding$ = "padding: 100 400 100 400;",
                          Optional unit% = 5,
                          Optional legendTitle$ = "",
-                         Optional legendFont As Font = Nothing,
+                         Optional legendFont$ = CSSFont.Win7Large,
                          Optional xsteps! = Single.NaN,
                          Optional ysteps! = Single.NaN,
                          Optional ByRef matrix As List(Of DataSet) = Nothing) As GraphicsData
@@ -139,11 +141,11 @@ Public Module Contour
                          Optional colorMap$ = "Spectral:c10",
                          Optional mapLevels% = 25,
                          Optional bg$ = "white",
-                         Optional size As Size = Nothing,
+                         Optional size$ = "3000,2700",
                          Optional padding$ = "padding: 100 400 100 400",
                          Optional unit% = 5,
                          Optional legendTitle$ = "Scatter Heatmap",
-                         Optional legendFont As Font = Nothing,
+                         Optional legendFont$ = CSSFont.Win7Large,
                          Optional xsteps! = Single.NaN,
                          Optional ysteps! = Single.NaN,
                          Optional parallel As Boolean = False,
@@ -153,46 +155,60 @@ Public Module Contour
                          Optional xlabel$ = "X",
                          Optional ylabel$ = "Y",
                          Optional logbase# = -1.0R,
-                         Optional scale# = 1.0#) As GraphicsData
+                         Optional scale# = 1.0#,
+                         Optional tickFont$ = CSSFont.Win7Normal) As GraphicsData
 
-        Dim margin As Padding = padding
-
-        If size.IsEmpty Then
-            size = New Size(3000, 2400)
-        End If
+        Dim plotInternal As New __plotHelper With {
+            .func = fun,
+            .offset = New Point(-300, 0),
+            .xrange = xrange,
+            .yrange = yrange,
+            .parallel = parallel,
+            .xsteps = xsteps,
+            .ysteps = ysteps,
+            .colorMap = colorMap,
+            .legendFont = CSSFont.TryParse(legendFont),
+            .legendTitle = legendTitle,
+            .mapLevels = mapLevels,
+            .matrix = matrix,
+            .unit = unit,
+            .xlabel = xlabel,
+            .ylabel = ylabel,
+            .logBase = logbase,
+            .maxZ = maxZ,
+            .minZ = minZ,
+            .scale = scale,
+            .tickFont = CSSFont.TryParse(tickFont)
+        }
 
         Return GraphicsPlots(
-           size, margin,
-           bg$, AddressOf New __plotHelper With {
-                .func = fun,
-                .margin = margin,
-                .offset = New Point(-300, 0),
-                .xrange = xrange,
-                .yrange = yrange,
-                .parallel = parallel,
-                .xsteps = xsteps,
-                .ysteps = ysteps,
-                .colorMap = colorMap,
-                .legendFont = legendFont,
-                .legendTitle = legendTitle,
-                .mapLevels = mapLevels,
-                .matrix = matrix,
-                .unit = unit,
-                .xlabel = xlabel,
-                .ylabel = ylabel,
-                .logBase = logbase,
-                .maxZ = maxZ,
-                .minZ = minZ,
-                .scale = scale
-           }.Plot)
+            size.SizeParser, padding,
+            bg$,
+            AddressOf plotInternal.Plot)
     End Function
 
+    ''' <summary>
+    ''' 从现有的矩阵数据之中绘制等高线图
+    ''' </summary>
+    ''' <param name="matrix"></param>
+    ''' <param name="colorMap$"></param>
+    ''' <param name="mapLevels%"></param>
+    ''' <param name="bg$"></param>
+    ''' <param name="size$"></param>
+    ''' <param name="padding$"></param>
+    ''' <param name="legendTitle$"></param>
+    ''' <param name="legendFont"></param>
+    ''' <param name="xlabel$"></param>
+    ''' <param name="ylabel$"></param>
+    ''' <param name="minZ#"></param>
+    ''' <param name="maxZ#"></param>
+    ''' <returns></returns>
     <Extension>
     Public Function Plot(matrix As IEnumerable(Of DataSet),
                          Optional colorMap$ = "Spectral:c10",
                          Optional mapLevels% = 25,
                          Optional bg$ = "white",
-                         Optional size As Size = Nothing,
+                         Optional size$ = "3000,2500",
                          Optional padding$ = "padding: 100 400 100 400;",
                          Optional legendTitle$ = "Scatter Heatmap",
                          Optional legendFont As Font = Nothing,
@@ -204,10 +220,9 @@ Public Module Contour
         Dim margin As Padding = padding
 
         Return GraphicsPlots(
-           If(size.IsEmpty, New Size(3000, 2400), size),
+           size.SizeParser,
            margin,
            bg$, AddressOf New __plotHelper With {
-                .margin = margin,
                 .offset = New Point(-300, 0),
                 .colorMap = colorMap,
                 .legendFont = legendFont,
@@ -226,7 +241,7 @@ Public Module Contour
     ''' </summary>
     Private Class __plotHelper
 
-        Public margin As Padding, offset As Point
+        Public offset As Point
         Public func As Func(Of Double, Double, Double)
         Public xrange As DoubleRange, yrange As DoubleRange
         Public xsteps!, ysteps!
@@ -239,23 +254,25 @@ Public Module Contour
         Public logBase#
         Public minZ, maxZ As Double
         Public scale# = 1
+        Public tickFont As Font
 
         Public Function GetData(plotSize As Size) As (x#, y#, z#)()
             If func Is Nothing Then
                 ' 直接返回矩阵数据
-                Return LinqAPI.Exec(Of (x#, y#, Z#)) <=
-                    From line As DataSet
-                    In matrix
-                    Let xi = Val(line.ID)
-                    Let data = line.Properties.Select(Function(o) (x:=xi, y:=Val(o.Key), Z:=o.Value))
-                    Select data
+                Return LinqAPI.Exec(Of (x#, y#, Z#)) _
+					() <= From line As DataSet 
+						  In matrix 
+						  Let xi = Val(line.ID) 
+						  Let data = line.Properties.Select(Function(o) (x:=xi, y:=Val(o.Key), Z:=o.Value)) 
+						  Select Data
             Else
+
                 Return func _
                     .__getData(plotSize,  ' 得到通过计算返回来的数据
-                          xrange, yrange,
-                          xsteps, ysteps,
-                          parallel, matrix,
-                          unit)
+                               xrange, yrange,
+                               xsteps, ysteps,
+                               parallel, matrix,
+                               unit)
             End If
         End Function
 
@@ -315,14 +332,29 @@ Public Module Contour
 
         Public Sub Plot(ByRef g As IGraphics, region As GraphicsRegion)
             Dim data = GetData(region.PlotRegion.Size)
-            Dim scaler As New Mapper(New Scaling(data))
-            Dim xf = scaler.XScaler(region.Size, region.Padding)
-            Dim yf = scaler.YScaler(region.Size, region.Padding)
+            Dim xTicks = data.Select(Function(d) d.x).Range.CreateAxisTicks
+            Dim yTicks = data.Select(Function(d) d.y).Range.CreateAxisTicks
+            Dim x = d3js.scale.linear() _
+                .domain(xTicks) _
+                .range({region.PlotRegion.Left, region.PlotRegion.Right})
+            Dim y = d3js.scale.linear() _
+                .domain(yTicks) _
+                .range({region.PlotRegion.Top, region.PlotRegion.Bottom})
             Dim colorDatas As SolidBrush() = Nothing
             Dim getColors = GetColor(data.ToArray(Function(o) o.z), colorDatas)
             Dim size As Size = region.Size
+            Dim margin = region.Padding
+            Dim plotWidth! = region.PlotRegion.Width
+            Dim plotHeight! = region.PlotRegion.Height
+            ' 图例位于右边，占1/5的绘图区域的宽度，高度为绘图区域的高度的2/3
+            Dim legendLayout As New Rectangle With {
+                .Width = plotWidth / 5,
+                .Height = plotHeight * (1 / 3),
+                .X = region.Width - margin.Right / 2 - .Width,
+                .Y = margin.Top + (plotHeight - .Height) / 2
+            }
 
-            Call g.DrawAxis(size, margin, scaler, False, offset, xlabel, ylabel)
+            ' Call g.DrawAxis(size, margin, scaler, False, offset, xlabel, ylabel)
 
             offset = New Point(offset.X, offset.Y - unit / 2)
 
@@ -331,7 +363,7 @@ Public Module Contour
             For i As Integer = 0 To data.Length - 1
                 Dim p As (X#, y#, Z#) = data(i)
                 Dim c As SolidBrush = getColors(i)
-                Dim fill As New RectangleF(xf(p.X) + offset.X, yf(p.y) + offset.Y, us, us)
+                Dim fill As New RectangleF(x(p.X) + offset.X, y(p.y) + offset.Y, us, us)
 
                 Call g.FillRectangle(c, fill)
                 Call g.DrawRectangle(New Pen(c),
@@ -347,17 +379,13 @@ Public Module Contour
                     z >= minZ AndAlso
                     z <= maxZ) _
                 .ToArray
-            Dim legend As GraphicsData = colorDatas.ColorMapLegend(
-                haveUnmapped:=False,
-                min:=realData.Min.FormatNumeric(1),
-                max:=realData.Max.FormatNumeric(1),
-                title:=legendTitle,
-                titleFont:=legendFont)
-            Dim lsize As Size = legend.Size
-            Dim left% = size.Width - lsize.Width + 150
-            Dim top% = size.Height / 3
+            Dim rangeTicks#() = realData.Range.CreateAxisTicks
 
-            Call g.DrawImageUnscaled(legend, left, top)
+            Call g.ColorMapLegend(
+                legendLayout, colorDatas, rangeTicks,
+                legendFont, legendTitle, tickFont,
+                New Pen(Color.Black, 2),
+                NameOf(Color.Gray))
         End Sub
     End Class
 

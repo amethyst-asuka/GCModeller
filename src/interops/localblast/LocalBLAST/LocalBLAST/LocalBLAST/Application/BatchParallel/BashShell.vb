@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::b6a9115f65b73c35a470e694071a6e3d, ..\interops\localblast\LocalBLAST\LocalBLAST\LocalBLAST\Application\BatchParallel\BashShell.vb"
+﻿#Region "Microsoft.VisualBasic::33ef785018bf082e0bc666d6eef91a5f, ..\localblast\LocalBLAST\LocalBLAST\LocalBLAST\Application\BatchParallel\BashShell.vb"
 
     ' Author:
     ' 
@@ -27,6 +27,7 @@
 #End Region
 
 Imports System.Text
+Imports Microsoft.VisualBasic.ApplicationServices
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Scripting.MetaData
 

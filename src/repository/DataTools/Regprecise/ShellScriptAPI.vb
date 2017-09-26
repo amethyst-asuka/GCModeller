@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::bbc6f6fc713d9926f25d0e0f2b9c18a5, ..\GCModeller\analysis\annoTools\DataTools\Regprecise\ShellScriptAPI.vb"
+﻿#Region "Microsoft.VisualBasic::52e64e41cca35aa75bbeb16d59c1ba44, ..\repository\DataTools\Regprecise\ShellScriptAPI.vb"
 
     ' Author:
     ' 
@@ -26,20 +26,18 @@
 
 #End Region
 
+Imports Microsoft.VisualBasic.ApplicationServices
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Linq.Extensions
 Imports Microsoft.VisualBasic.Scripting.MetaData
-Imports SMRUCC.genomics.Analysis.Annotations.Reports
 Imports SMRUCC.genomics.Data
 Imports SMRUCC.genomics.Data.Regprecise.WebServices
 Imports SMRUCC.genomics.Interops.NBCR.MEME_Suite.Analysis.MotifScans
-Imports SMRUCC.genomics.Interops.NCBI.Extensions
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.BLASTOutput.Views
-Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.InteropService
 
 Namespace RegpreciseRegulations
 

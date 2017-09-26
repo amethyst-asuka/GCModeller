@@ -31,6 +31,7 @@ Imports System.Drawing.Imaging
 Imports System.Runtime.CompilerServices
 Imports Microsoft.VisualBasic.Net.Http
 Imports Microsoft.VisualBasic.Text
+Imports defaultFormat = Microsoft.VisualBasic.Language.DefaultValue(Of System.Drawing.Imaging.ImageFormat)
 
 Namespace Imaging
 
@@ -89,6 +90,12 @@ Namespace Imaging
     ''' Specifies the file format of the image. Not inheritable.
     ''' </summary>
     Public Module ImageFormatExtensions
+
+        ''' <summary>
+        ''' 获取 W3C 可移植网络图形 (PNG) 图像格式。
+        ''' </summary>
+        ''' <returns></returns>
+        Public ReadOnly Property Png As defaultFormat = ImageFormat.Png
 
         ''' <summary>
         ''' default is <see cref="ImageFormat.Png"/>
@@ -153,11 +160,19 @@ Namespace Imaging
         ''' Saves this <see cref="System.Drawing.Image"/> to the specified file in the specified format.
         ''' (这个函数可以很容易的将图像对象保存为tiff文件)
         ''' </summary>
-        ''' <param name="res">The image resource data that will be saved to the disk</param>
+        ''' <param name="res">
+        ''' The image resource data that will be saved to the disk.
+        ''' (因为这个函数可能会被<see cref="Graphics2D.ImageResource"/>所调用，
+        ''' 由于该属性的Set方法是不公开可见的，所以将会不兼容这个方法，如果这个
+        ''' 参数被设置为ByRef的话)
+        ''' </param>
         ''' <param name="path">path string</param>
         ''' <param name="format">Image formats enumeration.</param>
         ''' <returns></returns>
-        <Extension> Public Function SaveAs(res As Image, path$, Optional format As ImageFormats = ImageFormats.Png) As Boolean
+        <Extension> Public Function SaveAs(res As Image,
+                                           path$,
+                                           Optional format As ImageFormats = ImageFormats.Png,
+                                           Optional autoDispose As Boolean = False) As Boolean
             Try
                 Call path.ParentPath.MkDIR
 
@@ -175,6 +190,12 @@ Namespace Imaging
                 Call App.LogException(ex)
                 Call ex.PrintException
                 Return False
+            Finally
+                If autoDispose Then
+                    Call res.Dispose()
+                    Call GC.SuppressFinalize(res)
+                    Call GC.Collect()
+                End If
             End Try
 
             Return True

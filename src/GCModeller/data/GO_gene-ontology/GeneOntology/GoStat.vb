@@ -1,28 +1,28 @@
 ﻿#Region "Microsoft.VisualBasic::b6fd731e6fcb21dcc42b74efb1d16a9d, ..\GCModeller\data\GO_gene-ontology\GeneOntology\GoStat.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -34,12 +34,65 @@ Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Math.Quantile
 Imports Microsoft.VisualBasic.Text
+Imports SMRUCC.genomics.Data.GeneOntology.DAG
 Imports SMRUCC.genomics.Data.GeneOntology.OBO
+Imports SMRUCC.genomics.foundation.OBO_Foundry
 
 ''' <summary>
 ''' Statics of the GO function catalog
 ''' </summary>
 Public Module GoStat
+
+    Public ReadOnly Property OntologyNamespaces As Dictionary(Of Ontologies, String) =
+        Enums(Of Ontologies) _
+        .ToDictionary(Function(o) o,
+                      Function([namespace]) [namespace].Description)
+
+    ''' <summary>
+    ''' Get specific level go Term and sum the result
+    ''' </summary>
+    ''' <param name="stat"></param>
+    ''' <param name="level%"></param>
+    ''' <param name="graph"></param>
+    ''' <returns></returns>
+    <Extension>
+    Public Function LevelGOTerms(stat As Dictionary(Of String, NamedValue(Of Integer)()), level%, graph As Graph) As Dictionary(Of String, NamedValue(Of Integer)())
+        Dim levelStat As New Dictionary(Of String, NamedValue(Of Integer)())
+
+        For Each [namespace] In stat
+            Dim ontology$ = [namespace].Key
+            Dim terms = [namespace].Value
+            Dim trees = terms _
+                .Select(Function(t)
+                            Dim chains = graph _
+                                .Family(t.Name) _
+                                .Select(Function(family) family.Strip) _
+                                .Where(Function(family) family.Route.Count >= level) _
+                                .ToArray
+                            Return (family:=chains, stat:=t)
+                        End Function) _
+                .Where(Function(t) t.family.Length > 0) _
+                .ToArray
+
+            ' 得到指定的等级的结果，然后分组计数
+            Dim levelTerms = trees _
+                .Select(Function(t) t.family.Select(Function(chain) (terms:=chain.Level(lv:=level), n:=t.stat.Value))) _
+                .IteratesALL _
+                .GroupBy(Function(term) term.terms.id) _
+                .Select(Function(term)
+                            Return New NamedValue(Of Integer) With {
+                                .Name = term.Key,
+                                .Description = term.First.terms.name,
+                                .Value = Aggregate t In term Into Sum(t.n)
+                            }
+                        End Function) _
+                .ToArray
+
+            levelStat.Add(ontology, levelTerms)
+        Next
+
+        Return levelStat
+    End Function
 
     ''' <summary>
     ''' 计数统计
@@ -78,7 +131,7 @@ Public Module GoStat
                         })
                 End If
 
-                count(goID).Value.value += value.Number
+                count(goID).Value.Value += value.Number
             Next
         Next
 
@@ -107,7 +160,7 @@ Public Module GoStat
     Private Function __t(value As IEnumerable(Of NamedValue(Of int))) As NamedValue(Of Integer)()
         Dim array As New List(Of NamedValue(Of Integer))
 
-        For Each x In value.Where(Function(c) c.Value.value > 1).ToArray
+        For Each x In value.Where(Function(c) c.Value.Value > 1).ToArray
             array += New NamedValue(Of Integer) With {
                 .Name = x.Name,
                 .Value = x.Value,
@@ -141,6 +194,11 @@ Public Module GoStat
         Next
 
         Return out
+    End Function
+
+    <Extension>
+    Public Function EnumerateGOTerms(obo As OBOFile) As IEnumerable(Of Term)
+        Return GO_OBO.ReadTerms(obo)
     End Function
 End Module
 

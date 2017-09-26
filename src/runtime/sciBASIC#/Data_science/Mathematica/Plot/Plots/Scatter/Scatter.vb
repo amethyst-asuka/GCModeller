@@ -1,28 +1,28 @@
 ﻿#Region "Microsoft.VisualBasic::df8105237486edb3ee7b2308b04674dc, ..\sciBASIC#\Data_science\Mathematica\Plot\Plots\Scatter\Scatter.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -44,7 +44,9 @@ Imports Microsoft.VisualBasic.Linq
 Imports Microsoft.VisualBasic.Math
 Imports Microsoft.VisualBasic.Math.LinearAlgebra
 Imports Microsoft.VisualBasic.Math.Scripting
+Imports Microsoft.VisualBasic.Math.StatisticsMathExtensions
 Imports Microsoft.VisualBasic.MIME.Markup.HTML.CSS
+Imports Microsoft.VisualBasic.Scripting.Runtime
 
 Public Module Scatter
 
@@ -65,9 +67,9 @@ Public Module Scatter
     ''' <returns></returns>
     <Extension>
     Public Function Plot(c As IEnumerable(Of SerialData),
-                         Optional size As Size = Nothing,
+                         Optional size$ = "1600,1200",
                          Optional padding$ = g.DefaultLargerPadding,
-                         Optional bg As String = "white",
+                         Optional bg$ = "white",
                          Optional showGrid As Boolean = True,
                          Optional showLegend As Boolean = True,
                          Optional legendPosition As Point = Nothing,
@@ -88,26 +90,63 @@ Public Module Scatter
                          Optional xaxis$ = Nothing) As GraphicsData
 
         Dim margin As Padding = padding
-        Dim plotInternal =
-            Sub(ByRef g As IGraphics, grect As GraphicsRegion)
-                Dim array As SerialData() = c.ToArray
-                Dim mapper As Mapper
-                Dim serialsData As New Scaling(array, absoluteScaling)
+        Dim array As SerialData() = c.ToArray
+        Dim XTicks = array _
+            .Select(Function(s)
+                        Return s.pts.Select(Function(pt) CDbl(pt.pt.X))
+                    End Function) _
+            .IteratesALL _
+            .Range _
+            .CreateAxisTicks
+        Dim YTicks = array _
+            .Select(Function(s)
+                        Return s.pts.Select(Function(pt)
+                                                Return {pt.pt.Y - pt.errMinus, pt.pt.Y + pt.errPlus}
+                                            End Function)
+                    End Function) _
+            .IteratesALL _
+            .IteratesALL _
+            .Range _
+            .CreateAxisTicks
 
-                If xaxis.StringEmpty OrElse yaxis.StringEmpty Then
-                    mapper = New Mapper(
-                        serialsData,
-                        XabsoluteScalling:=XaxisAbsoluteScalling,
-                        YabsoluteScalling:=YaxisAbsoluteScalling)
-                Else
-                    mapper = New Mapper(x:=xaxis, y:=yaxis, range:=serialsData)
-                End If
+        Dim plotInternal =
+            Sub(ByRef g As IGraphics, rect As GraphicsRegion)
+
+                Dim region As Rectangle = rect.PlotRegion
+                Dim X = d3js.scale.linear.domain(XTicks).range({region.Left, region.Right})
+                Dim Y = d3js.scale.linear.domain(YTicks).range({0, region.Bottom - region.Top}) ' Y 为什么是从零开始的？
+                Dim scaler As New DataScaler With {
+                    .X = X,
+                    .Y = Y,
+                    .ChartRegion = region,
+                    .AxisTicks = (XTicks, YTicks)
+                }
+                Dim gSize As Size = rect.Size
+
+                'If xaxis.StringEmpty OrElse yaxis.StringEmpty Then
+                '    Mapper = New Mapper(
+                '        serialsData,
+                '        XabsoluteScalling:=XaxisAbsoluteScalling,
+                '        YabsoluteScalling:=YaxisAbsoluteScalling)
+                'Else
+                '    Mapper = New Mapper(x:=xaxis, y:=yaxis, range:=serialsData)
+                'End If
 
                 If drawAxis Then
-                    Call g.DrawAxis(size, margin, mapper, showGrid, xlabel:=Xlabel, ylabel:=Ylabel)
+                    Call g.DrawAxis(rect, scaler, showGrid, xlabel:=Xlabel, ylabel:=Ylabel)
                 End If
 
-                For Each line As SerialData In mapper.ForEach(size, margin)
+                Dim canvas = g
+                Dim drawErrorLine = Sub(err#, sign%, pt As PointF, value#)
+                                        Dim p0 As New PointF With {
+                                            .X = pt.X,
+                                            .Y = Y(value + (sign * err))
+                                        }
+
+                                        Call canvas.DrawLine(Pens.Black, pt, p0)
+                                    End Sub
+
+                For Each line As SerialData In array
                     Dim pts = line.pts.SlideWindows(2)
                     Dim pen As New Pen(color:=line.color, width:=line.width) With {
                         .DashStyle = line.lineType
@@ -115,32 +154,59 @@ Public Module Scatter
                     Dim br As New SolidBrush(line.color)
                     Dim d = line.PointSize
                     Dim r As Single = line.PointSize / 2
-                    Dim bottom! = size.Height - margin.Bottom
+                    Dim bottom! = gSize.Height - margin.Bottom
+                    Dim getPointBrush = Function(pt As PointData)
+                                            If pt.color.StringEmpty Then
+                                                Return br
+                                            Else
+                                                Return pt.color.GetBrush
+                                            End If
+                                        End Function
+                    Dim pt1, pt2 As PointF
 
-                    For Each pt In pts
+                    For Each pt As SlideWindow(Of PointData) In pts
                         Dim a As PointData = pt.First
                         Dim b As PointData = pt.Last
 
+                        pt1 = scaler.Translate(a.pt.X, a.pt.Y)
+                        pt2 = scaler.Translate(b.pt.X, b.pt.Y)
+
                         If drawLine Then
-                            Call g.DrawLine(pen, a.pt, b.pt)
+                            Call g.DrawLine(pen, pt1, pt2)
                         End If
                         If fill Then
                             Dim path As New GraphicsPath
-                            Dim ptbr As New PointF(b.pt.X, bottom)
-                            Dim ptbl As New PointF(a.pt.X, bottom)
+                            Dim ptbr As New PointF(pt1.X, bottom)
+                            Dim ptbl As New PointF(pt2.X, bottom)
 
-                            path.AddLine(a.pt, b.pt)
-                            path.AddLine(b.pt, ptbr)
+                            path.AddLine(pt1, pt2)
+                            path.AddLine(pt2, ptbr)
                             path.AddLine(ptbr, ptbl)
-                            path.AddLine(ptbl, a.pt)
+                            path.AddLine(ptbl, pt1)
                             path.CloseFigure()
 
                             Call g.FillPath(br, path)
                         End If
 
                         If fillPie Then
-                            Call g.FillPie(br, a.pt.X - r, a.pt.Y - r, d, d, 0, 360)
-                            Call g.FillPie(br, b.pt.X - r, b.pt.Y - r, d, d, 0, 360)
+                            Call g.FillPie(getPointBrush(a), pt1.X - r, pt1.Y - r, d, d, 0, 360)
+                            Call g.FillPie(getPointBrush(b), pt2.X - r, pt2.Y - r, d, d, 0, 360)
+                        End If
+
+                        ' 绘制误差线
+                        ' 首先计算出误差的长度，然后可pt1,pt2的Y相加减即可得到新的位置
+                        ' 最后划线即可
+                        If a.errPlus > 0 Then
+                            Call drawErrorLine(a.errPlus, 1, pt1, a.pt.Y)
+                        End If
+                        If a.errMinus > 0 Then
+                            Call drawErrorLine(a.errMinus, -1, pt1, a.pt.Y)
+                        End If
+                        If b.errPlus > 0 Then
+                            Call drawErrorLine(b.errPlus, 1, pt2, b.pt.Y)
+                        End If
+                        If b.errMinus > 0 Then
+                            Call drawErrorLine(b.errMinus, -1, pt2, b.pt.Y)
                         End If
                     Next
 
@@ -148,43 +214,47 @@ Public Module Scatter
                         Dim raw = array.Where(Function(s) s.title = line.title).First
 
                         For Each annotation As Annotation In line.DataAnnotations
-                            Call annotation.Draw(g, mapper, raw, grect)
+                            Call annotation.Draw(g, scaler, raw, rect)
                         Next
                     End If
 
                     If showLegend Then
-                        Dim legends As Legend() = LinqAPI.Exec(Of Legend) <=
+                        Dim legends = LinqAPI.Exec(Of Legend) _
  _
-                            From x As SerialData
-                            In array
-                            Select New Legend With {
-                                .color = x.color.RGBExpression,
-                                .fontstyle = CSSFont.GetFontStyle(
-                                    FontFace.SegoeUI,
-                                    FontStyle.Regular,
-                                    legendFontSize),
-                                .style = LegendStyles.Circle,
-                                .title = x.title
-                            }
+                        () <= From s As SerialData
+                              In array
+                              Let sColor As String = s.color.RGBExpression
+                              Let legendFont = CSSFont.GetFontStyle(
+                                  FontFace.SegoeUI,
+                                  FontStyle.Regular,
+                                  legendFontSize)
+                              Select New Legend With {
+                                  .color = sColor,
+                                  .fontstyle = legendFont,
+                                  .style = LegendStyles.Circle,
+                                  .title = s.title
+                                  }
 
                         If legendPosition.IsEmpty Then
-                            legendPosition = New Point(
-                                CInt(size.Width * 0.7),
-                                margin.Bottom)
+                            legendPosition = New Point With {
+                                .X = CInt(gSize.Width * 0.7),
+                                .Y = margin.Bottom
+                            }
                         End If
 
-                        Call g.DrawLegends(legendPosition, legends, legendSize,,
-                                           legendBorder,
-                                           legendRegionBorder)
+                        Call g.DrawLegends(
+                            legendPosition, legends, legendSize,,
+                            legendBorder,
+                            legendRegionBorder)
                     End If
                 Next
             End Sub
 
-        Return GraphicsPlots(size, margin, bg, plotInternal)
+        Return GraphicsPlots(size.SizeParser, margin, bg, plotInternal)
     End Function
 
     Public Function Plot(x As Vector,
-                         Optional size As Size = Nothing,
+                         Optional size$ = "1600,1200",
                          Optional padding$ = g.DefaultPadding,
                          Optional bg As String = "white",
                          Optional ptSize As Single = 15,

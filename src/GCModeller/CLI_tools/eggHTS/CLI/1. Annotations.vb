@@ -1,4 +1,32 @@
-﻿Imports System.ComponentModel
+﻿#Region "Microsoft.VisualBasic::682701a70518f1085f7defbab5bb34df, ..\CLI_tools\eggHTS\CLI\1. Annotations.vb"
+
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+#End Region
+
+Imports System.ComponentModel
 Imports System.Drawing
 Imports System.IO
 Imports Microsoft.VisualBasic.CommandLine
@@ -24,6 +52,7 @@ Imports SMRUCC.genomics.Assembly.KEGG.WebServices
 Imports SMRUCC.genomics.Assembly.Uniprot.Web
 Imports SMRUCC.genomics.Assembly.Uniprot.XML
 Imports SMRUCC.genomics.Data
+Imports SMRUCC.genomics.Data.GeneOntology.DAG
 Imports SMRUCC.genomics.Data.GeneOntology.GoStat
 Imports SMRUCC.genomics.Data.GeneOntology.OBO
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH.Abstract
@@ -32,6 +61,83 @@ Imports SMRUCC.genomics.SequenceModel.FASTA
 Imports SMRUCC.genomics.Visualize
 
 Partial Module CLI
+
+    ''' <summary>
+    ''' 将每一个参考cluster之中的代表序列的uniprot编号取出来生成映射
+    ''' </summary>
+    ''' <param name="args"></param>
+    ''' <returns></returns>
+    <ExportAPI("/UniRef.UniprotKB")>
+    <Usage("/UniRef.UniprotKB /in <uniref.xml> [/out <maps.csv>]")>
+    <Argument("/in", False, CLITypes.File, Description:="The uniRef XML cluster database its file path.")>
+    Public Function UniRef2UniprotKB(args As CommandLine) As Integer
+        Dim in$ = args <= "/in"
+        Dim out$ = args.GetValue("/out", [in].TrimSuffix & "-uniref_uniprotKB.csv")
+        Dim ref As NamedValue(Of String)() = UniRef _
+            .PopulateALL([in]) _
+            .Select(Function(entry)
+                        Return New NamedValue(Of String) With {
+                            .Name = entry.id,
+                            .Value = entry.representativeMember.UniProtKB_accession
+                        }
+                    End Function) _
+            .ToArray
+
+        Return ref.SaveTo(out).CLICode
+    End Function
+
+    ''' <summary>
+    ''' 将cluster之中的指定的物种名称的编号取出来，以方便应用于新测序的非参考基因组的数据项目的功能富集分析
+    ''' </summary>
+    ''' <param name="args"></param>
+    ''' <returns></returns>
+    <ExportAPI("/UniRef.map.organism")>
+    <Usage("/UniRef.map.organism /in <uniref.xml> [/org <organism_name> /out <out.csv>]")>
+    <Argument("/in", False, CLITypes.File, Description:="The uniRef XML cluster database its file path.")>
+    <Argument("/org", True, CLITypes.String, Description:="The organism scientific name. If this argument is presented in the CLI input, then this program will output the top organism in this input data.")>
+    Public Function UniRefMap2Organism(args As CommandLine) As Integer
+        Dim in$ = args <= "/in"
+        Dim org$ = args <= "/org"
+
+        If org.StringEmpty Then
+            org = UniRef _
+                .PopulateALL([in]) _
+                .Select(Function(x)
+                            Return x.representativeMember.Join(x.members)
+                        End Function) _
+                .IteratesALL _
+                .Select(Function(x) x.source_organism) _
+                .GroupBy(Function(x) x) _
+                .OrderByDescending(Function(g) g.Count) _
+                .First _
+                .Key
+        End If
+
+        Dim ref As NamedValue(Of String)() = UniRef _
+            .PopulateALL([in]) _
+            .Select(Function(entry)
+                        Dim member = entry _
+                            .representativeMember _
+                            .Join(entry.members) _
+                            .Where(Function(m) InStr(m.source_organism, org, CompareMethod.Text) > 0) _
+                            .FirstOrDefault
+
+                        If member Is Nothing Then
+                            Return Nothing
+                        End If
+
+                        Return New NamedValue(Of String) With {
+                            .Name = entry.id,
+                            .Value = member.UniProtKB_accession,
+                            .Description = member.source_organism
+                        }
+                    End Function) _
+            .Where(Function(map) Not map.IsEmpty) _
+            .ToArray
+
+        Dim out$ = args.GetValue("/out", [in].TrimSuffix & "-" & org.NormalizePathString & ".csv")
+        Return ref.SaveTo(out).CLICode
+    End Function
 
     <ExportAPI("/Exocarta.Hits")>
     <Usage("/Exocarta.Hits /in <list.txt> /annotation <annotations.csv> /exocarta <Exocarta.tsv> [/out <out.csv>]")>
@@ -68,8 +174,8 @@ Partial Module CLI
         Return output.SaveTo(out).CLICode
     End Function
 
-    <ExportAPI("/update.uniprot.mapped",
-               Usage:="/update.uniprot.mapped /in <table.csv> /mapping <mapping.tsv/tab> [/source /out <out.csv>]")>
+    <ExportAPI("/update.uniprot.mapped")>
+    <Usage("/update.uniprot.mapped /in <table.csv> /mapping <mapping.tsv/tab> [/source /out <out.csv>]")>
     <Group(CLIGroups.Annotation_CLI)>
     Public Function Update2UniprotMappedID(args As CommandLine) As Integer
         Dim in$ = args <= "/in"
@@ -95,9 +201,9 @@ Partial Module CLI
             .CLICode
     End Function
 
-    <ExportAPI("/Samples.IDlist",
-               Info:="Extracts the protein hits from the protomics sample data, and using this ID list for downlaods the uniprot annotation data.",
-               Usage:="/Samples.IDlist /in <samples.csv> [/Perseus /shotgun /pair <samples2.csv> /out <out.list.txt>]")>
+    <ExportAPI("/Samples.IDlist")>
+    <Description("Extracts the protein hits from the protomics sample data, and using this ID list for downlaods the uniprot annotation data.")>
+    <Usage("/Samples.IDlist /in <samples.csv> [/Perseus /shotgun /pair <samples2.csv> /out <out.list.txt>]")>
     <Argument("/Perseus", True, CLITypes.Boolean,
               AcceptTypes:={GetType(Boolean)},
               Description:="If this flag was presented, that means the input sample data is the Perseus analysis output file ``ProteinGroups.txt``, or the input sample data is the iTraq result.")>
@@ -172,14 +278,17 @@ Partial Module CLI
 
             out = args.GetValue("/out", list.TrimSuffix & "-proteins-uniprot-annotations.csv")
 
-            If list.ExtensionSuffix.TextEquals("csv") Then
-                geneIDs = EntityObject.LoadDataSet(list) _
-                    .Select(Function(x) x.ID) _
-                    .Distinct _
-                    .ToArray
-            Else
-                geneIDs = list.ReadAllLines
-            End If
+            With list.ExtensionSuffix
+                If .TextEquals("csv") OrElse .TextEquals("tsv") Then
+                    geneIDs = EntityObject.LoadDataSet(list,, tsv:= .TextEquals("tsv")) _
+                        .Select(Function(x) x.ID) _
+                        .Distinct _
+                        .ToArray
+                Else
+                    geneIDs = list.ReadAllLines
+                End If
+            End With
+
             If mapping.FileExists Then
                 mappings = Retrieve_IDmapping.MappingReader(mapping)
             End If
@@ -254,7 +363,7 @@ Partial Module CLI
         Dim uniprot As String = args("/uniprot")
         Dim out = args.GetValue("/out", [in].TrimSuffix & ".proteins.annotation.csv")
         Dim table As Perseus() = [in].LoadCsv(Of Perseus)
-        Dim uniprotTable = UniprotXML.LoadDictionary(uniprot)
+        Dim uniprotTable = UniProtXML.LoadDictionary(uniprot)
         Dim scientifcName As String = args("/scientifcName")
         Dim output = table.GenerateAnnotations(uniprotTable, "uniprot", scientifcName).ToArray
         Dim annotations = output.Select(Function(prot) prot.Item1).ToArray
@@ -284,19 +393,34 @@ Partial Module CLI
     ''' </summary>
     ''' <param name="args"></param>
     ''' <returns></returns>
-    <ExportAPI("/proteins.Go.plot",
-               Info:="ProteinGroups sample data go profiling plot from the uniprot annotation data.",
-               Usage:="/proteins.Go.plot /in <proteins-uniprot-annotations.csv> [/GO <go.obo> /tick 50 /top 20 /size <2000,4000> /out <out.DIR>]")>
+    <ExportAPI("/proteins.Go.plot")>
+    <Description("ProteinGroups sample data go profiling plot from the uniprot annotation data.")>
+    <Usage("/proteins.Go.plot /in <proteins-uniprot-annotations.csv> [/GO <go.obo> /label.right /tick <default=-1> /level <default=2> /selects Q3 /size <2000,2200> /out <out.DIR>]")>
+    <Argument("/GO", True, CLITypes.File,
+              Description:="The go database file path, if this argument is present in the CLI, then will using the GO.obo database file from GCModeller repository.")>
+    <Argument("/level", True, CLITypes.Integer,
+              Description:="The GO annotation level from the DAG, default is level 2.")>
+    <Argument("/label.right", True, CLITypes.Boolean,
+              Description:="Plot GO term their label will be alignment on right. default is alignment left if this aegument is not present.")>
     Public Function ProteinsGoPlot(args As CommandLine) As Integer
-        Dim goDB As String = args.GetValue("/go", GCModeller.FileSystem.GO & "/go.obo")
-        Dim in$ = args("/in")
-        Dim size As Size = args.GetValue("/size", New Size(2000, 4000))
-        Dim out As String = args.GetValue("/out", [in].ParentPath & "/GO/")
-        Dim top% = args.GetValue("/top", 20)
-        Dim tick! = args.GetValue("/tick", 50.0!)
+        Dim goDB$ = (args <= "/go") Or (GCModeller.FileSystem.GO & "/go.obo").AsDefault
+        Dim in$ = args <= "/in"
+        Dim size$ = (args <= "/size") Or "2000,2200".AsDefault
+        Dim selects$ = args.GetValue("/selects", "Q3")
+        Dim tick! = args.GetValue("/tick", -1.0!)
+        Dim level% = args.GetValue("/level", 2)
+        Dim labelRight As Boolean = args.IsTrue("/label.right")
+        Dim out$ = (args <= "/out") Or ([in].ParentPath & "/GO/").AsDefault
+
+        cat("\n")
+        Call $"   ===> level={level}".__INFO_ECHO
+        cat("\n")
 
         ' 绘制GO图
-        Dim goTerms As Dictionary(Of String, Term) = GO_OBO.Open(goDB).ToDictionary(Function(x) x.id)
+        Dim goTerms As Dictionary(Of String, Term) = GO_OBO _
+            .Open(path:=goDB) _
+            .ToDictionary(Function(x) x.id)
+        Dim DAG As New Graph(goTerms.Values)
         Dim sample = [in].LoadSample
         Dim selector = Function(x As EntityObject)
                            Return x("GO") _
@@ -304,15 +428,17 @@ Partial Module CLI
                                .Select(AddressOf Trim) _
                                .ToArray
                        End Function
-        Dim data As Dictionary(Of String, NamedValue(Of Integer)()) =
-            sample.CountStat(selector, goTerms)
+        Dim data = sample _
+            .CountStat(selector, goTerms) _
+            .LevelGOTerms(level, DAG)
 
-        Call data.SaveCountValue(out & "/plot.csv")
-        Call CatalogPlots.Plot(
-            data, orderTakes:=top,
-            tick:=tick,
-            size:=size,
-            axisTitle:="Number Of Proteins").Save(out & "/plot.png")
+        Call data.SaveCountValue(out & $"/level={level}/plot.csv")
+        Call CatalogPlots.Plot(data, selects:=selects,
+                               tick:=tick,
+                               size:=size,
+                               axisTitle:="Number Of Proteins",
+                               labelAlignmentRight:=labelRight) _
+            .Save(out & $"/level={level}/plot.png")
 
         Return 0
     End Function
@@ -323,13 +449,13 @@ Partial Module CLI
     ''' <param name="args"></param>
     ''' <returns></returns>
     <ExportAPI("/proteins.KEGG.plot")>
-    <Usage("/proteins.KEGG.plot /in <proteins-uniprot-annotations.csv> [/custom <sp00001.keg> /size <2000,4000> /tick 20 /out <out.DIR>]")>
+    <Usage("/proteins.KEGG.plot /in <proteins-uniprot-annotations.csv> [/custom <sp00001.keg> /size <2200,2000> /tick 20 /out <out.DIR>]")>
     <Description("KEGG function catalog profiling plot of the TP sample.")>
     <Argument("/custom",
               Description:="Custom KO classification set can be download from: http://www.kegg.jp/kegg-bin/get_htext?ko00001.keg")>
     Public Function proteinsKEGGPlot(args As CommandLine) As Integer
         Dim in$ = args <= "/in"
-        Dim size As Size = args.GetValue("/size", New Size(2000, 4000))
+        Dim size$ = args.GetValue("/size", "2200,2000")
         Dim tick! = args.GetValue("/tick", 20.0!)
         Dim out As String = args.GetValue("/out", [in].ParentPath & "/KEGG/")
         Dim sample = [in].LoadSample
@@ -368,11 +494,12 @@ Partial Module CLI
         Return 0
     End Function
 
-    <ExportAPI("/protein.EXPORT",
-             Usage:="/protein.EXPORT /in <uniprot.xml> [/sp <name> /exclude /out <out.fasta>]")>
+    <ExportAPI("/protein.EXPORT")>
+    <Usage("/protein.EXPORT /in <uniprot.xml> [/sp <name> /exclude /out <out.fasta>]")>
+    <Description("Export the protein sequence and save as fasta format from the uniprot database dump XML.")>
     <Argument("/sp", True, CLITypes.String,
-            AcceptTypes:={GetType(String)},
-            Description:="The organism scientific name.")>
+              AcceptTypes:={GetType(String)},
+              Description:="The organism scientific name.")>
     <Group(CLIGroups.Annotation_CLI)>
     Public Function proteinEXPORT(args As CommandLine) As Integer
         Dim [in] As String = args <= "/in"
@@ -383,32 +510,39 @@ Partial Module CLI
             "",
             If(exclude, "-exclude", "") & "-" & sp.NormalizePathString.Replace(" ", "_"))
         Dim out As String = args.GetValue("/out", [in].TrimSuffix & $"{suffix}.fasta")
-        Dim uniprotXML As UniprotXML = UniprotXML.Load([in])
 
         Using writer As StreamWriter = out.OpenWriter(Encodings.ASCII)
-            Dim source As IEnumerable(Of Uniprot.XML.entry) = uniprotXML.entries
+            Dim source As IEnumerable(Of Uniprot.XML.entry) = UniProtXML.EnumerateEntries(path:=[in])
 
             If Not String.IsNullOrEmpty(sp) Then
                 If exclude Then
                     source = source _
-                        .Where(Function(gene) Not gene.organism.scientificName = sp) _
-                        .ToArray
+                        .Where(Function(gene)
+                                   Return Not gene.organism.scientificName = sp
+                               End Function)
                 Else
                     source = source _
-                        .Where(Function(gene) gene.organism.scientificName = sp) _
-                        .ToArray
+                        .Where(Function(gene)
+                                   Return gene.organism.scientificName = sp
+                               End Function)
                 End If
             End If
 
             For Each prot As Uniprot.XML.entry In source _
                 .Where(Function(g) Not g.sequence Is Nothing)
 
-                Dim orf$ = If(prot.gene Is Nothing, "", prot.gene.ORF.JoinBy(","))
+                Dim seq$ = prot _
+                    .sequence _
+                    .sequence _
+                    .lTokens _
+                    .JoinBy("") _
+                    .Replace(" ", "")
                 Dim fa As New FastaToken With {
-                    .SequenceData = prot.sequence.sequence.lTokens.JoinBy(""),
-                    .Attributes = {prot.accessions.First, orf$}
+                    .SequenceData = seq,
+                    .Attributes = {prot.accessions.First & " " & prot.proteinFullName}
                 }
-                Call writer.WriteLine(fa.GenerateDocument(-1))
+
+                Call writer.WriteLine(fa.GenerateDocument(120))
             Next
         End Using
 
@@ -438,7 +572,7 @@ Partial Module CLI
             .LoadCsv(Of BBHIndex) _
             .Where(Function(bh) bh.Matched) _
             .ToDictionary(Function(bh) bh.QueryName.Split("|"c).First)
-        Dim uniprotTable As Dictionary(Of Uniprot.XML.entry) = UniprotXML.LoadDictionary(uniprot)
+        Dim uniprotTable As Dictionary(Of Uniprot.XML.entry) = UniProtXML.LoadDictionary(uniprot)
 
         For Each protein As UniprotAnnotations In annotationData
 
@@ -473,7 +607,7 @@ Partial Module CLI
                Usage:="/COG.profiling.plot /in <myvacog.csv> [/size <image_size, default=1800,1200> /out <out.png>]")>
     Public Function COGCatalogProfilingPlot(args As CommandLine) As Integer
         Dim [in] = args("/in")
-        Dim size As Size = args.GetValue("/size", New Size(1800, 1200))
+        Dim size$ = args.GetValue("/size", "1800,1200")
         Dim out As String = args.GetValue("/out", [in].TrimSuffix & ".COG.profiling.png")
         Dim COGs As IEnumerable(Of MyvaCOG) = [in].LoadCsv(Of MyvaCOG)
 

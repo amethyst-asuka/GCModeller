@@ -40,7 +40,7 @@
 ''' For more technical information about relations And their properties used In GO And other ontologies see the OBO Relations Ontology 
 ''' (RO) And For relationships used In GO annotation extensions, see the GO annotation extension relations file (experimental).
 ''' </summary>
-Public Enum OntologyRelations
+Public Enum OntologyRelations As Byte
 
     ''' <summary>
     ''' ## The _is a_ relation
@@ -61,7 +61,22 @@ Public Enum OntologyRelations
     ''' 
     ''' (child is a parent class object.)
     ''' </summary>
-    is_a
+    ''' <remarks>
+    ''' 这个直接表示两个term之间在归属上面的关系，右边相对于左边而言是一个更加宽泛的概念，例如：
+    ''' 
+    ''' ```
+    ''' a is_a b
+    ''' 
+    ''' [RNA localization] is_a [macromolecule localization]
+    ''' [protein localization] is_a [macromolecule localization]
+    ''' ```
+    ''' 
+    ''' RNA定位和蛋白质定位，由于RNA和蛋白质都属于生物大分子，所以二者都是生物大分子定位的概念。
+    ''' 生物大分子定位相对于RNA定位或者蛋白定位而言，是一个更加宽泛的概念。
+    ''' 
+    ''' 由于一个term也有可能会从属于多个概念，所以通过``is_a``可以构成一个有向无环图
+    ''' </remarks>
+    is_a = 1
     ''' <summary>
     ''' ## The _part of_ relationship
     ''' The relation **_part of_** Is used To represent part-whole relationships In the Gene Ontology. part Of has a specific meaning In GO, 

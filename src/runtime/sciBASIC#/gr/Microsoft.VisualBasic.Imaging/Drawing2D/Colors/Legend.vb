@@ -1,28 +1,28 @@
 ﻿#Region "Microsoft.VisualBasic::8224a4cac2a315d5ef14a92af9cf071c, ..\sciBASIC#\gr\Microsoft.VisualBasic.Imaging\Drawing2D\Colors\Legend.vb"
 
-    ' Author:
-    ' 
-    '       asuka (amethyst.asuka@gcmodeller.org)
-    '       xieguigang (xie.guigang@live.com)
-    '       xie (genetics@smrucc.org)
-    ' 
-    ' Copyright (c) 2016 GPL3 Licensed
-    ' 
-    ' 
-    ' GNU GENERAL PUBLIC LICENSE (GPL3)
-    ' 
-    ' This program is free software: you can redistribute it and/or modify
-    ' it under the terms of the GNU General Public License as published by
-    ' the Free Software Foundation, either version 3 of the License, or
-    ' (at your option) any later version.
-    ' 
-    ' This program is distributed in the hope that it will be useful,
-    ' but WITHOUT ANY WARRANTY; without even the implied warranty of
-    ' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    ' GNU General Public License for more details.
-    ' 
-    ' You should have received a copy of the GNU General Public License
-    ' along with this program. If not, see <http://www.gnu.org/licenses/>.
+' Author:
+' 
+'       asuka (amethyst.asuka@gcmodeller.org)
+'       xieguigang (xie.guigang@live.com)
+'       xie (genetics@smrucc.org)
+' 
+' Copyright (c) 2016 GPL3 Licensed
+' 
+' 
+' GNU GENERAL PUBLIC LICENSE (GPL3)
+' 
+' This program is free software: you can redistribute it and/or modify
+' it under the terms of the GNU General Public License as published by
+' the Free Software Foundation, either version 3 of the License, or
+' (at your option) any later version.
+' 
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+' 
+' You should have received a copy of the GNU General Public License
+' along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #End Region
 
@@ -96,6 +96,7 @@ Namespace Drawing2D.Colors
                                        Optional titleFont As Font = Nothing,
                                        Optional labelFont As Font = Nothing,
                                        Optional legendWidth! = -1) As GraphicsData
+
             Dim margin As Padding = padding
 
             If lsize.IsEmpty Then
@@ -110,58 +111,134 @@ Namespace Drawing2D.Colors
 
             Dim plotInternal =
                 Sub(ByRef g As IGraphics, region As GraphicsRegion)
-                    Dim graphicsRegion As Rectangle = region.PlotRegion
-                    Dim size As Size = region.Size
-                    Dim grayHeight As Integer = size.Height * 0.05
-                    Dim y As Single
-                    Dim fSize As SizeF
-                    Dim pt As Point
-                    Dim rectWidth As Integer = If(legendWidth <= 0, size.Width - margin.Horizontal, legendWidth)
-                    Dim legendsHeight As Integer = size.Height - (margin.Top * 3) - grayHeight * 3
-                    Dim d As Single = legendsHeight / designer.Length
-                    Dim left As Integer = margin.Left + 30 + rectWidth
 
-                    Call g.DrawString(title, titleFont, Brushes.Black, New Point(margin.Left, 0))
-
-                    fSize = g.MeasureString(max, labelFont)
-                    y = margin.Top * 2
-
-                    Call g.DrawString(max, labelFont, Brushes.Black, New Point(left, y - fSize.Height / 2))
-
-                    For i As Integer = designer.Length - 1 To 0 Step -1
-                        Call g.FillRectangle(
-                            brush:=designer(i),
-                            rect:=New RectangleF With {
-                                .Location = New PointF(margin.Left, y),
-                                .Size = New SizeF(rectWidth, d)
-                            })
-                        y += d
-                    Next
-
-                    fSize = g.MeasureString(min, labelFont)
-                    Call g.DrawString(
-                        min, labelFont, Brushes.Black,
-                        New Point With {
-                            .X = left,
-                            .Y = If(designer.Length > 100, d, 0) + y - fSize.Height / 2
-                        })
-
-                    If haveUnmapped Then
-                        y = size.Height - margin.Top - grayHeight
-                        fSize = g.MeasureString("Unknown", labelFont)
-                        pt = New Point(left, y + (grayHeight - fSize.Height) / 2)
-                        graphicsRegion = New Rectangle With {
-                            .Location = New Point(margin.Left, y),
-                            .Size = New Size(rectWidth, grayHeight)
-                        }
-
-                        Call g.DrawString("Unknown", labelFont, Brushes.Black, pt)
-                        Call g.FillRectangle(Brushes.LightGray, graphicsRegion)
-                    End If
                 End Sub
 
             Return GraphicsPlots(lsize, margin, bg, plotInternal)
         End Function
+
+        ''' <summary>
+        ''' 垂直的颜色谱的绘制：左边为颜色谱，右边为标尺，左边的颜色谱的上方为标题
+        ''' </summary>
+        ''' <param name="g"></param>
+        ''' <param name="layout">legend的大小和位置</param>
+        ''' 
+        <Extension>
+        Public Sub ColorMapLegend(ByRef g As IGraphics, layout As Rectangle,
+                                  designer As SolidBrush(),
+                                  ticks#(),
+                                  titleFont As Font, title$,
+                                  tickFont As Font,
+                                  tickAxisStroke As Pen,
+                                  Optional unmapColor$ = Nothing,
+                                  Optional ruleOffset! = 10,
+                                  Optional roundDigit% = 2)
+
+            Dim titleSize As SizeF = g.MeasureString(title, titleFont)
+            Dim legendOffsetLeft!, legendOffsetTop!
+            Dim legendWidth! = layout.Width / 3 ' 颜色谱的宽度为layout的 1/3
+            Dim legendHeight!
+            Dim d!
+
+            ' 首先计算出layout
+            legendOffsetTop = titleSize.Height * 2 + 5
+
+            ' 下面的三个元素在宽度上面各自占1/3
+            ' 空白 | legend | 标尺
+            legendOffsetLeft = legendWidth
+
+            If unmapColor.StringEmpty Then
+                ' 没有unmap的颜色，则颜色谱的高度占据剩下的所有高度
+                legendHeight = layout.Height - legendOffsetTop
+                d = legendHeight / designer.Length
+            Else
+                legendHeight = layout.Height - legendOffsetTop
+                d = legendHeight / (designer.Length + 2)
+                legendHeight -= 2 * d
+            End If
+
+            Dim point As PointF
+            Dim x!, y!
+            Dim rect As RectangleF
+
+            ' 绘制标题
+            x = layout.Left + legendOffsetLeft + (legendWidth - titleSize.Width) / 2
+            y = layout.Top
+            point = New PointF(x, y)
+
+            Call g.DrawString(title, titleFont, Brushes.Black, point)
+
+            ' 绘制出颜色谱
+            y = legendOffsetTop + layout.Top
+            legendOffsetLeft += layout.Left
+
+            For i As Integer = designer.Length - 1 To 0 Step -1
+                rect = New RectangleF With {
+                    .Location = New PointF(legendOffsetLeft, y),
+                    .Size = New SizeF(legendWidth, d)
+                }
+                g.FillRectangle(brush:=designer(i), rect:=rect)
+                y += d
+            Next
+
+            y += d
+
+            If Not unmapColor.StringEmpty Then
+                Dim color As Brush = unmapColor.GetBrush
+
+                rect = New RectangleF With {
+                    .Location = New PointF(legendOffsetLeft, y),
+                    .Size = New SizeF(legendWidth, d)
+                }
+                point = New PointF With {
+                    .X = legendOffsetLeft + legendWidth + 5,
+                    .Y = y + (d - tickFont.Height) / 2
+                }
+                g.FillRectangle(color, rect:=rect)
+                g.DrawString("Unknown", tickFont, Brushes.Black, point)
+            End If
+
+            ' 绘制出标尺
+            x = legendOffsetLeft + legendWidth + ruleOffset
+            y = layout.Top + legendOffsetTop
+            g.DrawLine(tickAxisStroke, x, y, x, y + legendHeight)
+
+            ' 绘制最大值和最小值
+            g.DrawLine(Pens.Black, x, y, x + ruleOffset, y)
+            g.DrawLine(Pens.Black, x, y + legendHeight, x + ruleOffset, y + legendHeight)
+
+            x += ruleOffset + 5
+            point = New PointF(x, y - tickFont.Height / 2)
+            g.DrawString(ticks.Max.ToString("F" & roundDigit), tickFont, Brushes.Black, point)
+
+            point = New PointF(x, y + legendHeight - tickFont.Height / 2)
+            g.DrawString(ticks.Min.ToString("F" & roundDigit), tickFont, Brushes.Black, point)
+
+            ticks = ticks _
+                .Skip(1) _
+                .Take(ticks.Length - 2) _
+                .OrderByDescending(Function(n) n) _
+                .ToArray
+
+            Dim delta = legendHeight / (ticks.Length + 1)
+
+            y += delta
+            x -= ruleOffset
+            tickFont = New Font(tickFont.FontFamily, tickFont.Size * 2.5 / 3)
+
+            ' 画出剩余的小标尺
+            For Each tick In ticks
+
+                point = New PointF With {
+                    .X = x + 2,
+                    .Y = y - tickFont.Height / 2
+                }
+                g.DrawLine(Pens.Black, x, y, x - 5, y)
+                g.DrawString(tick.ToString($"F{roundDigit}"), tickFont, Brushes.Gray, point)
+
+                y += delta
+            Next
+        End Sub
 
         ''' <summary>
         ''' 横向的颜色legend
@@ -222,11 +299,11 @@ Namespace Drawing2D.Colors
 
             With region
 
-                g.DrawLine(Stroke.TryParse(AxisStroke).GDIObject, New Point(.Left, y), New Point(.Right, y))
+                g.DrawLine(Stroke.TryParse(AxisStroke).GDIObject, New Point(.Left, y), New Point(x, y))
                 y += 5
 
                 For Each i As SeqValue(Of Double) In ticks _
-                    .RangeTransform({region.Left, region.Right}) _
+                    .RangeTransform({ .Left, x}) _
                     .SeqIterator
 
                     Dim tick$ = If(scientificNotation, ticks(i).ToString("G2"), ticks(i))

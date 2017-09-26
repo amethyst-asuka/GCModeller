@@ -83,7 +83,7 @@ Partial Module CLI
 
         Call objects.SaveTo(out & "/links.csv")
         Call matrix.SaveTo(out & "/matrix.csv")
-        Call HeatmapTable _
+        Call CorrelationHeatmap _
             .Plot(matrix, size:=size, mapName:=colors) _
             .Save(out & "/heatmap.png")
 
@@ -133,7 +133,7 @@ Partial Module CLI
                                           }
                                       End Function) _
                               .ToArray) _
-            .ProfilesPlot(size:=New Size(2400, 1900),
+            .ProfilesPlot(size:="2400,1900",
                           title:="Network Connection Degrees",
                           axisTitle:="Node Degrees",
                           tick:=tick) _

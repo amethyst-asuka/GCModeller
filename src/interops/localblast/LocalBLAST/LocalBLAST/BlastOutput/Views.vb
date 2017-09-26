@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::4231e72b1fc8e9cbe56d46e01fb59336, ..\interops\localblast\LocalBLAST\LocalBLAST\BlastOutput\Views.vb"
+﻿#Region "Microsoft.VisualBasic::51e0aef4e11d00c83685ca145696b76b, ..\localblast\LocalBLAST\LocalBLAST\BlastOutput\Views.vb"
 
     ' Author:
     ' 
@@ -40,7 +40,7 @@ Namespace LocalBLAST.BLASTOutput.Views
     ''' 方便程序调试的一个对象数据结构
     ''' </summary>
     ''' <remarks></remarks>
-    Public Class Overview : Inherits ClassObject
+    Public Class Overview : Inherits BaseClass
 
         <XmlElement> Public Property Queries As Query()
 

@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::49f16f28fb91c5e6b90981157ae4d30e, ..\interops\localblast\LocalBLAST\LocalBLAST\LocalBLAST\Program\LocalBLAST.vb"
+﻿#Region "Microsoft.VisualBasic::1fc3fd6fec4dda33a438423a7e82f6cb, ..\localblast\LocalBLAST\LocalBLAST\LocalBLAST\Program\LocalBLAST.vb"
 
     ' Author:
     ' 
@@ -26,6 +26,7 @@
 
 #End Region
 
+Imports Microsoft.VisualBasic.ApplicationServices
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports File = System.String
 

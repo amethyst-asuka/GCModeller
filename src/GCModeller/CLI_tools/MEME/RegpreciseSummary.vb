@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::c5186e326a79ec411060819a5b562f41, ..\GCModeller\CLI_tools\MEME\RegpreciseSummary.vb"
+﻿#Region "Microsoft.VisualBasic::fa056bfcdabbd3d49b0181ca39f24161, ..\CLI_tools\MEME\RegpreciseSummary.vb"
 
     ' Author:
     ' 
@@ -155,11 +155,11 @@ Namespace Analysis
                                        KEGG As Dictionary(Of String, BriteHEntry.Module),
                                        correlations As ICorrelations,
                                        cutoff As Double) As List(Of PredictedRegulationFootprint)
-            Dim siteUid As String = site.uid.Split("|"c).Get(Scan0) ' 得到Motif编号
+            Dim siteUid As String = site.uid.Split("|"c).ElementAtOrDefault(Scan0) ' 得到Motif编号
             Dim regVimssId As Integer() = regDB.GetRegulations(siteUid).ToArray(Function(reg) reg.Regulator)  ' 该Motif在基因组内可能被多个调控因子调控
             Dim footprints = __regulationMappings(site, regVimssId, regulators, correlations, site.Signature, regDB, site.Tag, site.uid)
             Dim TagData As String() = (From s As String In site.Tag.Replace("\", "/").Split("/"c) Where Not String.IsNullOrEmpty(s) Select s).ToArray
-            Dim modId As String = TagData.Get(1)
+            Dim modId As String = TagData.ElementAtOrDefault(1)
 
             If Not String.IsNullOrEmpty(modId) Then
                 modId = modId.Split("_"c).Last

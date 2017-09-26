@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::e00eb8782b2b5f04f71970c32bd39500, ..\GCModeller\CLI_tools\RegPrecise\CLI\CORN.vb"
+﻿#Region "Microsoft.VisualBasic::1d65ec9c7ded1c62a9a4f75dcb84c58a, ..\CLI_tools\RegPrecise\CLI\CORN.vb"
 
     ' Author:
     ' 
@@ -27,7 +27,7 @@
 #End Region
 
 Imports System.Runtime.CompilerServices
-Imports Microsoft.VisualBasic
+Imports Microsoft.VisualBasic.ApplicationServices
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
@@ -37,7 +37,6 @@ Imports Microsoft.VisualBasic.Data.csv.IO.Linq
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Language.UnixBash
 Imports Microsoft.VisualBasic.Linq
-Imports Microsoft.VisualBasic.Parallel
 Imports Microsoft.VisualBasic.Parallel.Linq
 Imports Microsoft.VisualBasic.Text
 Imports SMRUCC.genomics.Analysis.SequenceTools.SequencePatterns

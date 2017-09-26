@@ -50,6 +50,10 @@ Namespace ComponentModel.Collection
             End Get
         End Property
 
+        ''' <summary>
+        ''' Gets the input object keys that using for the construction of this index.
+        ''' </summary>
+        ''' <returns></returns>
         Public ReadOnly Property Objects As T()
             Get
                 Return maps.Keys.ToArray
@@ -119,6 +123,11 @@ Namespace ComponentModel.Collection
                         .value = x
                     })
             End If
+        End Sub
+
+        Public Sub Clear()
+            Call maps.Clear()
+            Call index.Clear()
         End Sub
 
         ''' <summary>

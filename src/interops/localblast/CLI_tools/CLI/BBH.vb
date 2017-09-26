@@ -1,4 +1,4 @@
-﻿#Region "Microsoft.VisualBasic::f63cfab7bc51d2faa412285007cf630d, ..\interops\localblast\CLI_tools\CLI\BBH.vb"
+﻿#Region "Microsoft.VisualBasic::2cea27592381599a6deb40c099fc01b6, ..\localblast\CLI_tools\CLI\BBH.vb"
 
 ' Author:
 ' 
@@ -26,6 +26,8 @@
 
 #End Region
 
+Imports System.ComponentModel
+Imports Microsoft.VisualBasic.ApplicationServices
 Imports Microsoft.VisualBasic.CommandLine
 Imports Microsoft.VisualBasic.CommandLine.Reflection
 Imports Microsoft.VisualBasic.ComponentModel.Collection
@@ -45,6 +47,7 @@ Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.Application.BBH.Abstract
 Imports SMRUCC.genomics.Interops.NCBI.Extensions.LocalBLAST.BLASTOutput
 Imports SMRUCC.genomics.SequenceModel.FASTA
+Imports csvReflection = Microsoft.VisualBasic.Data.csv.Extensions
 
 Partial Module CLI
 
@@ -129,9 +132,20 @@ Partial Module CLI
         Dim bbh As BiDirectionalBesthit() = If(all,
             BBHParser.GetDirreBhAll2(qsbh.ToArray, ssbh.ToArray, identities, coverage),
             BBHParser.GetBBHTop(qsbh.ToArray, ssbh.ToArray, identities, coverage))
-        Dim out As String =
-            args.GetValue("/out", qvs.TrimSuffix & $"{If(all, "-all", "")},{identities},{coverage}.bbh.csv")
+        Dim out$ = (args <= "/out") Or (qvs.TrimSuffix & $"{If(all, "-all", "")},{identities},{coverage}.bbh.csv").AsDefault
         Return bbh.SaveTo(out).CLICode
+    End Function
+
+    <ExportAPI("/bbh.topbest")>
+    <Usage("/bbh.topbest /in <bbh.csv> [/out <out.csv>]")>
+    Public Function BBHTopBest(args As CommandLine) As Integer
+        With (args <= "/out") Or ((args <= "/in").TrimSuffix & ".topbest.csv").AsDefault
+            Return (args <= "/in") _
+                .LoadCsv(Of BiDirectionalBesthit) _
+                .StripTopBest _
+                .SaveTo(.ref) _
+                .CLICode
+        End With
     End Function
 
     <ExportAPI("/SBH.BBH.Batch",
@@ -194,7 +208,7 @@ Partial Module CLI
 
         If trim Then
             Dim script As TextGrepMethod =
-                TextGrepScriptEngine.Compile("tokens ' ' first").Method
+                TextGrepScriptEngine.Compile("tokens ' ' first").PipelinePointer
             Call queryOUT.Grep(script, script)
         End If
 
@@ -330,7 +344,7 @@ Partial Module CLI
         End If
 
         Dim logs As BlastPlus.v228 = BlastPlus.ParsingSizeAuto(blastp)
-        Dim GrepMethod = TextGrepScriptEngine.Compile("tokens ' ' first").Method
+        Dim GrepMethod = TextGrepScriptEngine.Compile("tokens ' ' first").PipelinePointer
         Dim GrepOperation As GrepOperation = New GrepOperation(GrepMethod, GrepMethod)
         Call GrepOperation.Grep(logs)
         Return logs.ExportAllBestHist(coverage, identities).SaveTo(out).CLICode
@@ -341,12 +355,13 @@ Partial Module CLI
     ''' </summary>
     ''' <param name="args"></param>
     ''' <returns></returns>
-    <ExportAPI("/venn.cache",
-               Info:="1. [SBH_Batch] Creates the sbh cache data for the downstream bbh analysis. 
-               And this batch function is suitable with any scale of the blastp sbh data output.",
-               Usage:="/venn.cache /imports <blastp.DIR> [/out <sbh.out.DIR> /coverage <0.6> /identities <0.3> /num_threads <-1> /overrides]")>
+    <ExportAPI("/venn.cache")>
+    <Description(
+    "1. [SBH_Batch] Creates the sbh cache data for the downstream bbh analysis. 
+    And this batch function is suitable with any scale of the blastp sbh data output.")>
+    <Usage("/venn.cache /imports <blastp.DIR> [/out <sbh.out.DIR> /coverage <0.6> /identities <0.3> /num_threads <-1> /overrides]")>
     <Argument("/num_threads", True,
-                   Description:="The number of the sub process thread. -1 value is stands for auto config by the system.")>
+              Description:="The number of the sub process thread. -1 value is stands for auto config by the system.")>
     <Group(CLIGrouping.BBHTools)>
     Public Function VennCache(args As CommandLine) As Integer
         Dim importsDIR As String = args("/imports")
@@ -358,21 +373,21 @@ Partial Module CLI
         Dim taskBuilder As Func(Of String, String) =
             Function(blastp) _
                 $"{GetType(CLI).API(NameOf(SBHThread))} /in {blastp.CLIPath} /out {(out & "/" & blastp.BaseName & ".csv").CLIPath} /coverage {coverage} /identities {identities} {[overrides]}"
-        Dim CLI As String() =
-            LinqAPI.Exec(Of String) <= From blastp As String
-                                       In ls - l - r - wildcards("*.txt") <= importsDIR
-                                       Select taskBuilder(blastp)
-        Dim numT As Integer = args.GetValue("/num_threads", -1)
+        Dim CLI$() = LinqAPI.Exec(Of String) _
+ _
+            () <= From blastp As String
+                  In ls - l - r - "*.txt" <= importsDIR
+                  Select taskBuilder(blastp)
 
-        If numT <= 0 Then
-            numT = LQuerySchedule.Recommended_NUM_THREADS
-        End If
-
-        Return App.SelfFolks(CLI, numT)
+        With args.GetValue("/num_threads", -1)
+            With .ref Or LQuerySchedule.Recommended_NUM_THREADS.AsDefault(Function() .ref <= 0)
+                Return App.SelfFolks(CLI, .ref)
+            End With
+        End With
     End Function
 
-    <ExportAPI("/locus.Selects",
-               Usage:="/locus.Selects /locus <locus.txt> /bh <bbhindex.csv> [/out <out.csv>]")>
+    <ExportAPI("/locus.Selects")>
+    <Usage("/locus.Selects /locus <locus.txt> /bh <bbhindex.csv> [/out <out.csv>]")>
     <Group(CLIGrouping.BBHTools)>
     Public Function LocusSelects(args As CommandLine) As Integer
         Dim [in] As String = args("/locus")
@@ -384,17 +399,19 @@ Partial Module CLI
         Return LQuery.SaveTo(out).CLICode
     End Function
 
-    <ExportAPI("/Export.Locus", Usage:="/Export.Locus /in <sbh/bbh_DIR> [/hit /out <out.txt>]")>
+    <ExportAPI("/Export.Locus")>
+    <Usage("/Export.Locus /in <sbh/bbh_DIR> [/hit /out <out.txt>]")>
     <Group(CLIGrouping.BBHTools)>
     Public Function ExportLocus(args As CommandLine) As Integer
-        Dim [in] As String = args("/in")
+        Dim in$ = args <= "/in"
         Dim isHit As Boolean = args.GetBoolean("/hit")
         Dim out As String = args.GetValue("/out", [in] & "-" & If(isHit, "hit_name", "query_name") & ".txt")
-        Dim source As IEnumerable(Of BBHIndex) =
-            (ls - l - r - wildcards("*.csv") <= [in]).Select(AddressOf csv.Extensions.LoadCsv(Of BBHIndex)).IteratesALL
         Dim locus As String()
         Dim getName As Func(Of BBHIndex, String)
         Dim test As Func(Of BBHIndex, Boolean)
+        Dim source = (ls - l - r - "*.csv" <= [in]) _
+            .Select(AddressOf csvReflection.LoadCsv(Of BBHIndex)) _
+            .IteratesALL
 
         If isHit Then
             getName = Function(x) x.HitName
@@ -406,12 +423,13 @@ Partial Module CLI
                 Not String.Equals(IBlastOutput.HITS_NOT_FOUND, x.QueryName)
         End If
 
-        locus =
-            LinqAPI.Exec(Of String) <= From x As BBHIndex
-                                       In source
-                                       Where test(x)
-                                       Select getName(x)
-                                       Distinct
+        locus = LinqAPI.Exec(Of String) _
+ _
+            () <= From x As BBHIndex
+                  In source
+                  Where test(x)
+                  Select getName(x)
+                  Distinct
 
         Return locus.FlushAllLines(out, Encodings.ASCII).CLICode
     End Function

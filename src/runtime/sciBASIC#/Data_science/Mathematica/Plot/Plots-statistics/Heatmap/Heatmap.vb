@@ -28,7 +28,6 @@
 
 Imports System.Drawing
 Imports System.Runtime.CompilerServices
-Imports Microsoft.VisualBasic.ComponentModel.DataSourceModel
 Imports Microsoft.VisualBasic.Data.csv.IO
 Imports Microsoft.VisualBasic.Imaging
 Imports Microsoft.VisualBasic.Imaging.Drawing2D
@@ -36,9 +35,6 @@ Imports Microsoft.VisualBasic.Imaging.Drawing2D.Colors
 Imports Microsoft.VisualBasic.Imaging.Driver
 Imports Microsoft.VisualBasic.Language
 Imports Microsoft.VisualBasic.Linq
-Imports Microsoft.VisualBasic.Math
-Imports Microsoft.VisualBasic.Math.Correlations
-Imports Microsoft.VisualBasic.Math.Correlations.Correlations
 Imports Microsoft.VisualBasic.MIME.Markup.HTML.CSS
 Imports Microsoft.VisualBasic.Scripting.Runtime
 
@@ -52,79 +48,6 @@ Namespace Heatmap
     ''' have existed for over a century.
     ''' </summary>
     Public Module Heatmap
-
-        ''' <summary>
-        ''' 相比于<see cref="LoadDataSet(String, String, Boolean, Correlations.ICorrelation)"/>函数，这个函数处理的是没有经过归一化处理的原始数据
-        ''' </summary>
-        ''' <param name="data"></param>
-        ''' <param name="correlation">假若这个参数为空，则默认使用<see cref="Correlations.GetPearson(Double(), Double())"/></param>
-        ''' <returns></returns>
-        <Extension>
-        Public Iterator Function CorrelatesNormalized(
-                                    data As IEnumerable(Of DataSet),
-                    Optional correlation As Correlations.ICorrelation = Nothing) _
-                                         As IEnumerable(Of NamedValue(Of Dictionary(Of String, Double)))
-
-            Dim dataset As DataSet() = data.ToArray
-            Dim keys$() = dataset(Scan0) _
-                .Properties _
-                .Keys _
-                .ToArray
-
-            If correlation Is Nothing Then
-                correlation = AddressOf Correlations.GetPearson
-            End If
-
-            For Each x As DataSet In dataset
-                Dim out As New Dictionary(Of String, Double)
-                Dim array As Double() = keys.ToArray(Function(o$) x(o))
-
-                For Each y As DataSet In dataset
-                    out(y.ID) = correlation(
-                    array,
-                    keys.ToArray(Function(o) y(o)))
-                Next
-
-                Yield New NamedValue(Of Dictionary(Of String, Double)) With {
-                    .Name = x.ID,
-                    .Value = out
-                }
-            Next
-        End Function
-
-        ''' <summary>
-        ''' (这个函数是直接加在已经计算好了的相关度数据).假若使用这个直接加载数据来进行heatmap的绘制，
-        ''' 请先要确保数据集之中的所有数据都是经过归一化的，假若没有归一化，则确保函数参数
-        ''' <paramref name="normalization"/>的值为真
-        ''' </summary>
-        ''' <param name="path"></param>
-        ''' <param name="uidMap$"></param>
-        ''' <param name="normalization">是否对输入的数据集进行归一化处理？</param>
-        ''' <param name="correlation">
-        ''' 默认为<see cref="Correlations.GetPearson(Double(), Double())"/>方法
-        ''' </param>
-        ''' <returns></returns>
-        <Extension>
-        Public Function LoadDataSet(path As String,
-                                    Optional uidMap$ = Nothing,
-                                    Optional normalization As Boolean = False,
-                                    Optional correlation As ICorrelation = Nothing) As NamedValue(Of Dictionary(Of String, Double))()
-
-            Dim ds As IEnumerable(Of DataSet) = DataSet.LoadDataSet(path, uidMap)
-
-            If normalization Then
-                Return ds.CorrelatesNormalized(correlation).ToArray
-            Else
-                Return LinqAPI.Exec(Of NamedValue(Of Dictionary(Of String, Double))) _
- _
-                    () <= From x As DataSet
-                          In ds
-                          Select New NamedValue(Of Dictionary(Of String, Double)) With {
-                              .Name = x.ID,
-                              .Value = x.Properties
-                          }
-            End If
-        End Function
 
         ' dendrogramLayout$ = A,B
         '                                         |
@@ -169,7 +92,7 @@ Namespace Heatmap
                              Optional customColors As Color() = Nothing,
                              Optional reverseClrSeq As Boolean = False,
                              Optional mapLevels% = 100,
-                             Optional mapName$ = ColorMap.PatternJet,
+                             Optional mapName$ = ColorBrewer.DivergingSchemes.RdYlBu11,
                              Optional size$ = "3000,2700",
                              Optional padding$ = g.DefaultPadding,
                              Optional bg$ = "white",
@@ -177,6 +100,7 @@ Namespace Heatmap
                              Optional drawScaleMethod As DrawElements = DrawElements.Cols,
                              Optional drawLabels As DrawElements = DrawElements.Both,
                              Optional drawDendrograms As DrawElements = DrawElements.Rows,
+                             Optional drawClass As (rowClass As Dictionary(Of String, String), colClass As Dictionary(Of String, String)) = Nothing,
                              Optional dendrogramLayout$ = "200,200",
                              Optional rowLabelfontStyle$ = CSSFont.Win7Normal,
                              Optional colLabelFontStyle$ = CSSFont.Win7LargerBold,
@@ -224,7 +148,10 @@ Namespace Heatmap
                                 If(level% > colors.Length - 1,
                                     colors.Length - 1,
                                     level))
-                            Dim rect As New RectangleF(New PointF(args.left, args.top), blockSize)
+                            Dim rect As New RectangleF With {
+                                .Location = New PointF(args.left, args.top),
+                                .Size = blockSize
+                            }
 #If DEBUG Then
                             ' Call $"{level} -> {b.Color.ToString}".__DEBUG_ECHO
 #End If
@@ -234,13 +161,15 @@ Namespace Heatmap
                                 Call g.DrawRectangles(Pens.WhiteSmoke, {rect})
                             End If
                             If drawValueLabel Then
-                                key = c.FormatNumeric(2)
-                                Dim ksz As SizeF = g.MeasureString(key, valuelabelFont)
-                                Dim kpos As New PointF With {
-                                    .X = rect.Left + (rect.Width - ksz.Width) / 2,
-                                    .Y = rect.Top + (rect.Height - ksz.Height) / 2
-                                }
-                                Call g.DrawString(key, valuelabelFont, Brushes.White, kpos)
+
+                                With c.ToString("F2")
+                                    Dim ksz As SizeF = g.MeasureString(.ref, valuelabelFont)
+                                    Dim kpos As New PointF With {
+                                        .X = rect.Left + (rect.Width - ksz.Width) / 2,
+                                        .Y = rect.Top + (rect.Height - ksz.Height) / 2
+                                    }
+                                    Call g.DrawString(.ref, valuelabelFont, Brushes.White, kpos)
+                                End With
                             End If
 
                             args.left += dw!
@@ -268,7 +197,7 @@ Namespace Heatmap
 
             Return __plotInterval(
                 plotInternal, array,
-                rowLabelFont, CSSFont.TryParse(colLabelFontStyle).GDIObject, logTransform, drawScaleMethod, drawLabels, drawDendrograms, dlayout,
+                rowLabelFont, CSSFont.TryParse(colLabelFontStyle).GDIObject, logTransform, drawScaleMethod, drawLabels, drawDendrograms, drawClass, dlayout,
                 reverseClrSeq, customColors.GetBrushes, mapLevels, mapName,
                 size.SizeParser, margin, bg,
                 legendTitle, legendFont, Nothing,
